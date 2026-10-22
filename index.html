@@ -54,11 +54,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .nav button:hover{background:var(--surface-2);color:var(--fg)}
 .nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
 .nav .badge{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;font-weight:700;border-radius:99px;padding:0 6px;line-height:16px}
-.savebox{margin-top:auto;font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--line);border-radius:10px}
-.savebox .st{display:flex;gap:6px;align-items:center;font-weight:600}
-.savebox .st i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
-.savebox .st.bad i{background:var(--bad)}
-.savebox .ud{display:flex;gap:6px}
+.hello{margin-top:auto;display:flex;align-items:center;gap:8px;justify-content:center;text-align:center;background:linear-gradient(120deg,var(--accent-soft),var(--surface));border:1px solid var(--line);border-radius:12px;padding:12px 10px;font-weight:700;font-size:12.5px;line-height:1.45;color:var(--accent)}
+.hello svg{flex:none}
+.savechip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);padding:0 4px;white-space:nowrap}
+.savechip i{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block}
+.savechip.bad{color:var(--bad);font-weight:700}.savechip.bad i{background:var(--bad)}
 .jd{display:block;flex:none;object-fit:contain}
 main{padding-block:20px 48px;padding-left:max(16px,2vw);padding-right:max(16px,2vw,env(safe-area-inset-right,0px));min-width:0}
 .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
@@ -421,7 +421,7 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
   .sheet .tp{position:static}.sheet-wrap{max-height:none}
   .app{grid-template-columns:minmax(0,1fr)}
   .rail{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));z-index:40;border-right:0;border-top:1px solid var(--line)}
-  .brand,.savebox,#subjbox{display:none}
+  .brand,.hello,#subjbox{display:none}
   .nav{flex-direction:row;justify-content:space-around;width:100%}
   .nav button{flex-direction:column;gap:2px;font-size:10px;padding:6px 2px}
   .nav .badge{position:absolute;top:2px;right:2px;margin:0}
@@ -504,6 +504,7 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .lgbox > span{display:flex;gap:8px;align-items:center}
 .lgd:hover .lgbox,.lgd:focus-within .lgbox{display:flex}
 .lgd::after{content:'';position:absolute;left:0;right:0;top:100%;height:8px}
+@media (max-width:640px){.lgd{position:static}.lgbox{position:fixed;left:12px;right:12px;top:auto;margin-top:6px;width:auto;max-width:none}.lgd::after{display:none}}
 .hsub{margin-bottom:22px}
 .subh{font-size:16px;font-weight:800;margin:2px 0 10px;padding-left:10px;border-left:4px solid var(--accent);letter-spacing:-.02em}
 .hempty{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
@@ -513,8 +514,9 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .hday{display:flex;align-items:center;gap:8px}
 .hday svg{color:var(--accent)}
 .chip b{color:var(--fg)}
-.chip.warnchip{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
-.chip.warnchip b{color:var(--warn)}
+.chip.ddchip{cursor:pointer;border-color:var(--accent);color:var(--accent);background:var(--accent-soft);font-weight:600}
+.chip.ddchip b{color:var(--accent)}
+.chip.ddchip:hover{filter:brightness(.97)}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;background:linear-gradient(120deg,var(--accent-soft),var(--surface) 85%);border:1px solid var(--line);border-radius:20px;padding:22px 26px 0;margin-bottom:16px;overflow:hidden}
 .hero .hl{padding-bottom:22px;min-width:0}
 .hero .ht{display:flex;gap:12px;align-items:flex-start}
@@ -533,7 +535,7 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .hstat b{font-size:26px;line-height:1.1}
 .hstat b i{font-style:normal;font-size:14px;font-weight:600;margin-left:2px}
 .hstat.warn b{color:var(--warn)} .hstat.ok b{color:var(--ok)} .hstat.blue b{color:var(--accent)}
-.hstat .chv,.lrow .chv,.nxcard .chv,.pendbox .chv{margin-left:auto;color:var(--muted);display:inline-flex;flex:none}
+.hstat .chv,.nxcard .chv,.pendbox .chv{margin-left:auto;color:var(--muted);display:inline-flex;flex:none}
 .hero .mascot{position:relative;align-self:end;padding-right:6px}
 .hero .cheer{position:absolute;top:6px;left:-26px;background:var(--surface);border:2px solid var(--line-2);border-radius:14px;padding:1px 11px;font-weight:800;font-size:13px;color:var(--accent);transform:rotate(-7deg);z-index:1}
 .hero .mascot .jd{transform-origin:50% 100%}
@@ -543,24 +545,25 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .hlink{border:0;background:none;color:var(--accent);font-size:12px;font-weight:700;padding:2px 4px}
 .hlink:hover{text-decoration:underline}
 .tag.lg{font-size:12px;padding:2px 11px;border-radius:99px}
-.lrow{--st:var(--accent);display:grid;grid-template-columns:88px minmax(0,1fr) auto;border:1px solid var(--line);border-left:4px solid var(--st);border-radius:12px;background:var(--surface);overflow:hidden;cursor:pointer;text-align:left}
-.lrow+.lrow{margin-top:8px}
+.lrow{--st:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr) auto;border:1px solid var(--line);border-left:4px solid var(--st);border-radius:10px;background:var(--surface);overflow:hidden;cursor:pointer;text-align:left}
+.lrow+.lrow{margin-top:6px}
 .lrow:hover{border-color:var(--st);box-shadow:0 2px 10px rgba(30,50,100,.08)}
 .lrow.check{--st:var(--warn);background:color-mix(in srgb,var(--warn) 7%,var(--surface))}
 .lrow.done{--st:var(--ok)}
 .lrow.absent{--st:var(--bad)}
 .lrow.moved{--st:var(--line-2)}
 .lrow.moved .tx b,.lrow.absent .tx b{text-decoration:line-through;color:var(--muted)}
-.lrow .tm{background:color-mix(in srgb,var(--st) 11%,var(--surface));padding:10px 10px 10px 12px;display:flex;flex-direction:column;justify-content:center;font-size:12px;color:var(--muted);line-height:1.45}
-.lrow .tm b{font-size:14px;color:var(--fg)}
-.lrow .bd{padding:11px 12px;min-width:0;display:flex;gap:11px;align-items:flex-start}
-.lrow .sq,.prog .sq{width:28px;height:28px;border-radius:8px;background:var(--cc);display:grid;place-items:center;color:#1A2440;flex:none}
-.lrow .bd .sq{margin-top:2px}
-.lrow .tx{min-width:0;display:flex;flex-direction:column}
-.lrow .tx b{font-size:15px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.lrow .tx small{color:var(--muted);font-size:12.5px}
-.lrow .tx .tp{font-weight:600;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lrow .rt{padding:10px 12px;display:flex;align-items:center;gap:8px}
+.lrow .tm{background:color-mix(in srgb,var(--st) 11%,var(--surface));padding:5px 8px 5px 11px;display:flex;flex-direction:column;justify-content:center;font-size:11.5px;color:var(--muted);line-height:1.35}
+.lrow .tm b{font-size:13.5px;color:var(--fg)}
+.lrow .bd{padding:6px 10px;min-width:0;display:flex;gap:9px;align-items:center}
+.lrow .sq,.prog .sq{width:26px;height:26px;border-radius:8px;background:var(--cc);display:grid;place-items:center;color:#1A2440;flex:none}
+.lrow .tx{min-width:0;display:flex;flex-direction:column;line-height:1.4}
+.lrow .tx .l1{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.lrow .tx .l1 b{font-size:14.5px}
+.lrow .tx .l1 small{color:var(--muted);font-size:12px}
+.lrow .tx .tp{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow .rt{padding:4px 8px 4px 4px;display:flex;align-items:center;gap:4px}
+.lrow .tog{width:34px;height:34px}
 .scs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .sc{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px 6px}
 .sc svg{color:var(--accent);margin-bottom:2px}
@@ -599,17 +602,16 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .uev .ic.p{background:#EAE3FA;color:#7650C8}.uev .ic.w{background:var(--warn-soft);color:var(--warn)}.uev .ic.g{background:var(--ok-soft);color:var(--ok)}.uev .ic.b{background:var(--accent-soft);color:var(--accent)}
 .uev .ut{display:flex;flex-direction:column;min-width:0;line-height:1.4}
 .uev .ut b{font-size:14px}.uev .ut small{font-size:12px;color:var(--muted)}
-.hfoot{display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(120deg,var(--accent-soft),var(--surface));border:1px solid var(--line);border-radius:14px;padding:10px 14px;font-weight:700;font-size:13px;color:var(--accent)}
 @media (max-width:1100px){.hmain{grid-template-columns:minmax(0,1fr)}.hero .mascot{display:none}}
 @media (max-width:640px){.hero{padding:16px 16px 0}.hero h2{font-size:17px}.hstats{grid-template-columns:minmax(0,1fr);gap:8px}.hstat{padding:9px 12px}.hstat b{font-size:22px}
-  .lrow{grid-template-columns:70px minmax(0,1fr)}.lrow .rt{grid-column:1/-1;padding:0 12px 10px;justify-content:flex-end}.lrow .chv{display:none}.scs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .lrow{grid-template-columns:62px minmax(0,1fr) auto}.lrow .tm{padding-left:8px}.lrow .tx .tp{white-space:normal}.scs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head><body>
 <div class="app">
   <aside class="rail">
     <div class="brand"><span id="brandDog"></span><div><b>진도깨</b><small>선생님의 충직한 진도 관리 도우미</small></div></div>
     <nav class="nav" id="nav" aria-label="주 메뉴"></nav>
-    <div class="savebox" id="savebox" aria-live="polite"></div>
+    <div class="hello" id="hello"></div>
   </aside>
   <main id="main"></main>
 </div>
@@ -839,7 +841,8 @@ const bab=(s)=>`<img class="babs" src="${BAB_SRC}" width="${s}" height="${s}" al
 const jd=(s)=>`<img class="jd" src="${JD_SRC}" width="${s}" height="${s}" alt="">`;
 {const n=new Date();setClock(key(n),n.getHours()*60+n.getMinutes())}
 
-let STORE={subjects:[],cur:null},HIST={},DB,SCH,LOG=[],UNDO=[],REDO=[],SAVE={ok:true,t:''},ALGS=[];
+const normDday=d=>({label:String(d&&d.label||'종업식').slice(0,12),date:d&&/^\d{4}-\d{2}-\d{2}$/.test(d.date||'')?d.date:''});
+let STORE={subjects:[],cur:null,dday:normDday()},HIST={},DB,SCH,LOG=[],UNDO=[],REDO=[],SAVE={ok:true,t:''},ALGS=[];
 const LSK='jindokkae.v4',SUBK='jindokkae.v5',NEISK='jindokkae.neis',MEALK='jindokkae.meals';
 let NEIS={key:'',proxy:'',school:null},MEALS={};
 const U={view:'home',sel:TK,month:{y:+TK.slice(0,4),m:+TK.slice(5,7)-1},week:mondayOf(TK),calMode:'month',
@@ -862,7 +865,7 @@ const predTxt=v=>v>DB.lessons.length?`준비된 ${DB.lessons.length}차시 모�
 
 /* ---- 저장·실행 취소 ---- */
 const curSub=()=>STORE.subjects.find(x=>x.id===STORE.cur);
-function persist(){try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}}
+function persist(){try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}}
 function persistNeis(){try{localStorage.setItem(NEISK,JSON.stringify(NEIS));localStorage.setItem(MEALK,JSON.stringify(MEALS))}catch(e){}}
 function logAdd(label,refs){LOG.push({t:stamp(),label,refs:refs||[]});if(LOG.length>300)LOG.shift()}
 function boot(){try{const u=JSON.parse(localStorage.getItem('jindokkae.ui')||'{}');if(u.tpW>=120&&u.tpW<=560)U.tpW=u.tpW}catch(e){}
@@ -873,7 +876,7 @@ function boot(){try{const u=JSON.parse(localStorage.getItem('jindokkae.ui')||'{}
     const sub={id:uid('s'),name:'내 교과',db:fresh?emptyDB(semNow(),shiftTerms(DEFAULT_TERMS,yearNow()-BASE_YEAR)):old.db};if(!fresh){LOG=old.log||[];ALGS=old.alg||[]}
     if(fresh){sub.sem=semNow();sub.year=yearNow()}
     STORE={subjects:[sub],cur:sub.id}}
-  STORE.subjects.forEach(x=>ensureSub(x));
+  STORE.subjects.forEach(x=>ensureSub(x));STORE.dday=normDday((j&&j.dday)||STORE.dday);
   DB=curSub().db;persist();
   try{NEIS={...NEIS,...JSON.parse(localStorage.getItem(NEISK)||'{}')};MEALS=JSON.parse(localStorage.getItem(MEALK)||'{}')}catch(e){}
   if(!U.sheetClass&&DB.classes[0])U.sheetClass=DB.classes[0].id}
@@ -916,7 +919,8 @@ function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
 function refreshChrome(){
   const pend=DB.inbox.filter(i=>i.state==='pending').length+SCH.conflicts.length;
   $('#nav').innerHTML=VIEWS.map(([v,l])=>`<button data-a="go" data-x="${v}" ${U.view===v?'aria-current="page"':''}>${ic(v)}<span>${l}</span>${v==='cal'&&pend?`<span class="badge">${pend}</span>`:''}</button>`).join('');
-  $('#savebox').innerHTML=`<span class="st ${SAVE.ok?'':'bad'}"><i></i>${SAVE.ok?'이 브라우저에 저장됨':'저장 실패'}</span><span class="mono">${esc(SAVE.t)}</span><span>다른 기기와는 동기화되지 않아요.</span>`;
+  $('#hello').innerHTML=`${paw(15)}<span>오늘도 좋은<br>수업 되세요!</span>`;
+   document.querySelectorAll('.savechip').forEach(el=>{el.classList.toggle('bad',!SAVE.ok);el.innerHTML=`<i></i>${SAVE.ok?'저장됨':'저장 실패'}`;el.title=SAVE.ok?`이 브라우저에 저장됨 ${SAVE.t} · 다른 기기와는 동기화되지 않아요`:'저장에 실패했어요. 설정에서 백업을 받아 두세요'})
   const ub=$('[data-a=undo].tb'),rb=$('[data-a=redo].tb');if(ub)ub.disabled=!UNDO.length;if(rb)rb.disabled=!REDO.length;
 }
 function render(){
@@ -928,8 +932,9 @@ function render(){
   U.flash=null;
 }
 function autosize(t){if(CSS.supports&&CSS.supports('field-sizing','content'))return;t.style.height='auto';t.style.height=Math.max(28,t.scrollHeight+2)+'px'}
+const saveChip=()=>`<span class="savechip ${SAVE.ok?'':'bad'}" title="${SAVE.ok?'이 브라우저에 저장됨 '+esc(SAVE.t):'저장 실패'}"><i></i>${SAVE.ok?'저장됨':'저장 실패'}</span>`;
 function topbar(t,extra=''){const ex=nextExam(DB);
-  return `<div class="top"><h1>${t}</h1><div class="meta">${extra}<button class="btn sm tb" data-a="undo" ${UNDO.length?'':'disabled'}>되돌리기</button><button class="btn sm tb" data-a="redo" ${REDO.length?'':'disabled'}>다시 실행</button><span class="chip mono">${+TK.slice(5,7)}월 ${+TK.slice(8)}일 (${wd(TK)})</span>${ex?`<span class="chip hot">${esc(ex.title)} D-${dday(ex.start)}</span>`:''}</div></div>`}
+  return `<div class="top"><h1>${t}</h1><div class="meta">${extra}${saveChip()}<button class="btn sm tb" data-a="undo" ${UNDO.length?'':'disabled'}>되돌리기</button><button class="btn sm tb" data-a="redo" ${REDO.length?'':'disabled'}>다시 실행</button><span class="chip mono">${+TK.slice(5,7)}월 ${+TK.slice(8)}일 (${wd(TK)})</span>${ex?`<span class="chip hot">${esc(ex.title)} D-${dday(ex.start)}</span>`:''}</div></div>`}
 const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK).length>0||DB.tt.some(t=>t.slots.length)});
 
 /* ---------- 홈 ---------- */
@@ -953,11 +958,12 @@ function homeSub(sb){
   /* 오늘의 수업 목록 */
   const rows=tday.map(s=>{const k=s.status==='plan'&&isNow(DB,TK,s.p)?'now':s.status,[lab,tg]=HST[k],n=s.n||SCH.nextN[s.c],dead=s.status==='absent'||s.status==='moved';
     const sub2=s.status==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:s.status==='moved'?moveDest(s):esc(lname(n));
-    const btn=s.status==='check'?`<button class="btn sm pri" data-a="done" data-x="${s.key}">진도 기록하기 ${ic('chev',12)}</button>`:k==='now'?`<button class="btn sm pri" data-a="done" data-x="${s.key}">${paw(13)} 수업 완료</button>`:'';
+    const pawb=dead?'':s.status==='done'?`<button class="tog on" data-a="uncomplete" data-x="${s.c}|${s.n}" title="완료 취소" aria-label="${esc(cn(s.c))} ${s.p}교시 완료 취소">${paw(20)}</button>`
+      :`<button class="tog" data-a="done" data-x="${s.key}" title="수업 완료로 기록" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
     return {p:s.p,html:`<div class="lrow ${k}" style="--cc:${sq}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0">
-      <div class="tm"><b>${s.p}교시</b><span class="mono">${PT(s.p)}</span><span class="mono">~ ${endT(s.p)}</span></div>
-      <div class="bd"><span class="sq">${ic('book',15)}</span><div class="tx"><b>${esc(cn(s.c))}${s.movedIn?` <span class="tag gray">${sic('moved',11)} ${s.from.p}교시에서 이동</span>`:''}</b><small>${esc(subjMain(sb))}${dead?'':` · ${n}차시`}</small><span class="tp">${sub2}</span></div></div>
-      <div class="rt">${btn}<span class="tag lg ${tg}">${lab}</span><span class="chv">${ic('chev',16)}</span></div></div>`}});
+      <div class="tm"><b>${s.p}교시</b><span class="mono">${PT(s.p)}~${endT(s.p)}</span></div>
+      <div class="bd"><span class="sq">${ic('book',13)}</span><div class="tx"><span class="l1"><b>${esc(cn(s.c))}</b><small>${esc(subjMain(sb))}${dead?'':` · ${n}차시`}</small>${s.movedIn?`<span class="tag gray">${sic('moved',11)} ${s.from.p}교시에서 이동</span>`:''}</span><span class="tp">${sub2}</span></div></div>
+      <div class="rt"><span class="tag lg ${tg}">${lab}</span>${pawb}</div></div>`}});
   /* 오늘 이전에 기록이 빠진 수업과 일정 충돌 (오늘 것은 위 목록에 보여요) */
   const olds=checks.filter(s=>s.date<TK);
   const alerts=(conf.length||olds.length)?`<div class="dlist" data-sub="${sb.id}">
@@ -980,6 +986,14 @@ function homeSub(sb){
 
 
 function withSub(sb,fn){const d0=DB,s0=SCH;if(sb.id!==STORE.cur){DB=sb.db;SCH=buildSched(DB)}try{return fn()}finally{DB=d0;SCH=s0}}
+/* D-day: 기본은 '종업식' = 현재 교과 시트의 2학기 끝나는 날 */
+function ddayInfo(){const dd=STORE.dday,auto=!dd.date,date=dd.date||(DB.terms&&DB.terms[2]?DB.terms[2].end:DB.term.end),n=dday(date);
+  return {label:dd.label,date,auto,n,txt:n>0?'D-'+n:n===0?'D-Day':'D+'+(-n)}}
+function openDday(){const i=ddayInfo();
+  modal(`<form id="ddForm" style="display:flex;flex-direction:column;gap:12px"><h3>D-day 설정</h3><p class="sub">홈 화면 맨 위에 남은 날을 보여줘요. 기본은 <b>종업식</b>(이 교과의 2학기 끝나는 날)이에요.</p>
+  <label class="field">이름<input id="ddLabel" class="inp" maxlength="12" value="${esc(i.label)}" placeholder="예: 종업식, 기말고사"></label>
+  <label class="field">날짜<input type="date" id="ddDate" value="${i.date}"><span>날짜를 비우면 2학기 끝나는 날(${md(DB.terms&&DB.terms[2]?DB.terms[2].end:DB.term.end)})을 따라가요.</span></label>
+  <div class="acts"><button type="button" class="btn" data-a="ddreset" style="margin-right:auto">기본값(종업식)으로</button><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`)}
 function vHome(){
   const multi=STORE.subjects.length>1;
   const parts=STORE.subjects.map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
@@ -995,9 +1009,10 @@ function vHome(){
   else say='오늘은 수업이 없어요.';
   const d=D(TK);
   /* 상단 */
+  const dd=ddayInfo();
   const top=`<div class="top"><h1 class="hday">${ic('cal',24)} ${d.getMonth()+1}월 ${d.getDate()}일 ${wd(TK)}요일</h1>
-    ${withCls.length?`<span class="chip">${ic('cal',14)} 오늘 수업 <b>${nAct}개</b></span>${nCheck?`<span class="chip warnchip">${ic('warn',14)} 기록 확인 필요 <b>${nCheck}건</b></span>`:''}`:''}
-    <div class="meta"><button class="btn sm tb" data-a="undo" ${UNDO.length?'':'disabled'}>되돌리기</button><button class="btn sm tb" data-a="redo" ${REDO.length?'':'disabled'}>다시 실행</button>
+    <button class="chip ddchip" data-a="ddset" title="D-day 설정 (${md(dd.date)})">${ic('clock',14)} ${esc(dd.label)} <b class="mono">${dd.txt}</b></button>
+    <div class="meta">${saveChip()}<button class="btn sm tb" data-a="undo" ${UNDO.length?'':'disabled'}>되돌리기</button><button class="btn sm tb" data-a="redo" ${REDO.length?'':'disabled'}>다시 실행</button>
     <button class="btn pri" data-a="go" data-x="sheet">+ 진도 기록</button></div></div>`;
   /* 배너 */
   const stat=(cls,icn,label,num,unit,attr)=>`<button class="hstat ${cls}" ${attr}><span class="ic">${ic(icn,20)}</span><span><small>${label}</small><b class="mono">${num}<i>${unit}</i></b></span><span class="chv">${ic('chev',16)}</span></button>`;
@@ -1040,9 +1055,8 @@ function vHome(){
   const todoCard=`<div class="card"><h2>${ic('checkc',18)} 오늘 할 일</h2><ul class="todo">${autos.map(t=>`<li><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
       ${todos.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="td${t.sid}${t.i}" data-todo="${t.sid}:${t.i}" ${t.d?'checked':''}><label for="td${t.sid}${t.i}">${esc(t.t)}</label></li>`).join('')}</ul>
       <form id="todoForm" style="display:flex;gap:6px;margin-top:10px"><input id="todoIn" class="inp" placeholder="할 일 추가" aria-label="할 일 추가"><button class="btn sm">추가</button></form></div>`;
-  const foot=`<div class="hfoot">${jd(44)}<span>오늘도 좋은 수업 되세요!</span></div>`;
   return top+hero+pendBar+(withCls.length?'':setupCard())+`<div class="hmain"><div class="stack">${todayCard}${shortcuts}${alertsCard.replace('<div class="card"','<div class="card" id="alertcard"')}${empties}</div>
-    <div class="stack">${withCls.length?progCard:''}${nextCard}${upCard}${todoCard}${mealCard()}${foot}</div></div>`;
+    <div class="stack">${withCls.length?progCard:''}${nextCard}${upCard}${todoCard}${mealCard()}</div></div>`;
 }
 function rowHtml(s,kind){const n=s.n||SCH.nextN[s.c];
   const acts={done:`<span class="stamp">${paw(16)} 완료</span><button class="btn sm" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,
@@ -1055,9 +1069,9 @@ function rowHtml(s,kind){const n=s.n||SCH.nextN[s.c];
   <span class="ls"><b>${esc(cn(s.c))}${kind==='absent'||kind==='moved'?'':` · ${n}차시`}</b><small>${sub}</small></span><span class="acts">${acts}</span></div>`}
 const excOf=s=>DB.exc.find(e=>e.id===(s.excId||s.movedIn));
 function moveDest(s){const e=excOf(s);return e?`${mdw(e.toDate)} ${e.toP}교시로 이동 · ${esc(e.note||e.reason)}`:''}
-function achip(a){const d=dday(a.start),past=(a.end||a.start)<TK;const tg=a.classes==='all'?'전체 학급':a.classes.map(cn).join(', ');
+function achip(a){const d=dday(a.start),past=(a.end||a.start)<TK;const tg=a.classes==='all'?'':a.classes.map(cn).join(', ');
   const rng=a.type==='exam'&&(a.fromId||a.toId)?` · 범위 ${lessonIdx(DB,a.fromId)||'?'}~${lessonIdx(DB,a.toId)||'?'}차시`:a.lessonId?` · ${lessonIdx(DB,a.lessonId)}차시`:'';
-  return `<button class="achip ${a.type} ${past?'past':''}" data-a="avedit" data-x="${a.id}"><b>${past?'지남':d<=0?'진행 중':'D-'+d}</b><span>${esc(a.title)} <span class="muted">${md(a.start)}${a.end&&a.end!==a.start?'~'+md(a.end):''} · ${esc(tg)}${rng}</span></span></button>`}
+  return `<button class="achip ${a.type} ${past?'past':''}" data-a="avedit" data-x="${a.id}"><b>${past?'지남':d<=0?'진행 중':'D-'+d}</b><span>${esc(a.title)} <span class="muted">${md(a.start)}${a.end&&a.end!==a.start?'~'+md(a.end):''}${tg?' · '+esc(tg):''}${rng}</span></span></button>`}
 function mealCard(){const m=MEALS[TK];
   return `<div class="card"><div class="mealhead">${bab(48)}<div><b>밥숑의 오늘 급식</b><div class="muted" style="font-size:12px">${NEIS.school?esc(NEIS.school.name):'학교 미설정'}</div></div><button class="btn sm" style="margin-left:auto" data-a="go" data-x="meal">이번 주</button></div>
   ${m?mealList(m):NEIS.key&&NEIS.school?`<p class="muted" style="margin:0">${U.neis.busy?'불러오는 중…':'아직 불러오지 않았어요.'}</p>`:`<p class="muted" style="margin:0 0 8px">설정에서 NEIS 인증키와 학교를 등록하면 급식이 보여요.</p><button class="btn sm" data-a="go" data-x="set">NEIS 연결하기</button>`}</div>`}
@@ -1149,9 +1163,9 @@ function vSheet(){
   const lead=DB.classes.length?Math.max(...DB.classes.map(c=>SCH.nextN[c.id]-1)):0;
   const {pl,cur}=periodSel();
   const tasks=DB.assess.filter(a=>a.type==='task').sort((a,b)=>a.start<b.start?-1:1);
-  const pchip=p=>{const a=p.a,d=dday(a.start),past=(a.end||a.start)<TK;const tg=a.classes==='all'?'전체 학급':a.classes.map(cn).join(', ');
+  const pchip=p=>{const a=p.a,d=dday(a.start),past=(a.end||a.start)<TK;const tg=a.classes==='all'?'':a.classes.map(cn).join(', ');
     const rng=p.empty?'':` · 범위 ${p.from}~${p.to}차시`;
-    return `<button class="achip exam ${past?'past':''}" data-a="period" data-x="${a.id}" aria-pressed="${!!cur&&cur.a.id===a.id}"><b>${past?'지남':d<=0?'진행 중':'D-'+d}</b><span>${esc(a.title)} <span class="muted">${md(a.start)}${a.end&&a.end!==a.start?'~'+md(a.end):''} · ${esc(tg)}${rng}</span></span></button>`};
+    return `<button class="achip exam ${past?'past':''}" data-a="period" data-x="${a.id}" aria-pressed="${!!cur&&cur.a.id===a.id}"><b>${past?'지남':d<=0?'진행 중':'D-'+d}</b><span>${esc(a.title)} <span class="muted">${md(a.start)}${a.end&&a.end!==a.start?'~'+md(a.end):''}${tg?' · '+esc(tg):''}${rng}</span></span></button>`};
   const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">시기</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map(pchip).join('')}<button class="btn sm" data-a="avnew">${DB.assess.length?'+ 평가 추가':'+ 정기시험 · 수행평가 추가'}</button>
     ${tasks.length?`<span class="muted" style="font-size:12px;font-weight:700;margin-left:6px">수행평가</span>${tasks.map(achip).join('')}`:''}</div>
     ${cur?`<div class="pinfo"><span class="note"><b style="color:var(--fg)">${esc(cur.a.title)}</b> · ${md(cur.a.start)}${cur.a.end&&cur.a.end!==cur.a.start?'~'+md(cur.a.end):''} · ${cur.empty?'<b>이 시기에 해당하는 차시가 없어요</b>':`<b style="color:var(--fg)">${cur.from}~${cur.to}차시</b> (${cur.to-cur.from+1}개)`} <span class="muted">· ${cur.basis} 기준${cur.empty?' — 시험 범위를 정하거나 시간표를 확인해 보세요':''}</span></span><button class="btn sm" data-a="avedit" data-x="${cur.a.id}">시험 일정 · 범위 편집</button></div>`:''}`;
@@ -1316,7 +1330,7 @@ async function importSchedule(){if(!NEIS.school)return;U.neis.busy=true;neisMsg(
   catch(e){U.neis.busy=false;neisMsg(e.msg,true);render()}}
 
 /* ---------- 설정 ---------- */
-function backupText(){const cs=curSub();if(cs)cs.db=DB;return JSON.stringify({app:'jindokkae',v:5,exported:stamp(),cur:STORE.cur,subjects:STORE.subjects,log:LOG.slice(-300)})}
+function backupText(){const cs=curSub();if(cs)cs.db=DB;return JSON.stringify({app:'jindokkae',v:5,exported:stamp(),cur:STORE.cur,dday:STORE.dday,subjects:STORE.subjects,log:LOG.slice(-300)})}
 function sheetTSV(){const h=['차시','수업 주제','교과서','수업 내용','비고',...DB.classes.flatMap(c=>[c.name+' 수업여부',c.name+' 수업날짜',c.name+' 비고'])];
   const rows=DB.lessons.map((l,i)=>[(i+1)+'차시',l.topic,l.pages,l.content,l.note,...DB.classes.flatMap(c=>{const r=rec(DB,c.id,i+1);return [r?.done?'O':r?.doing?'진행중':'',r?.done?mdw(r.date):'',r?.memo||'']})]);
   return [h,...rows].map(r=>r.map(v=>String(v??'').replace(/[\t\n]/g,' ')).join('\t')).join('\n')}
@@ -1537,6 +1551,8 @@ document.addEventListener('click',e=>{
    case 'sm':U.schedMode=x;render();break;
    case 'subj':useSub(x);break;
    case 'subjadd':openSubject(null);break;
+   case 'ddset':openDday();break;
+   case 'ddreset':STORE.dday=normDday();persist();closeM();render();break;
    case 'jump':{const el=document.getElementById(x);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});break}
    case 'clsmanage':go('set');setTimeout(()=>{const el=document.getElementById('clsCard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},60);break
    case 'sjsem':{$('#sjSem').value=x;document.querySelectorAll('[data-a=sjsem]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.x===x)));break}
@@ -1624,7 +1640,7 @@ document.addEventListener('click',e=>{
    case 'tsv':copyText(sheetTSV());break;
    case 'csv':tryDownload(`jindokkae-진도표-${TK}.csv`,sheetCSV());break;
    case 'imppaste':openImport($('#impTa').value);break;
-   case 'impgo':{const I=U.imp;if(I.all){STORE={subjects:clone(I.all.subjects),cur:I.all.subjects.some(k=>k.id===I.all.cur)?I.all.cur:I.all.subjects[0].id};STORE.subjects.forEach(x=>ensureSub(x));HIST={};UNDO=[];REDO=[];DB=curSub().db;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;persist();closeM();render();toast('백업을 불러왔어요.');break}mutate('백업 불러오기',db=>{Object.keys(db).forEach(k=>delete db[k]);Object.assign(db,clone(I.db));ensureSub(curSub(),db)});break}
+   case 'impgo':{const I=U.imp;if(I.all){STORE={subjects:clone(I.all.subjects),cur:I.all.subjects.some(k=>k.id===I.all.cur)?I.all.cur:I.all.subjects[0].id,dday:normDday(I.all.dday)};STORE.subjects.forEach(x=>ensureSub(x));HIST={};UNDO=[];REDO=[];DB=curSub().db;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;persist();closeM();render();toast('백업을 불러왔어요.');break}mutate('백업 불러오기',db=>{Object.keys(db).forEach(k=>delete db[k]);Object.assign(db,clone(I.db));ensureSub(curSub(),db)});break}
    case 'resetask':modal(`<h3>이 교과의 모든 기록을 지울까요?</h3><p class="warnbox">'${esc(curSub().name)}' 교과의 학급·차시·기록·시간표·평가 일정이 모두 지워져요. 먼저 백업을 받아 두는 게 안전해요. 지운 뒤에도 이 창을 닫기 전까지는 '되돌리기'로 돌릴 수 있어요.</p><div class="acts"><button class="btn" data-a="close">취소</button><button class="btn badfill" data-a="resetgo">모두 지우기</button></div>`);break;
    case 'resetgo':U.selCell=null;U.draft=null;mutate('모든 기록 지우기',db=>{const s=emptyDB();Object.keys(db).forEach(k=>delete db[k]);Object.assign(db,s)});break;
   }
@@ -1692,6 +1708,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
       persist();closeM();render();toast('교과 정보를 바꿨어요.')}
     else{const terms=shiftTerms(DB.terms,year-(curSub().year||year));const d=emptyDB(sem,terms);d.periods=clone(DB.periods);d.events=clone(DB.events);
       const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
+  if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'종업식',date:$('#ddDate').value});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:TK}))}
   if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:U.sel}))}
   if(id==='addClassForm'){acAdd($('#acNames').value);$('#acNames').value='';const names=U.acTags.slice(),lead=$('#acLead').value.trim();
