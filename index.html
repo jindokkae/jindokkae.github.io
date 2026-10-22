@@ -490,6 +490,18 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .tagchip button{border:0;background:none;color:inherit;width:20px;height:20px;border-radius:50%;font-size:15px;line-height:1;padding:0;cursor:pointer}
 .tagchip button:hover{background:var(--accent);color:var(--accent-ink)}
 .tagbox .tagin{border:0;outline:0;box-shadow:none;flex:1;min-width:110px;width:auto;background:none;padding:5px 2px;font-size:14px;color:var(--fg)}
+
+/* ---- 범례 팝오버 · 홈 교과 구역 ---- */
+.lgd{position:relative;display:inline-block}
+.lgb .lgi{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1.5px solid currentColor;font-size:10px;font-weight:800;line-height:1}
+.lgbox{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:max-content;max-width:300px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:12px 14px;box-shadow:0 10px 30px rgba(20,30,60,.18);flex-direction:column;gap:9px;font-size:12.5px;color:var(--fg)}
+.lgbox > span{display:flex;gap:8px;align-items:center}
+.lgd:hover .lgbox,.lgd:focus-within .lgbox{display:flex}
+.lgd::after{content:'';position:absolute;left:0;right:0;top:100%;height:8px}
+.hsub{margin-bottom:22px}
+.subh{font-size:16px;font-weight:800;margin:2px 0 10px;padding-left:10px;border-left:4px solid var(--accent);letter-spacing:-.02em}
+.hempty{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+.hsub .focus,.hsub > .card{margin-bottom:14px}
 </style>
 </head><body>
 <div class="app">
@@ -791,7 +803,7 @@ function setupCard(){const r=ready();if(r.cls&&r.les&&r.tt)return '';
    ${st(r.les,2,'차시 입력','진도표에 수업 주제·내용·비고를 적어요. 엑셀에서 복사해 붙여넣어도 돼요.','go','sheet','진도표 열기')}
    ${st(r.tt,3,'시간표 입력','요일·교시마다 어느 반 수업인지 고르면 날짜별 수업이 만들어져요.','ttedit','','시간표 입력')}</div>
    <p class="note" style="margin-top:10px">급식과 학사일정은 설정에서 NEIS 인증키를 넣으면 불러올 수 있어요.</p></div>`}
-function vHome(){
+function homeSub(){
   const tday=SCH.by[TK]||[];
   const act=tday.filter(s=>['plan','check','done'].includes(s.status));
   const done=act.filter(s=>s.status==='done'),plan=act.filter(s=>s.status==='plan');
@@ -831,14 +843,35 @@ function vHome(){
   const todos=DB.todos.map((t,i)=>({...t,i})).filter(t=>!t.date||t.date===TK);
   const lead=DB.classes.length?Math.max(...DB.classes.map(c=>SCH.nextN[c.id]-1)):0;
   const ups=DB.assess.filter(a=>(a.end||a.start)>=TK).sort((a,b)=>a.start<b.start?-1:1).slice(0,4);
-  return topbar('홈')+`<div class="speak ${sayPop('home',say)}">${jd(104)}<div class="bub" aria-live="polite">${say}</div></div>${setupCard()}${alerts}
-  <div class="grid homegrid"><div style="min-width:0">${focusHtml}${lists}</div>
+  const mini=DB.classes.length&&DB.lessons.length?`<div class="card"><h2>반별 진도 <span class="right"><button class="btn sm" data-a="go" data-x="sheet">진도표</button></span></h2><div class="mini">${DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return `<div style="--cc:${ccv(c.id)}"><b>${esc(c.name)}</b><span class="tr"><i style="width:${d/DB.lessons.length*100}%"></i></span><span class="mono" style="font-size:12px">${d}차시 ${d===lead?'<span class="tag ok">선두</span>':`<span class="tag ${lead-d>=2?'warn':'gray'}">-${lead-d}</span>`}</span></div>`}).join('')}</div></div>`:'';
+  const upsH=ups.length?`<div class="card"><h2>다가오는 평가 <span class="right"><button class="btn sm" data-a="avnew">평가 추가</button></span></h2><div class="dlist">${ups.map(achip).join('')}</div></div>`:'';
+  return {say,alerts,focusHtml,lists,auto,mini,ups:upsH,focus,checks,act,hasCls:DB.classes.length>0};
+}
+
+function withSub(sb,fn){const d0=DB,s0=SCH;if(sb.id!==STORE.cur){DB=sb.db;SCH=buildSched(DB)}try{return fn()}finally{DB=d0;SCH=s0}}
+function vHome(){
+  const multi=STORE.subjects.length>1;
+  const parts=STORE.subjects.map(sb=>({sb,h:withSub(sb,homeSub)}));
+  const withCls=parts.filter(p=>p.h.hasCls);
+  let say;
+  if(!withCls.length)say='반가워요! 먼저 <b>학급</b>부터 알려 주세요.';
+  else{const nCheck=withCls.reduce((a,p)=>a+p.h.checks.length,0);
+    if(nCheck)say=`기록하지 않은 수업이 <b>${nCheck}개</b> 있어요. 먼저 확인해 주세요.`;
+    else{const fs=withCls.filter(p=>p.h.focus).sort((a,b)=>a.h.focus.p-b.h.focus.p);
+      if(fs.length){const f=fs[0];say=withSub(f.sb,()=>`다음은 <b>${multi?esc(f.sb.name)+' ':''}${f.h.focus.p}교시 ${esc(cn(f.h.focus.c))}</b> ${f.h.focus.n}차시예요.`)}
+      else if(withCls.some(p=>p.h.act.length))say='오늘 수업을 <b>모두 깨부쉈어요!</b> 수고 많았어요.';
+      else say='오늘은 수업이 없어요.'}}
+  const sections=parts.map(({sb,h})=>{
+    if(!h.hasCls)return withCls.length?`<section class="hsub" data-sub="${sb.id}"><div class="card hempty"><span><b>${esc(sb.name)}</b> 교과는 아직 학급이 없어요.</span><button class="btn sm pri" data-a="addclass">학급 추가</button></div></section>`:'';
+    return `<section class="hsub" data-sub="${sb.id}">${multi?`<h2 class="subh">${esc(sb.name)}</h2>`:''}${h.alerts}${h.focusHtml}${h.lists}${h.mini}${h.ups}</section>`}).join('');
+  const autos=parts.flatMap(({sb,h})=>h.auto.map(a=>multi?`[${sb.name}] ${a.t}`:a.t));
+  const todos=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i})).filter(t=>!t.date||t.date===TK));
+  return topbar('홈')+`<div class="speak ${sayPop('home',say)}"><div class="who">${jd(104)}<span class="whon">진도깨</span></div><div class="bub" aria-live="polite">${say}</div></div>${withCls.length?'':setupCard()}
+  <div class="grid homegrid"><div style="min-width:0">${sections}</div>
   <div class="stack">
-    <div class="card"><h2>오늘 할 일</h2><ul class="todo">${auto.map(t=>`<li><span class="tag warn">진도표</span><span>${esc(t.t)}</span></li>`).join('')}
-      ${todos.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="td${t.i}" data-todo="${t.i}" ${t.d?'checked':''}><label for="td${t.i}">${esc(t.t)}</label></li>`).join('')}</ul>
+    <div class="card"><h2>오늘 할 일</h2><ul class="todo">${autos.map(t=>`<li><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
+      ${todos.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="td${t.sid}${t.i}" data-todo="${t.sid}:${t.i}" ${t.d?'checked':''}><label for="td${t.sid}${t.i}">${esc(t.t)}</label></li>`).join('')}</ul>
       <form id="todoForm" style="display:flex;gap:6px;margin-top:10px"><input id="todoIn" class="inp" placeholder="할 일 추가" aria-label="할 일 추가"><button class="btn sm">추가</button></form></div>
-    ${ups.length?`<div class="card"><h2>다가오는 평가 <span class="right"><button class="btn sm" data-a="avnew">평가 추가</button></span></h2><div class="dlist">${ups.map(achip).join('')}</div></div>`:''}
-    ${DB.classes.length&&DB.lessons.length?`<div class="card"><h2>반별 진도 <span class="right"><button class="btn sm" data-a="go" data-x="sheet">진도표</button></span></h2><div class="mini">${DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return `<div style="--cc:${ccv(c.id)}"><b>${esc(c.name)}</b><span class="tr"><i style="width:${d/DB.lessons.length*100}%"></i></span><span class="mono" style="font-size:12px">${d}차시 ${d===lead?'<span class="tag ok">선두</span>':`<span class="tag ${lead-d>=2?'warn':'gray'}">-${lead-d}</span>`}</span></div>`}).join('')}</div></div>`:''}
     ${mealCard()}
   </div></div>`;
 }
@@ -948,8 +981,9 @@ function vSheet(){
       return `<div class="crow ${nxt?'next':''} ${sel?'sel':''} ${U.flash===c.id+'|'+n?'justdone':''}" data-a="sel" data-x="${c.id}|${n}"><b class="mono">${n}차시</b><button class="tog ${v?.done?'on':v?.doing?'doing':''}" data-a="tog" data-x="${c.id}|${n}" aria-label="${n}차시 ${v?.done?'완료 취소':'완료로 표시'}">${paw(20)}</button><span style="min-width:0"><span>${esc(les.topic||'(주제 미입력)')}</span>${v?.memo?`<small style="color:var(--warn)">${esc(v.memo)}</small>`:les.note?`<small>${esc(les.note)}</small>`:''}</span><span class="dt2 mono" style="text-align:right;font-size:12px">${v?.done?mdw(v.date):pl?`<span class="${nxt?'nx':'pl'}">예정 ${mdw(pl.date)}</span>`:''}</span></div>`}).join('')||'<p class="muted">차시가 없어요. 전체 진도표에서 먼저 차시를 만드세요.</p>'}</div>`;
   }
   const PH=panelHtml();
-  const tools=`<button class="btn sm" data-a="help" aria-pressed="${!!U.help}">도움말</button>`;
-  return topbar('진도표',mode+tools)+subjTabs()+strip+`<div class="legend"><span><span class="tog" style="width:22px;height:22px">${paw(16)}</span>아직 안 함 (누르면 완료)</span><span><span class="tog doing" style="width:22px;height:22px">${paw(16)}</span>진행 중 (오른쪽 '실제 수업 기록'에서 지정)</span><span><span class="tog on" style="width:22px;height:22px">${paw(16)}</span>수업함 (날짜·요일)</span><span><span class="nx mono">10/23</span>파란 글씨 = 다음 차시 예정일</span><span><span class="pl mono">10/27</span>시간표로 계산한 예정일</span><span><span class="rbadge exam" style="margin:0">시험</span>시험 범위</span><span style="color:var(--bad)">${sic('check',11)} 일정 충돌</span></div>
+  const legendH=`<span class="lgd"><button type="button" class="btn sm lgb" aria-label="범례 보기"><span class="lgi">?</span> 범례</button><div class="lgbox" role="tooltip"><span><span class="tog" style="width:22px;height:22px">${paw(16)}</span>아직 안 함 (누르면 완료)</span><span><span class="tog doing" style="width:22px;height:22px">${paw(16)}</span>진행 중 (오른쪽 '실제 수업 기록'에서 지정)</span><span><span class="tog on" style="width:22px;height:22px">${paw(16)}</span>수업함 (날짜·요일)</span><span><span class="nx mono">10/23</span>파란 글씨 = 다음 차시 예정일</span><span><span class="pl mono">10/27</span>시간표로 계산한 예정일</span><span><span class="rbadge exam" style="margin:0">시험</span>시험 범위</span><span style="color:var(--bad)">${sic('check',11)} 일정 충돌</span></div></span>`;
+  const tools=legendH+`<button class="btn sm" data-a="help" aria-pressed="${!!U.help}">도움말</button>`;
+  return topbar('진도표',mode+tools)+subjTabs()+strip+`
   <div class="sheetlay ${PH?'withp':''}"><div style="min-width:0">${body}</div>${PH}</div>`;
 }
 
@@ -1043,7 +1077,7 @@ function vCal(){
 /* ---------- 급식 ---------- */
 const ALG={1:'난류',2:'우유',3:'메밀',4:'땅콩',5:'대두',6:'밀',7:'고등어',8:'게',9:'새우',10:'돼지고기',11:'복숭아',12:'토마토',13:'아황산류',14:'호두',15:'닭고기',16:'쇠고기',17:'오징어',18:'조개류',19:'잣'};
 const mainDishes=a=>{const f=a.filter(n=>{const t=n.replace(/\s/g,'');
-    if(/(김치|깍두기|겉절이|석박지)$/.test(t))return false;
+    if(/(김치|깍두기|겉절이|석박지)$/.test(t)||/^(흰죽|흰쌀죽)$/.test(t))return false;
     if(/밥$/.test(t)&&!/(볶음|비빔|덮|김|주먹|초|유부|카레|오므|영양|컵|쌈)밥$/.test(t))return false;return true});return f.length?f:a};
 function vMeal(){const mon=U.mealWeek;const ready=NEIS.key&&NEIS.school;
   const days=[0,1,2,3,4].map(i=>addK(mon,i));
@@ -1288,6 +1322,7 @@ function completeKey(k){const s=SCH.key[k];if(!s)return;const n=SCH.nextN[s.c];i
 const lref=(c,n)=>c+'|'+(L(n)?.id||'');
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,x=t.dataset.x||'';
+  {const sec=t.closest('[data-sub]');if(sec&&sec.dataset.sub!==STORE.cur)useSub(sec.dataset.sub)}
   const [c,nS]=x.split('|'),n=+nS;
   switch(a){
    case 'close':if(e.target===t)closeM();break;
@@ -1407,7 +1442,7 @@ document.addEventListener('change',e=>{const tg=e.target;
     mutate(`${n}차시 ${FIELD_LABEL[f]} 수정`,db=>C.setLesson(db,n,f,v),{norender:true,refs:DB.classes.map(c=>lref(c.id,n))});if(f==='note'&&!U.cOpen.has(n))swapCl(n);return}
   if(tg.dataset.cf){const id=tg.dataset.c,f=tg.dataset.cf,v=tg.value.trim();if((cobj(id)[f]||'')===v)return;
     mutate(`학급 ${f==='name'?'이름':'교과부장'} 수정: ${v||'(빈칸)'}`,db=>C.setClass(db,id,f,v),{norender:true});return}
-  if(tg.dataset.todo!==undefined){quick(db=>{db.todos[+tg.dataset.todo].d=tg.checked});return}
+  if(tg.dataset.todo!==undefined){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos[+ix].d=tg.checked;persist();render()}return}
   if(tg.id==='impFile'&&tg.files[0]){const r=new FileReader();r.onload=()=>openImport(String(r.result));r.readAsText(tg.files[0]);tg.value='';return}
   if(U.av&&(tg.dataset.avall||tg.dataset.avc)){readAssessForm();if(tg.dataset.avall)U.av.classes=tg.checked?'all':DB.classes.map(c=>c.id);
     else{const ids=new Set(U.av.classes==='all'?DB.classes.map(c=>c.id):U.av.classes);tg.checked?ids.add(tg.dataset.avc):ids.delete(tg.dataset.avc);U.av.classes=[...ids]}drawAssess();return}
