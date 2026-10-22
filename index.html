@@ -450,7 +450,7 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
   .app{grid-template-columns:minmax(0,1fr)}
   .rail{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;flex-direction:row;padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));z-index:40;border-right:0;border-top:1px solid var(--line)}
   .brand,.hello,#subjbox{display:none}
-  .railbot{margin:0;flex:none}.helpbtn{flex-direction:column;gap:2px;font-size:10px;padding:6px 8px;border:0;background:none}
+  .railbot{margin:0;flex:none;flex-direction:row}.railbot .helpbtn[data-a=install],.railbot .helpbtn[data-a=recapps]{display:none}.helpbtn{flex-direction:column;gap:2px;font-size:10px;padding:6px 8px;border:0;background:none}
   .nav{flex-direction:row;justify-content:space-around;width:100%}
   .nav button{flex-direction:column;gap:2px;font-size:10px;padding:6px 2px}
   .nav .badge{position:absolute;top:2px;right:2px;margin:0}
@@ -1165,19 +1165,8 @@ function vHome(){
   const todoCard=`<div class="card"><h2>${ic('checkc',18)} 오늘 할 일</h2><ul class="todo">${autos.map(t=>`<li><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
       ${todos.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="td${t.sid}${t.i}" data-todo="${t.sid}:${t.i}" ${t.d?'checked':''}><label for="td${t.sid}${t.i}">${esc(t.t)}</label></li>`).join('')}</ul>
       <form id="todoForm" style="display:flex;gap:6px;margin-top:10px"><input id="todoIn" class="inp" placeholder="할 일 추가" aria-label="할 일 추가"><button class="btn sm">추가</button></form></div>`;
-  /* 카드를 어림 높이대로 짧은 쪽 열에 차례로 놓아 두 열 길이를 비슷하게 맞춘다 */
-  const cards=[
-    {h:todayCard,w:withCls.length?70+Math.max(rows.length,1)*58:0},
-    {h:withCls.length?progCard:'',w:80+progs.reduce((a,p)=>a+80+p.cls.length*28,0)+(nCheck?70:0)},
-    {h:nextCard,w:190},
-    {h:alertsCard,w:60+noCls.length*50+parts.reduce((a,p)=>a+(p.h.alerts?30+p.h.nAlert*56:0),0)},
-    ].filter(c=>c.h);
-  /* 오늘 할 일 + 오늘 급식은 오른쪽 열 맨 아래에 가로로 반반 */
-  const pairW=Math.max(110+(autos.length+todos.length)*26,150);
-  const upW=70+Math.ceil(evs.length/2)*60,col=[[],[]],sumW=[upW,pairW];
-  cards.forEach(c=>{const k=sumW[1]<sumW[0]?1:0;col[k].push(c.h);sumW[k]+=c.w});
-  col[0].push(upCard);
-  col[1].push(`<div class="hpair">${todoCard}${mealCard()}</div>`);
+  /* 고정 배치: 왼쪽 = 오늘의 수업 · 다가오는 일정 · 다음 수업 / 오른쪽 = 교과별 진도 현황 · 오늘 할 일+급식 · 확인이 필요해요 */
+  const col=[[todayCard,upCard,nextCard],[withCls.length?progCard:'',`<div class="hpair">${todoCard}${mealCard()}</div>`,alertsCard]].map(a=>a.filter(Boolean));
   return top+hero+pendBar+(withCls.length?'':setupCard())+`<div class="hmain"><div class="stack">${col[0].join('')}</div><div class="stack">${col[1].join('')}</div></div>`;
 }
 function rowHtml(s,kind){const n=s.n||SCH.nextN[s.c];
@@ -1522,6 +1511,7 @@ function vSet(){const nrec=DB.classes.reduce((a,c)=>a+Object.values(DB.records[c
     <div style="margin-top:10px"><button class="btn pri" data-a="saveterm">학기 · 교시 저장</button></div></div>
   <div class="card" id="clsCard"><h2>학급 <span class="right"><button class="btn sm pri" data-a="addclass">+ 학급 추가</button></span></h2>
     <div class="dlist">${DB.classes.map(c=>`<div class="exc" style="--cc:${ccv(c.id)}"><span class="bar"></span><span><b>${esc(c.name||'(이름 없음)')}</b><small>교과부장 ${esc(c.lead||'-')}</small></span><button class="btn sm" data-a="clsmenu" data-x="${c.id}">관리</button></div>`).join('')||'<p class="muted" style="margin:0">학급이 없어요.</p>'}</div></div>
+  <div class="card"><h2>앱 <span class="sub">설치와 추천 앱</span></h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-a="install">앱으로 설치</button><button class="btn" data-a="recapps">추천 앱 보기</button></div></div>
   <div class="card"><h2>백업</h2><p style="margin:0 0 8px"><span class="tag ${SAVE.ok?'ok':'bad'}">${SAVE.ok?'이 브라우저에 저장됨':'저장 실패'}</span> <span class="mono muted">${esc(SAVE.t)}</span></p>
     <p class="note">기록은 지금 쓰는 브라우저 안에만 저장돼요. 다른 기기와는 동기화되지 않으니 중요한 시점마다 백업을 받아 두세요.</p>
     <p style="margin:10px 0;font-size:13px">학급 <b class="mono">${DB.classes.length}</b> · 차시 <b class="mono">${DB.lessons.length}</b> · 완료 기록 <b class="mono">${nrec}</b> · 결손·교환 <b class="mono">${DB.exc.length}</b> · 평가 <b class="mono">${DB.assess.length}</b></p>
