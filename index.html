@@ -167,7 +167,7 @@ button.sum:hover{border-color:var(--accent)}
 .stamp{color:var(--ok);display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:12px}
 .todo{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .todo li{display:flex;gap:9px;align-items:flex-start;font-size:13px}
-.todo input{margin-top:4px;accent-color:var(--accent)}
+.todo input[type=checkbox]{margin-top:4px;accent-color:var(--accent)}.todo .tdb{border:0;background:none;color:var(--muted);font-size:12px;padding:0 3px;opacity:.55;line-height:1.6}.todo li:hover .tdb{opacity:1}.todo .tdb:hover{color:var(--accent)}.todo .tdedit{align-items:center}
 .todo li.d label{text-decoration:line-through;color:var(--muted)}
 .mini{display:flex;flex-direction:column;gap:6px}
 .mini > div{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px}
@@ -617,6 +617,7 @@ body.touring main{padding-bottom:300px}
 .tag.lg{font-size:12px;padding:2px 11px;border-radius:99px}
 .lrow{--st:var(--accent);display:grid;grid-template-columns:86px minmax(0,1fr) auto;border:1px solid var(--line);border-left:4px solid var(--st);border-radius:10px;background:var(--surface);overflow:hidden;cursor:pointer;text-align:left}
 .lrow+.lrow{margin-top:5px}
+.lrow{min-height:67px}
 .lrow:hover{border-color:var(--st);box-shadow:0 2px 10px rgba(30,50,100,.08)}
 .lrow.check{--st:var(--warn);background:color-mix(in srgb,var(--warn) 7%,var(--surface))}
 .lrow.done{--st:var(--ok)}
@@ -1197,6 +1198,19 @@ function openDday(){const i=ddayInfo();
   <label class="field">이름<input id="ddLabel" class="inp" maxlength="12" value="${esc(i.label)}" placeholder="예: 종업식, 기말고사"></label>
   <label class="field">날짜<input type="date" id="ddDate" value="${i.date}"></label>
   <div class="acts"><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`)}
+function todoLi(sid,i,t,pre){const key=sid+':'+i;
+  if(U.tdEdit===key)return `<li class="tdedit"><form data-tdform="${key}" style="display:flex;gap:6px;flex:1"><input class="inp" id="tdEditIn" value="${esc(t.t)}" aria-label="내용 수정"><button class="btn sm pri">저장</button><button type="button" class="btn sm" data-a="tdcancel">취소</button></form></li>`;
+  return `<li class="${t.d?'d':''}"><input type="checkbox" id="${pre}${sid}${i}" data-todo="${key}" ${t.d?'checked':''}><label for="${pre}${sid}${i}" style="flex:1">${esc(t.t)}</label><button type="button" class="tdb" data-a="tdedit" data-x="${key}" aria-label="수정" title="수정">✎</button><button type="button" class="tdb" data-a="tddel" data-x="${key}" aria-label="삭제" title="삭제">✕</button></li>`}
+function sayTime(done){const h=new Date().getHours(),m=new Date().getMinutes(),t=h*60+m;
+  const P=(a)=>a[(+TK.slice(8)+h)%a.length];
+  if(done)return P(['꼬리가 붕붕~ 오늘도 정말 수고했어요, 멍멍! 쓰담쓰담 해주세요!','헥헥! 오늘 진도 다 깼어요! 칭찬해 주세요, 멍!','와우~ 오늘 수업 끝! 간식 먹어도 되죠? 왈왈!']);
+  if(t<8*60+30)return P(['멍멍! 좋은 아침이에요~ 오늘도 같이 달려요!','일어났어요? 진도깨는 벌써 꼬리 흔들고 있어요, 멍!','아침 산책 다녀온 기분이에요! 오늘도 힘내요, 왈!']);
+  if(t<11*60+30)return P(['킁킁, 오늘 수업 냄새가 솔솔~ 천천히 해요, 멍!','진도깨가 옆에서 같이 챙겨줄게요, 멍! 오늘도 힘내요!','귀 쫑긋! 수업 시간 놓치지 않게 지켜볼게요, 왈!']);
+  if(t<12*60+40)return P(['왈! 배고파졌어요… 점심 먹으러 가요, 멍멍!','꼬르륵… 밥숑 급식 뭐예요? 침이 줄줄~ 왈왈!','점심시간이 다가와요! 꼬리가 저절로 붕붕~ 멍!']);
+  if(t<14*60)return P(['냠냠, 점심은 맛있게 먹었어요? 소화되면 또 힘내요, 멍!','밥 먹고 나니 졸려요~ 하품 하암… 그래도 오후도 파이팅, 멍!']);
+  if(t<16*60)return P(['오후도 꼬리 붕붕! 조금만 더 힘내요, 멍멍!','진도깨는 선생님 곁에 쭉 있을게요, 멍! 오후 수업도 화이팅!','킁킁, 오후 수업도 잘 챙겨볼게요, 왈!']);
+  if(t<17*60+30)return P(['헥헥! 퇴근이 얼마 안 남았어요~ 기뻐서 꼬리가 막 돌아가요, 멍!','헥-헥! 조금만 더 하면 퇴근이에요! 신나요, 왈왈!','퇴근 시간이 코앞이에요! 폴짝폴짝 뛰고 싶어요, 멍멍!']);
+  return P(['오늘도 정말 고생 많았어요, 멍! 푹 쉬어요~ 쓰담쓰담','하루 끝! 집에 가서 꼬리 흔들며 쉬어요, 헥헥~','낑… 아직 안 갔어요? 같이 얼른 퇴근해요, 왈!']);}
 function vHome(){
   const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
   const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
@@ -1220,7 +1234,7 @@ function vHome(){
     <button class="btn pri" data-a="go" data-x="sheet">+ 진도 기록</button></div></div>`;
   /* 배너 */
   const stat=(cls,icn,label,num,unit,attr)=>`<button class="hstat ${cls}" ${attr}><span class="ic">${ic(icn,20)}</span><span><small>${label}</small><b class="mono">${num}<i>${unit}</i></b></span><span class="chv">${ic('chev',16)}</span></button>`;
-  const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${say}</h2><p>${nAct&&!nCheck&&!soon&&withCls.length?'꼬리가 붕붕~ 오늘도 정말 수고했어요, 멍멍! 쓰담쓰담 해주세요!':'진도깨가 옆에서 같이 챙겨줄게요, 멍! 오늘도 힘내요!'}</p></div></div>
+  const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${say}</h2><p>${sayTime(nAct&&!nCheck&&!soon&&withCls.length)}</p></div></div>
     ${withCls.length?`<div class="hstats">${stat('blue','cal','오늘 수업',nAct,'개','data-a="day" data-x="'+TK+'"')}${stat('warn','warn','기록 필요',nCheck,'건','data-a="jump" data-x="'+(nCheck?'pendbox':'todaycard')+'"')}${stat('ok','checkc','완료',nDone,'개','data-a="jump" data-x="todaycard"')}</div>`:''}</div>
     <div class="mascot"><span class="cheer">화이팅!</span>${jdWave(150)}</div></div>`;
   const pendBar=nPend?`<p class="warnbox" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">시간표 변경 확인이 필요해요 (${nPend}건) <button class="btn sm" data-a="go" data-x="tt">확인하기</button></p>`:'';
@@ -1253,9 +1267,9 @@ function vHome(){
     <div class="upgrid">${evs.map(e=>{const [i,c]=EIC[e.kind]||EIC.event;return `<button class="uev" data-a="day" data-x="${e.s}"><span class="ic ${c}">${ic(i,17)}</span><span class="ut"><b>${esc(e.label)}</b><small>${mdw(e.s)} · ${esc(e.meta)}</small></span></button>`}).join('')||'<p class="muted" style="margin:0">다가오는 일정이 없어요.</p>'}</div></div>`;
   const autos=parts.flatMap(({sb,h})=>h.auto.map(a=>multi?`[${subjMain(sb)}] ${a.t}`:a.t));
   const todos=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i})).filter(t=>!t.date||t.date===TK));
-  const todoCard=`<div class="card"><h2>${ic('checkc',18)} 오늘 할 일</h2><ul class="todo">${autos.map(t=>`<li><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
-      ${todos.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="td${t.sid}${t.i}" data-todo="${t.sid}:${t.i}" ${t.d?'checked':''}><label for="td${t.sid}${t.i}">${esc(t.t)}</label></li>`).join('')}</ul>
-      <form id="todoForm" style="display:flex;gap:6px;margin-top:10px"><input id="todoIn" class="inp" placeholder="할 일 추가" aria-label="할 일 추가"><button class="btn sm">추가</button></form></div>`;
+  const todoCard=`<div class="card"><h2>${ic('checkc',18)} 오늘 할 일 · 메모</h2><ul class="todo">${autos.map(t=>`<li><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
+      ${todos.map(t=>todoLi(t.sid,t.i,t,'td')).join('')}</ul>
+      <form id="todoForm" style="display:flex;gap:6px;margin-top:10px"><input id="todoIn" class="inp" placeholder="할 일 · 메모 추가" aria-label="할 일 · 메모 추가"><button class="btn sm">추가</button></form></div>`;
   /* 고정 배치: 왼쪽 = 오늘의 수업 · 다가오는 일정 · 다음 수업 / 오른쪽 = 교과별 진도 현황 · 오늘 할 일+급식 · 확인이 필요해요 */
   const col=[[todayCard,upCard,nextCard],[withCls.length?progCard:'',`<div class="hpair">${todoCard}${mealCard()}</div>`,alertsCard]].map(a=>a.filter(Boolean));
   return top+hero+pendBar+(withCls.length?'':setupCard())+`<div class="hmain"><div class="stack">${col[0].join('')}</div><div class="stack">${col[1].join('')}</div></div>`;
@@ -1515,9 +1529,9 @@ function calBody(){
     ${blk&&blk!=='주말'?`<p class="note">${esc(blk)}라서 수업이 없어요.</p>`:''}
     <div class="sect" style="margin-top:6px">수업 <span style="font-weight:400">· 누르면 완료·결손·교환</span></div>
     <div class="dlist">${ss.length?ss.map(x=>x.row).join(''):'<p class="muted" style="margin:0">수업이 없는 날이에요.</p>'}</div>
-    <div class="sect">이날 할 일</div>
-    <ul class="todo">${tds.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="ctd${t.i}" data-todo="${t.i}" ${t.d?'checked':''}><label for="ctd${t.i}">${esc(t.t)}</label></li>`).join('')||'<li class="muted">없음</li>'}</ul>
-    <form id="calTodo" style="display:flex;gap:6px;margin-top:8px"><input id="ctIn" class="inp" placeholder="할 일 추가" aria-label="이날 할 일 추가"><button class="btn sm">추가</button></form>
+    <div class="sect">이날 할 일 · 메모</div>
+    <ul class="todo">${tds.map(t=>todoLi(STORE.cur,t.i,t,'ctd')).join('')||'<li class="muted">없음</li>'}</ul>
+    <form id="calTodo" style="display:flex;gap:6px;margin-top:8px"><input id="ctIn" class="inp" placeholder="할 일 · 메모 추가" aria-label="이날 할 일 · 메모 추가"><button class="btn sm">추가</button></form>
     <div class="sect">일정 추가</div>
     <form id="evForm" class="inl"><label class="field" style="flex:0 0 120px">종류<select id="evK"><option value="event">학교 행사</option><option value="hol">휴업일 (수업 없음)</option></select></label><label class="field">제목<input id="evT" placeholder="예: 체육대회"></label><button class="btn sm">추가</button></form>
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-a="avnew" data-x="task|${k}">이날 수행평가 추가</button><button class="btn sm" data-a="avnew" data-x="exam|${k}">이날부터 정기시험 추가</button></div></div>`;
@@ -1795,7 +1809,7 @@ const go=v=>{if(v==='tt'){v='cal';U.schedMode='tt'}U.view=v;closeM();neisMsg('')
 function completeKey(k){const s=SCH.key[k];if(!s)return;const n=SCH.nextN[s.c];if(!L(n)){toast('기록할 차시가 없어요. 진도표에 차시를 먼저 추가하세요.');return}
   mutate(`${cn(s.c)} ${n}차시 완료 (${mdw(s.date)})`,db=>C.complete(db,s.c,nextN(db,s.c),s.date),{refs:[s.c+'|'+L(n).id],paw:true,flash:s.c+'|'+n,msg:`${cn(s.c)} ${n}차시 완료 · ${cheer()}`});waveDog()}
 let WVT=null;
-function waveDog(ms=650){const m=document.querySelector('.hero .mwrap');if(!m)return;m.classList.add('wv');clearTimeout(WVT);WVT=setTimeout(()=>{const x=document.querySelector('.hero .mwrap');if(x)x.classList.remove('wv')},ms)}
+function waveDog(ms=260){const m=document.querySelector('.hero .mwrap');if(!m)return;m.classList.add('wv');clearTimeout(WVT);WVT=setTimeout(()=>{const x=document.querySelector('.hero .mwrap');if(x)x.classList.remove('wv')},ms)}
 const lref=(c,n)=>c+'|'+(L(n)?.id||'');
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,x=t.dataset.x||'';
@@ -1832,6 +1846,9 @@ document.addEventListener('click',e=>{
    case 'bdel':{const ids=new Set(U.selRows);U.selRows.clear();U.selCell=null;U.draft=null;U.selRow=null;mutate(`차시 ${ids.size}개 삭제`,db=>{for(let n=db.lessons.length;n>=1;n--)if(ids.has(db.lessons[n-1].id))C.removeLesson(db,n)});break}
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;if(nS==='a')delete l.col;else l.col=+nS},{silent:true});break}
+   case 'tdedit':U.tdEdit=x;render();setTimeout(()=>{const i=$('#tdEditIn');if(i){i.focus();i.select()}},0);break;
+   case 'tdcancel':U.tdEdit=null;render();break;
+   case 'tddel':{const [sid,ix]=x.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos.splice(+ix,1);U.tdEdit=null;persist();render();toast('삭제했어요.')}break}
    case 'tut':startTour();break;
    case 'tourn':tourGo(TOUR.i+(+x));break;
    case 'tourx':endTour();break;
@@ -1951,7 +1968,7 @@ document.addEventListener('change',e=>{const tg=e.target;
     mutate(`${n}차시 ${FIELD_LABEL[f]} 수정`,db=>C.setLesson(db,n,f,v),{norender:true,refs:DB.classes.map(c=>lref(c.id,n))});return}
   if(tg.dataset.cf){const id=tg.dataset.c,f=tg.dataset.cf,v=tg.value.trim();if((cobj(id)[f]||'')===v)return;
     mutate(`학급 ${f==='name'?'이름':'교과부장'} 수정: ${v||'(빈칸)'}`,db=>C.setClass(db,id,f,v),{norender:true});return}
-  if(tg.dataset.todo!==undefined){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos[+ix].d=tg.checked;persist();render()}return}
+  if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos[+ix].d=tg.checked;persist();render()}return}
   if(tg.id==='impFile'&&tg.files[0]){const r=new FileReader();r.onload=()=>openImport(String(r.result));r.readAsText(tg.files[0]);tg.value='';return}
   if(U.av&&(tg.dataset.avall||tg.dataset.avc)){readAssessForm();if(tg.dataset.avall)U.av.classes=tg.checked?'all':DB.classes.map(c=>c.id);
     else{const ids=new Set(U.av.classes==='all'?DB.classes.map(c=>c.id):U.av.classes);tg.checked?ids.add(tg.dataset.avc):ids.delete(tg.dataset.avc);U.av.classes=[...ids]}drawAssess();return}
@@ -2013,6 +2030,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
       persist();closeM();render();toast('교과 정보를 바꿨어요.')}
     else{const terms=shiftTerms(DB.terms,year-(curSub().year||year));const d=emptyDB(sem,terms);d.periods=clone(DB.periods);d.events=clone(DB.events);
       const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
+  if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=$('#tdEditIn').value.trim();U.tdEdit=null;if(sb&&sb.db.todos[+ix]){if(v)sb.db.todos[+ix].t=v;else sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'종업식',date:$('#ddDate').value,init:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:TK}))}
   if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:U.sel}))}
