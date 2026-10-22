@@ -255,7 +255,8 @@ textarea.ie{min-height:28px}
 .nx small{display:block;font-size:11.5px;font-weight:600}
 .cell.next{background:var(--accent-soft)!important}
 .cell .mm{display:block;font-size:11px;color:var(--warn);line-height:1.3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px}
-.cell .cf{position:absolute;top:3px;right:3px;color:var(--bad)}
+.cell .cf{position:absolute;top:3px;right:14px;color:var(--bad)}
+.cell .fold{position:absolute;top:0;right:0;width:0;height:0;border-top:13px solid var(--warn);border-left:13px solid transparent;pointer-events:none}
 .cell.sel{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)!important}
 .cell.also{box-shadow:inset 0 0 0 2px var(--accent);background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--accent-soft) 6px 12px)!important}
 .addrow td{background:var(--surface)!important;padding:8px!important}
@@ -1048,8 +1049,9 @@ function openDday(){const i=ddayInfo();
   <label class="field">날짜<input type="date" id="ddDate" value="${i.date}"></label>
   <div class="acts"><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`)}
 function vHome(){
-  const multi=STORE.subjects.length>1;
-  const parts=STORE.subjects.map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
+  const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
+  const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
+  const multi=parts.length>1;
   const withCls=parts.filter(p=>p.h.hasCls);
   const sum=k=>withCls.reduce((a,p)=>a+p.h[k],0);
   const nAct=sum('nAct'),nDone=sum('nDone'),nCheck=sum('nCheck'),nPend=sum('nPend');
@@ -1196,7 +1198,7 @@ function cellHtml(c,n){const v=rec(DB,c.id,n),nxt=SCH.nextN[c.id]===n,pl=SCH.pla
   const cf=v?.done&&SCH.conflicts.some(x=>x.c===c.id&&x.n===n);
   const doing=!v?.done&&!!v?.doing;
   const right=doing?`<span class="dg mono">진행 중<small>${pl?`${md(pl.date)} (${wd(pl.date)})`:'&nbsp;'}</small></span>`:v?.done?`<span class="dt mono">${md(v.date)}<small>(${wd(v.date)})</small></span>`:pl?`<span class="${nxt?'nx':'pl'} mono">${md(pl.date)}<small>(${wd(pl.date)}) ${pl.p}교시</small></span>`:nxt?'<span class="nx">다음</span>':'';
-  return `<td class="cell ${v?.done?'done':doing?'doing':nxt?'next':''} ${sel?'sel':also?'also':''} ${U.flash===c.id+'|'+n?'justdone':''}" style="--cc:${ccv(c.id)}" data-a="sel" data-x="${c.id}|${n}">${cf?`<span class="cf" title="일정 충돌">${sic('check',12)}</span>`:''}<div class="in"><button class="tog" data-a="tog" data-x="${c.id}|${n}" aria-label="${esc(c.name)} ${n}차시 ${v?.done?'완료 취소':doing?'진행 중 → 완료로 표시':'완료로 표시'}">${paw(20)}</button>${right}</div>${v?.memo?`<span class="mm" title="${esc(v.memo)}">${esc(v.memo)}</span>`:''}</td>`}
+  return `<td class="cell ${v?.done?'done':doing?'doing':nxt?'next':''} ${sel?'sel':also?'also':''} ${U.flash===c.id+'|'+n?'justdone':''}" style="--cc:${ccv(c.id)}" data-a="sel" data-x="${c.id}|${n}">${cf?`<span class="cf" title="일정 충돌">${sic('check',12)}</span>`:''}<div class="in"><button class="tog" data-a="tog" data-x="${c.id}|${n}" aria-label="${esc(c.name)} ${n}차시 ${v?.done?'완료 취소':doing?'진행 중 → 완료로 표시':'완료로 표시'}">${paw(20)}</button>${right}</div>${v?.memo?`<span class="fold" title="${esc(v.memo)}"></span>`:''}</td>`}
 function clsHead(c,lead){const d=SCH.nextN[c.id]-1;const ex=nextExam(DB,c.id);const r=ex?examReach(DB,SCH,ex,c.id):null;
   return `<th class="cls" style="--cc:${ccv(c.id)}"><div class="hd"><input class="ie" data-cf="name" data-c="${c.id}" value="${esc(c.name)}" placeholder="0-0" aria-label="학급 이름" size="5"><button class="rm" data-a="clsmenu" data-x="${c.id}" aria-label="${esc(c.name)} 관리" title="학급 관리">⋯</button></div>
   <input class="ie lead" data-cf="lead" data-c="${c.id}" value="${esc(c.lead)}" placeholder="교과부장 이름" aria-label="교과부장">
@@ -1274,8 +1276,9 @@ function excRow(e,sbId='',pre=''){const on=e.state==='active';
   const t=e.type==='absence'?`${mdw(e.date)} ${e.p}교시 결손 · ${esc(e.reason)}`:e.type==='extra'?`${mdw(e.date)} ${e.p}교시 수업 보강`:`${md(e.date)} ${e.p}교시 → ${mdw(e.toDate)} ${e.toP}교시 교환`;
   return `<div class="exc ${on?'':'off'}" style="--cc:${ccv(e.c)}" ${sbId?`data-sub="${sbId}"`:''}><span class="bar"></span><span><b>${pre?`<small class="muted">${esc(pre)}</small> `:''}${esc(cn(e.c))} ${t}</b><small>${esc(e.note||'')}${e.note?' · ':''}${esc(e.src)} · ${esc(e.at)} 등록${on?'':' · 취소됨'}</small></span>
   ${on?`<button class="btn sm" data-a="excoff" data-x="${e.id}">${EXN[e.type]} 취소</button>`:`<button class="btn sm" data-a="excon" data-x="${e.id}">다시 적용</button>`}</div>`}
-const schedSeg=()=>`<span class="seg" role="group" aria-label="보기"><button data-a="sm" data-x="cal" aria-pressed="${U.schedMode==='cal'}">캘린더</button><button data-a="sm" data-x="tt" aria-pressed="${U.schedMode==='tt'}">시간표</button></span>`;
+const schedSeg=()=>`<span class="seg" role="group" aria-label="보기"><button data-a="sm" data-x="tt" aria-pressed="${U.schedMode==='tt'}">시간표</button><button data-a="sm" data-x="cal" aria-pressed="${U.schedMode==='cal'}">캘린더</button></span>`;
 /* 주간 시간표는 교사의 시간표 하나: 같은 학년도·학기의 모든 교과를 한꺼번에 보여준다 */
+const subPre=(sb,subs)=>subs.length>1?(subs.filter(z=>z.subj===sb.subj).length>1?subjMain(sb):(sb.subj||subjMain(sb))):'';
 function ttSubs(){const cs=curSub();const r=STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0));return r.length?r:[cs]}
 function vTT(){
   const subs=ttSubs(),multi=subs.length>1;
@@ -1284,7 +1287,7 @@ function vTT(){
   /* 교과별로 따로 계산해서 한 표에 모은다 (withSub: 그 교과의 학급 이름·색으로 그림) */
   const filt=[],cellH={},pends=[],confs=[],emptys=[],exAll=[],ttBtns=[];
   const optsAll=[];subs.forEach(sb=>withSub(sb,()=>{
-    const pre=multi?(subs.filter(z=>z.subj===sb.subj).length>1?subjMain(sb):(sb.subj||subjMain(sb))):'';
+    const pre=subPre(sb,subs);
     DB.classes.forEach(c=>filt.push({id:sb.id+'|'+c.id,html:`<button class="chip ttf" data-a="ttc" data-x="${sb.id}|${c.id}" aria-pressed="@@${sb.id}|${c.id}"><span class="dot" style="background:${ccv(c.id)}"></span>${pre?`<small class="muted">${esc(pre)}</small> `:''}${esc(cn(c.id))}</button>`}));
     days.forEach(k=>(SCH.by[k]||[]).forEach(x=>{if(!['plan','check','done','absent','moved'].includes(x.status))return;
       (cellH[k+'|'+x.p]=cellH[k+'|'+x.p]||[]).push({id:sb.id+'|'+x.c,html:sessChip(x,true,pre,`data-sub="${sb.id}"`)})}));
@@ -1324,31 +1327,45 @@ const filtEv=k=>eventsOn(DB,k).filter(e=>e.kind==='hol'||U.flt[e.kind]!==false);
 const filtS=k=>(SCH.by[k]||[]).filter(s=>U.flt[kindOf(s)]);
 function vCal(){
   const chips=[['done','완료'],['plan','예정·확인 필요'],['off','결손·교환'],['event','학교 행사'],['task','수행평가'],['exam','정기시험']].map(([k,l])=>`<button class="chip" data-a="flt" data-x="${k}" aria-pressed="${U.flt[k]}">${l}</button>`).join('');
-  const up=DB.assess.filter(a=>(a.end||a.start)>=TK).sort((a,b)=>a.start<b.start?-1:1).slice(0,5);
-  const ddays=`<div class="astrip">${up.map(achip).join('')}<button class="btn sm" data-a="avnew">+ 평가 추가</button></div>`;
-  let grid,title;
-  if(U.calMode==='month'){const {y,m}=U.month,first=new Date(y,m,1),start=addDays(first,-first.getDay());title=`${y}. ${pad(m+1)}`;
-    let cells='';for(let i=0;i<42;i++){const dt=addDays(start,i),k=key(dt);if(i>=35&&dt.getMonth()!==m)break;
-      const hol=eventsOn(DB,k).some(e=>e.kind==='hol')||dt.getDay()===0;
-      cells+=`<button class="day ${dt.getMonth()!==m?'out':''} ${k===TK?'today':''} ${k===U.sel?'sel':''} ${hol?'hol':''}" data-a="day" data-x="${k}" aria-label="${md(k)}"><span class="dn mono">${dt.getDate()}</span>${filtEv(k).map(e=>`<span class="ev ${e.kind}">${esc(e.label)}</span>`).join('')}<span class="pips">${filtS(k).map(s=>`<span class="pip ${s.status==='done'?'':s.status}" style="--cc:${ccv(s.c)}">${esc(cn(s.c))}</span>`).join('')}</span></button>`}
+  /* 모든 교과를 한 캘린더에: 교과마다 자기 학기 기간(1학기 3~7월, 2학기 8~1월 등) 안에서만 수업이 나온다 */
+  const subs=STORE.subjects,multi=subs.length>1;
+  let dates,grid,title;
+  if(U.calMode==='month'){const {y,m}=U.month,first=new Date(y,m,1),st=addDays(first,-first.getDay());dates=[];for(let i=0;i<42;i++){const dt=addDays(st,i);if(i>=35&&dt.getMonth()!==m)break;dates.push(key(dt))}}
+  else dates=[0,1,2,3,4].map(i=>addK(U.week,i));
+  const DD={};[...dates,U.sel].forEach(k=>DD[k]={evs:[],ss:[]});
+  const seen={};
+  subs.forEach(sb=>withSub(sb,()=>{const pre=subPre(sb,subs);
+    Object.keys(DD).forEach(k=>{
+      eventsOn(DB,k).forEach(e=>{const id=[k,e.kind,e.label].join('|');if(seen[id])return;seen[id]=1;DD[k].evs.push({e,sid:sb.id})});
+      (SCH.by[k]||[]).forEach(s=>DD[k].ss.push({sb,s,pre,
+        chip:sessChip(s,true,pre,`data-sub="${sb.id}"`),
+        pip:`<span class="pip ${s.status==='done'?'':s.status}" style="--cc:${ccv(s.c)}" title="${esc(pre)}">${esc(cn(s.c))}</span>`,
+        row:`<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center">${sessChip(s,true,pre,`data-sub="${sb.id}"`)}<span style="font-size:12px;min-width:0">${s.p}교시 · ${stag(s.status)} ${s.n?`${s.n}차시 ${esc(lname(s.n))}`:s.status==='moved'?moveDest(s):s.status==='absent'?esc((excOf(s)?.reason||'')+' '+(excOf(s)?.note||'')):''}</span></div>`}))})}));
+  const evVis=k=>DD[k].evs.filter(x=>x.e.kind==='hol'||U.flt[x.e.kind]!==false);
+  const ssVis=k=>DD[k].ss.filter(x=>U.flt[kindOf(x.s)]).sort((a,b)=>a.s.p-b.s.p);
+  if(U.calMode==='month'){const {y,m}=U.month;title=`${y}. ${pad(m+1)}`;
+    let cells='';dates.forEach(k=>{const dt=D(k);
+      const hol=DD[k].evs.some(x=>x.e.kind==='hol')||dt.getDay()===0;
+      cells+=`<button class="day ${dt.getMonth()!==m?'out':''} ${k===TK?'today':''} ${k===U.sel?'sel':''} ${hol?'hol':''}" data-a="day" data-x="${k}" aria-label="${md(k)}"><span class="dn mono">${dt.getDate()}</span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}<span class="pips">${ssVis(k).map(x=>x.pip).join('')}</span></button>`});
     grid=`<div class="calg">${[...WD].map(w=>`<div class="wd">${w}</div>`).join('')}${cells}</div>`;
   }else{title=`${md(U.week)} ~ ${md(addK(U.week,4))}`;
-    grid=`<div class="weekg">${[0,1,2,3,4].map(i=>{const k=addK(U.week,i);return `<div class="wcol ${k===TK?'today':''} ${k===U.sel?'sel':''}" data-a="day" data-x="${k}"><span class="wh">${wd(k)} <b class="mono">${md(k)}</b></span>${filtEv(k).map(e=>`<span class="ev ${e.kind}">${esc(e.label)}</span>`).join('')}${filtS(k).map(s=>sessChip(s)).join('')}</div>`}).join('')}</div>`;}
-  const k=U.sel,ss=SCH.by[k]||[],evs=eventsOn(DB,k),tds=DB.todos.map((t,i)=>({...t,i})).filter(t=>t.date===k);
-  const active=ss.filter(s=>['plan','check','done'].includes(s.status));const blk=dayBlock(DB,k);
+    grid=`<div class="weekg">${dates.map(k=>`<div class="wcol ${k===TK?'today':''} ${k===U.sel?'sel':''}" data-a="day" data-x="${k}"><span class="wh">${wd(k)} <b class="mono">${md(k)}</b></span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}${ssVis(k).map(x=>x.chip).join('')}</div>`).join('')}</div>`;}
+  const k=U.sel,evs=DD[k].evs,ss=DD[k].ss.sort((a,b)=>a.s.p-b.s.p),tds=DB.todos.map((t,i)=>({...t,i})).filter(t=>t.date===k);
+  const actSubs=[...new Map(ss.filter(x=>['plan','check','done'].includes(x.s.status)).map(x=>[x.sb.id,x.sb])).values()];
+  const blk=subs.length&&subs.every(sb=>dayBlock(sb.db,k))?dayBlock(subs[0].db,k):null;
   const KIND={hol:'휴업·휴일',exam:'정기시험',task:'수행평가',event:'학교 행사'};
-  const det=`<div class="card"><h2>${mdw(k)} <span class="sub">${k<TK?'지난 날':k===TK?'오늘':dday(k)+'일 뒤'}</span>${active.length?`<span class="right"><button class="btn sm bad" data-a="absday" data-x="${k}">이날 수업 결손 처리</button></span>`:''}</h2>
-    ${evs.length?`<div class="dlist" style="margin-bottom:6px">${evs.map(e=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="ev ${e.kind}">${KIND[e.kind]}</span><span>${esc(e.label)}</span>${e.src?`<span class="muted" style="font-size:11px">${esc(e.src)}</span>`:''}${e.assessId?`<button class="btn sm" style="margin-left:auto" data-a="avedit" data-x="${e.assessId}">수정</button>`:e.id?`<button class="btn sm bad" style="margin-left:auto" data-a="evdel" data-x="${e.id}">삭제</button>`:''}</div>`).join('')}</div>`:''}
+  const det=`<div class="card"><h2>${mdw(k)} <span class="sub">${k<TK?'지난 날':k===TK?'오늘':dday(k)+'일 뒤'}</span>${actSubs.length?`<span class="right" style="display:flex;gap:6px;flex-wrap:wrap">${actSubs.map(sb=>`<button class="btn sm bad" data-sub="${sb.id}" data-a="absday" data-x="${k}">${multi?esc(subPre(sb,subs))+' ':''}이날 수업 결손 처리</button>`).join('')}</span>`:''}</h2>
+    ${evs.length?`<div class="dlist" style="margin-bottom:6px">${evs.map(({e,sid})=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="ev ${e.kind}">${KIND[e.kind]}</span><span>${esc(e.label)}</span>${e.src?`<span class="muted" style="font-size:11px">${esc(e.src)}</span>`:''}${e.assessId?`<button class="btn sm" style="margin-left:auto" data-sub="${sid}" data-a="avedit" data-x="${e.assessId}">수정</button>`:e.id?`<button class="btn sm bad" style="margin-left:auto" data-sub="${sid}" data-a="evdel" data-x="${e.id}">삭제</button>`:''}</div>`).join('')}</div>`:''}
     ${blk&&blk!=='주말'?`<p class="note">${esc(blk)}라서 수업이 없어요.</p>`:''}
     <div class="sect" style="margin-top:6px">수업 <span style="font-weight:400">· 누르면 완료·결손·교환</span></div>
-    <div class="dlist">${ss.length?ss.map(s=>`<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center">${sessChip(s)}<span style="font-size:12px;min-width:0">${s.p}교시 · ${stag(s.status)} ${s.n?`${s.n}차시 ${esc(lname(s.n))}`:s.status==='moved'?moveDest(s):s.status==='absent'?esc((excOf(s)?.reason||'')+' '+(excOf(s)?.note||'')):''}</span></div>`).join(''):'<p class="muted" style="margin:0">수업이 없는 날이에요.</p>'}</div>
+    <div class="dlist">${ss.length?ss.map(x=>x.row).join(''):'<p class="muted" style="margin:0">수업이 없는 날이에요.</p>'}</div>
     <div class="sect">이날 할 일</div>
     <ul class="todo">${tds.map(t=>`<li class="${t.d?'d':''}"><input type="checkbox" id="ctd${t.i}" data-todo="${t.i}" ${t.d?'checked':''}><label for="ctd${t.i}">${esc(t.t)}</label></li>`).join('')||'<li class="muted">없음</li>'}</ul>
     <form id="calTodo" style="display:flex;gap:6px;margin-top:8px"><input id="ctIn" class="inp" placeholder="할 일 추가" aria-label="이날 할 일 추가"><button class="btn sm">추가</button></form>
     <div class="sect">일정 추가</div>
     <form id="evForm" class="inl"><label class="field" style="flex:0 0 120px">종류<select id="evK"><option value="event">학교 행사</option><option value="hol">휴업일 (수업 없음)</option></select></label><label class="field">제목<input id="evT" placeholder="예: 체육대회"></label><button class="btn sm">추가</button></form>
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn sm" data-a="avnew" data-x="task|${k}">이날 수행평가 추가</button><button class="btn sm" data-a="avnew" data-x="exam|${k}">이날부터 정기시험 추가</button></div></div>`;
-  return topbar('시간표·캘린더',schedSeg())+ddays+`<div class="grid callay"><div class="card">
+  return topbar('시간표·캘린더',schedSeg())+`<div class="grid callay"><div class="card">
    <div class="calbar"><span class="seg" role="group" aria-label="보기"><button data-a="calm" data-x="month" aria-pressed="${U.calMode==='month'}">월간</button><button data-a="calm" data-x="week" aria-pressed="${U.calMode==='week'}">주간</button></span>
    <button class="btn sm" data-a="mon" data-x="-1" aria-label="이전">‹</button><span class="ttl mono">${title}</span><button class="btn sm" data-a="mon" data-x="1" aria-label="다음">›</button><button class="btn sm" data-a="today">오늘</button>
    <div class="filters">${chips}</div></div>${grid}</div><div class="stack">${det}</div></div>`;
@@ -1636,7 +1653,7 @@ document.addEventListener('click',e=>{
      break}
    case 'skipgo':{const [sc,sn,mode]=x.split('|'),N=+sn,f=SCH.nextN[sc];const ns=mode==='range'?Array.from({length:N-f+1},(_,i)=>f+i):[N];
      mutate(`${cn(sc)} ${ns.length>1?f+'~'+N:N}차시 완료`,db=>ns.forEach(k=>C.complete(db,sc,k,suggestDateDb(db,sc,k))),{refs:ns.map(k=>lref(sc,k)),paw:true,flash:sc+'|'+N});break}
-   case 'sel':if(e.target.closest('.ie'))break;fillDraft(c,n);render();break;
+   case 'sel':if(e.target.closest('.ie'))break;if(U.selCell&&U.selCell.c===c&&U.selCell.n===n){U.selCell=null;U.draft=null;U.selRow=null;render();break}fillDraft(c,n);render();break;
    case 'row':closeM();fillDraft(DB.classes[0].id,+x,DB.classes.slice(1).map(k=>k.id));U.draft.done=true;U.draft.doing=false;render();break;
    case 'actagx':U.acTags.splice(+x,1);acDraw();$('#acNames')&&$('#acNames').focus();break;
    case 'acfocus':$('#acNames')&&$('#acNames').focus();break;
@@ -1655,7 +1672,7 @@ document.addEventListener('click',e=>{
      modal(`<h3>'${esc(sb.name)}' 교과를 삭제할까요?</h3><p class="warnbox">이 교과의 학급 ${sb.db.classes.length}개 · 차시 ${sb.db.lessons.length}개 · 완료 기록 ${nrec}개 · 시간표가 모두 사라지고 되돌릴 수 없어요. 먼저 설정에서 백업을 받아 두세요.</p><div class="acts"><button class="btn" data-a="close">취소</button><button class="btn badfill" data-a="subjdelgo" data-x="${x}">삭제</button></div>`);break}
    case 'subjdelgo':{const i=STORE.subjects.findIndex(k=>k.id===x);if(i<0||STORE.subjects.length<2)break;if(STORE.cur===x){useSub(STORE.subjects[i?0:1].id)}delete HIST[x];STORE.subjects=STORE.subjects.filter(k=>k.id!==x);persist();closeM();render();toast('교과를 삭제했어요.');break}
    case 'closep':U.selCell=null;U.draft=null;U.selRow=null;render();break;
-   case 'lrow':U.selCell=null;U.draft=null;U.selRow=+x;render();break;
+   case 'lrow':if(!U.selCell&&U.selRow===+x){U.selRow=null;render();break}U.selCell=null;U.draft=null;U.selRow=+x;render();break;
    case 'ced':U.cOpen.add(+x);swapCl(+x);break;
    case 'dd':U.draft.done=x==='1';U.draft.doing=x==='2';if(!draftItems().length)render();else commitDraft(false);break;
    case 'mode':U.sheetMode=x;if(x==='class'&&U.selCell)U.sheetClass=U.selCell.c;render();break;
@@ -1763,6 +1780,7 @@ document.addEventListener('focusout',e=>{const tg=e.target;
 document.addEventListener('input',e=>{const tg=e.target;
   if(tg.id==='acNames'){const v=tg.value;if(/[,，\s]/.test(v)){const parts=v.split(/[,，\s]/),rest=parts.pop();acAdd(parts.join(','));tg.value=rest}return}
   if(tg.classList.contains('ie')&&tg.tagName==='TEXTAREA')autosize(tg);
+  if(tg.dataset&&tg.dataset.lf==='topic'){const n=+tg.dataset.n;if(L(n)&&(U.selRow===n||U.selCell?.n===n)){const pp=document.querySelector('.panel .ph p');if(pp)pp.textContent=(tg.value.trim()||`${n}차시 (주제 미입력)`)+(U.selCell&&L(n).pages?` · p.${L(n).pages}`:'')}}
   if(U.abs&&tg.id==='absNote'){U.abs.note=tg.value;return}
   if(U.abs&&tg.dataset.abs){tg.checked?U.abs.keys.add(tg.dataset.abs):U.abs.keys.delete(tg.dataset.abs);drawAbsence();return}
   if(U.abs&&tg.id==='absRev'){U.abs.revert=tg.checked;drawAbsence();return}
