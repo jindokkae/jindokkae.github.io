@@ -363,16 +363,17 @@ textarea.ie{min-height:28px}
 table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;table-layout:fixed}
 .tt th{font-size:12px;color:var(--muted);font-weight:600;padding:2px}
 .tt th.today{color:var(--accent)}
-.tt td{height:54px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
+.tt td{height:40px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
 .tt td.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));outline:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
 .tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}@media (hover:none){.tt th .dabs{visibility:visible}}
 .tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
 .tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
 .tt thead th .btn{opacity:0;transition:opacity .15s}.tt thead th:hover .btn{opacity:1}
-.tc{display:flex;flex-direction:column;gap:1px;width:100%;text-align:left;padding:4px 7px 4px 8px;border-radius:8px;border:1px solid color-mix(in srgb,var(--cc) 38%,var(--line));border-left:5px solid var(--cc);background:color-mix(in srgb,var(--cc) 13%,var(--surface));min-width:0;line-height:1.25}
+.tc{display:flex;flex-direction:column;gap:0;width:100%;text-align:left;padding:3px 7px 3px 8px;border-radius:8px;border:1px solid color-mix(in srgb,var(--cc) 38%,var(--line));border-left:5px solid var(--cc);background:color-mix(in srgb,var(--cc) 13%,var(--surface));min-width:0;line-height:1.25}
 .tc:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(30,50,100,.12)}
 .tc1{display:flex;align-items:center;gap:5px;min-width:0}.tc1 b{font-size:14px}.tc1 small{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}.tc1 i{font-style:normal;font-size:10px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:0 4px}
 .tc .tci{display:inline-grid;color:var(--muted)}.tc .tcs{margin-left:auto;display:inline-grid}
+.tc .tcp{font-style:normal;font-size:10px;font-weight:700;color:var(--muted)}
 .tc2{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px}.tc2 em{font-style:normal;font-weight:700}
 .tc.done .tcs{color:var(--ok)}.tc.plan{background:color-mix(in srgb,var(--cc) 7%,var(--surface))}.tc.plan .tcs{color:var(--accent)}
 .tc.now{box-shadow:0 0 0 2px var(--accent)}
@@ -1155,9 +1156,9 @@ const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="no
 const sessChip=(s,showN=true,pre='',attr='')=>`<button class="sess ${sk(s)} ${s.nop?'nop':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'진도 없음':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}">${sic(sk(s),11)}<span>${pre?`<small>${esc(pre)}</small> `:''}${esc(cn(s.c))}${s.extra?' <small>보강</small>':''}${showN&&s.n&&s.status!=='check'?` <small>${s.n}차시</small>`:''}</span></button>`;
 const EXN={absence:'결손',move:'교환',extra:'보강'};
 const ttChip=(s,sb,pre,attr)=>{const nowS=s.status==='plan'&&isNow(DB,s.date,s.p);const dead=s.status==='absent'||s.status==='moved';
-  return `<button class="tc ${sk(s)} ${s.nop?'nop':''} ${nowS?'now':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${STM[sk(s)][0]}${s.extra?' · 수업 보강':''}${!dead&&s.n?' · '+esc(lname(s.n)):''}">
-    <span class="tc1"><span class="tci">${sjic(sb.icon,13)}</span><b>${esc(cn(s.c))}</b>${s.extra?'<i>보강</i>':''}${!dead&&s.n&&s.status!=='check'?`<small>${s.n}차시</small>`:''}<span class="tcs">${sic(sk(s),13)}</span></span>
-    <span class="tc2">${s.status==='skipped'?'기록 없음':dead?(s.status==='absent'?esc(excOf(s)?.reason||'결손'):'교환됨'):(pre?`<em>${esc(pre)}</em> `:'')+esc(s.n?lname(s.n):'')}</span></button>`};
+  const sub=s.status==='skipped'?'기록 없음':s.status==='absent'?(excOf(s)?.reason||'결손'):s.status==='moved'?'교환됨':'';
+  return `<button class="tc ${sk(s)} ${s.nop?'nop':''} ${nowS?'now':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'진도 없음':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}${!dead&&s.n?' · '+esc(lname(s.n)):''}">
+    <span class="tc1">${pre?`<em class="tcp">${esc(pre)}</em>`:''}<b>${esc(cn(s.c))}</b>${s.extra?'<i>보강</i>':''}${!dead&&s.n&&s.status!=='check'&&s.status!=='skipped'?`<small>${s.n}차시</small>`:''}<span class="tcs">${sic(sk(s),13)}</span></span>${sub?`<span class="tc2">${esc(sub)}</span>`:''}</button>`};
 
 /* ---- 렌더 ---- */
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
@@ -1326,10 +1327,12 @@ function homeSub(sb){
   const pend=DB.inbox.filter(i=>i.state==='pending'),conf=SCH.conflicts;
   const sq=`var(--c${Math.max(0,STORE.subjects.findIndex(x=>x.id===sb.id))%PALETTE+1})`;
   /* 오늘의 수업 목록 */
-  const rows=tday.map(s=>{const k=s.status==='plan'&&isNow(DB,TK,s.p)?'now':sk(s),[lab,tg]=HST[k],n=s.n||SCH.nextN[s.c],dead=s.status==='absent'||s.status==='moved';
+  const dseen={},dsh={};
+  const rows=tday.map(s=>{let ovr=false;if(s.status==='plan'&&!s.doing&&!dseen[s.c]){const v0=rec(DB,s.c,SCH.nextN[s.c]);if(v0&&v0.doing&&!v0.done){ovr=true;dsh[s.c]=Math.max(0,(s.n||0)-SCH.nextN[s.c])}}if(['plan','check','done'].includes(s.status))dseen[s.c]=1;
+    const k=ovr?'doing':s.status==='plan'&&isNow(DB,TK,s.p)?'now':sk(s),[lab,tg]=HST[k],n=ovr?SCH.nextN[s.c]:s.status==='plan'&&dsh[s.c]&&s.n?s.n-dsh[s.c]:s.n||SCH.nextN[s.c],dead=s.status==='absent'||s.status==='moved';
     const sub2=s.status==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:s.status==='moved'?moveDest(s):esc(lname(n));
     const pawb=dead?'':s.status==='done'?`<button class="tog on" data-a="uncomplete" data-x="${s.c}|${s.n}" title="완료 취소" aria-label="${esc(cn(s.c))} ${s.p}교시 완료 취소">${paw(20)}</button>`
-      :`<button class="tog" data-a="done" data-x="${s.key}" title="수업 완료로 기록" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
+      :`<button class="tog ${k==='doing'?'doing':''}" data-a="done" data-x="${s.key}" title="${k==='doing'?'진행 중인 수업을 완료로 기록':'수업 완료로 기록'}" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
     return {p:s.p,html:`<div class="lrow ${k}" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0">
       <div class="tm"><b>${s.p}교시</b><span class="mono">${PT(s.p)}~${endT(s.p)}</span></div>
       <div class="bd"><span class="sq" title="${esc(cn(s.c))}">${sjic(sb.icon,15)}</span><div class="tx"><span class="l1"><b>${esc(cn(s.c))}</b><small>${esc(subjMain(sb))}${dead?'':` · ${n}차시`}</small>${s.movedIn?`<span class="tag gray">${sic('moved',11)} ${s.from.p}교시에서 교환</span>`:''}</span><span class="tp">${sub2}</span></div></div>
@@ -1345,8 +1348,8 @@ function homeSub(sb){
   const prog=DB.classes.length&&total?{sbId:sb.id,icon:sb.icon,name:subjMain(sb),meta:subjMeta(sb),sq,done:lead,total,pct:Math.round(lead/total*100),nCheck:checks.length,
     cls:DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return {name:cn(c.id),d,gap:lead-d,color:ccv(c.id)}})}:null;
   /* 다음 수업 */
-  let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan');if(f){const les=L(f.n)||{};
-    nx={date:k,p:f.p,key:f.key,sbId:sb.id,cn:cn(f.c),subj:subjMain(sb),n:f.n,topic:lname(f.n),pages:les.pages||'',materials:les.materials||'',note:les.note||'',t1:PT(f.p),t2:endT(f.p),now:isNow(DB,k,f.p)}}}
+  let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan');if(f){const v0=rec(DB,f.c,SCH.nextN[f.c]),dg=!!(v0&&v0.doing&&!v0.done),fn=dg?SCH.nextN[f.c]:f.n,les=L(fn)||{};
+    nx={date:k,p:f.p,key:f.key,sbId:sb.id,cn:cn(f.c),subj:subjMain(sb),n:fn,doing:dg||!!f.doing,topic:lname(fn),pages:les.pages||'',materials:les.materials||'',note:les.note||'',t1:PT(f.p),t2:endT(f.p),now:isNow(DB,k,f.p)}}}
   /* 다가오는 일정 */
   const evs=allEvents(DB).filter(e=>(e.e||e.s)>=TK).map(e=>{const a=e.assessId?DB.assess.find(x=>x.id===e.assessId):null;
     const tg=a?(a.classes==='all'?'전체 학급':a.classes.map(cn).join(', ')):'';
@@ -1693,9 +1696,9 @@ function ttBody(){
   <div class="grid ttlay ${pends.length?'':'solo'}"><div class="stack">
     <div class="card"><h2>주간 시간표 <span class="sub">${multi?'모든 교과 · ':''}칸을 누르면 완료·결손·교환을 처리하고, 빈 칸을 누르면 수업 보강을 추가해요</span></h2>
       <div class="calbar"><button class="btn sm" data-a="ttw" data-x="-1" aria-label="이전 주" ${mon<=SR.mlo?'disabled':''}>‹</button><span class="ttl mono">${md(days[0])} ~ ${md(days[4])}</span><button class="btn sm" data-a="ttw" data-x="1" aria-label="다음 주" ${mon>=SR.mhi?'disabled':''}>›</button><button class="btn sm" data-a="ttw" data-x="0" ${mon===mondayOf(TK)||TK<SR.lo||TK>SR.hi?'disabled':''}>이번 주</button>
-        <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div></div>
+        <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div><span class="lgd"><button type="button" class="btn sm lgb" aria-label="범례 보기"><span class="lgi">?</span> 범례</button><div class="lgbox" role="tooltip">${['done','doing','plan','check','absent','moved','skipped'].map(x=>`<span>${stag(x)}</span>`).join('')}</div></span></div>
       <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><div class="dabw">${blockOf(k)?'':`<button class="btn sm mobhide dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</div><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="legend" style="margin:10px 0 0">${['done','doing','plan','check','absent','moved','skipped'].map(s=>`<span>${stag(s)}</span>`).join('')}<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${ttBtns.join('')}</span></div></div>
+      <div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-top:10px">${ttBtns.join('')}</div></div>
     <div class="card"><h2>결손 · 교환 · 보강 기록 <span class="sub">월별로 확인해요 · 취소하면 목록에서 사라져요</span></h2>
       ${excMonths}
       <div class="excl">${exsM.map(e=>e.html).join('')||'<p class="muted" style="margin:0">기록이 없어요. 시간표 칸을 눌러 결손이나 교환을, 빈 칸을 눌러 보강을 등록하세요.</p>'}</div></div>
