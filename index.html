@@ -1279,6 +1279,7 @@ function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
   <label class="field">학년<select id="sjGrade" class="inp"><option value="">-</option>${[1,2,3].map(g=>`<option value="${g}" ${sb&&String(sb.grade)===String(g)?'selected':''}>${g}학년</option>`).join('')}</select></label></div>
   <label class="field">교과<input id="sjName" class="inp" autofocus maxlength="20" value="${sb?esc(sb.subj):''}" placeholder="예: 한국사, 통합사회"></label>
   <div class="field"><span>아이콘</span><input type="hidden" id="sjIcon" value="${sb&&sb.icon||'book'}"><div class="sjicons">${Object.entries(SJI).map(([k,v])=>`<button type="button" data-a="sjicon" data-x="${k}" aria-pressed="${(sb&&sb.icon||'book')===k}" title="${v[0]}">${sjic(k,20)}</button>`).join('')}</div></div>
+  ${sb?`<label class="field"><span>진도 기록 시작일 <span class="muted">(선택)</span></span><input id="sjTrack" class="inp" type="date" value="${sb.db.trackFrom||''}" style="max-width:220px"><span class="muted" style="font-size:12px">이 날 전의 수업은 기록이 없어도 '확인 필요'로 보지 않고, 차시 예정일도 이 날부터 계산해요(학기 중간에 쓰기 시작할 때). 비우면 학기 첫 수업일부터 계산해요.</span></label>`:''}
   <div class="acts">${sb?`<button type="button" class="btn bad" data-a="subjdel" data-x="${sb.id}" ${STORE.subjects.length<2?'disabled title="마지막 교과는 지울 수 없어요"':''}>이 교과 삭제</button>`:''}<span style="flex:1"></span><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">${sb?'저장':'만들기'}</button></div></form>`)}
 function refreshChrome(){
   const pend=DB.inbox.filter(i=>i.state==='pending').length+SCH.conflicts.length;
@@ -1590,8 +1591,7 @@ function vSheet(){
   /* 범위 칩을 누르면 그 범위의 차시만 보여준다. 시험 범위는 차시 색(차시별로 정한 색 > 자동 색) 기준, 나머지는 차시 번호 기준 */
   const inP=n=>{if(!cur)return true;if(cur.kind==='exam'&&BAS!=='exam')return !cur.empty0&&cur.from&&n>=cur.from&&n<=cur.to;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to);const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(les.col>0)return les.col===cur.k;return pcol[n]?.id===cur.id};
   if(cur)cur.empty=cur.kind==='exam'&&BAS==='exam'?!DB.lessons.some((l,i)=>inP(i+1)):(!cur.from||cur.from>DB.lessons.length);
-  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button>
-    ${DB.classes.length?`<span style="margin-left:auto">${DB.trackFrom?`<button class="btn sm" data-a="trk" data-x="term" title="${md(DB.trackFrom)} 이후만 계산 중이에요. 눌러서 학기 첫 수업일부터 다시 계산">${md(DB.trackFrom)} 기준 · 학기 첫 수업일로</button>`:`<button class="btn sm" data-a="trk" data-x="now" title="지난 수업을 건너뛰고 오늘부터 차시 예정일을 계산해요">현재일 기준으로 설정</button>`}</span>`:''}</div>
+  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button></div>
     ${cur&&cur.empty?`<div class="pinfo"><span class="warnbox">${cur.kind==='exam'?'이 시험 범위에 해당하는 차시가 아직 없어요. 차시 ⋯ 수업 정보에서 색을 정하거나 시간표를 확인해 보세요.':'이 범위의 차시가 없어요. 범위를 편집해서 차시를 다시 골라 주세요.'}</span></div>`:''}`;
   let body;
   if(U.sheetMode==='all'||!DB.classes.length){
@@ -1895,7 +1895,6 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
     ${[1,2].map(k=>{const n=STORE.subjects.filter(x=>x.year===sy&&x.sem===k).length;return `<div class="sect">${sy}년 ${k}학기 ${n?`<span class="tag ok" style="margin-left:6px">교과 ${n}개에 적용 중</span>`:''}</div><div class="inl"><label class="field">${k}학기 시작<input type="date" id="t${k}s" value="${YTV[k].start}"></label><label class="field">${k}학기 끝<input type="date" id="t${k}e" value="${YTV[k].end}"></label></div>`}).join('')}
     <p class="muted" style="font-size:12px;margin:6px 0 0">저장하면 ${sy}학년도의 모든 교과 시트에 같이 적용돼요. 교과 탭의 ⋯에서 교과의 연도·학기를 바꿀 수 있어요.</p>
     <div class="sect">교시 시작 시각</div><div class="inl">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}</div>
-    <div class="sect">진도 기록 시작일</div><label class="field" style="max-width:220px"><input type="date" id="tTrack" value="${DB.trackFrom||''}"><span>이 날 전의 수업은 기록이 없어도 '확인 필요'로 표시하지 않아요. 지난 수업까지 모두 기록하려면 학기 시작일로 바꾸세요.</span></label>
     <div style="margin-top:10px"><button class="btn pri" data-a="saveterm">학기 · 교시 저장</button></div></div>
   ${notifCard()}
   <div class="card"><h2>백업</h2><p style="margin:0 0 8px"><span class="tag ${SAVE.ok?'ok':'bad'}">${SAVE.ok?'이 브라우저에 저장됨':'저장 실패'}</span> <span class="mono muted">${esc(SAVE.t)}</span></p>
@@ -2301,7 +2300,7 @@ document.addEventListener('click',e=>{
       if(bad){toast(bad);break}const sy=U.setYear||curSub().year,cs=curSub();YT()[sy]=T;
      STORE.subjects.forEach(sb=>{if(sb.year!==sy||sb===cs)return;sb.db.terms=clone(T);sb.db.term={...T[sb.sem]};if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start});
      const per={};document.querySelectorAll('[data-pt]').forEach(i=>per[i.dataset.pt]=i.value);
-     const tr=$('#tTrack').value||null;mutate('학기 · 교시 저장',db=>{if(cs.year===sy){db.terms=clone(T);db.term={...T[cs.sem]};if(db.tt[0]&&db.tt[0].from>db.term.start)db.tt[0].from=db.term.start}db.trackFrom=tr;db.periods={...db.periods,...per}});break}
+     mutate('학기 · 교시 저장',db=>{if(cs.year===sy){db.terms=clone(T);db.term={...T[cs.sem]};if(db.tt[0]&&db.tt[0].from>db.term.start)db.tt[0].from=db.term.start}db.periods={...db.periods,...per}});break}
    case 'exportfile':tryDownload(`jindokkae-backup-${TK}.json`,backupText());break;
    case 'exportcopy':copyText(backupText());break;
    case 'tsv':copyText(sheetTSV());break;
@@ -2393,7 +2392,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if(sid){const sb=STORE.subjects.find(k=>k.id===sid);const moved=sb.year!==year||sb.sem!==sem;
       if(sb.year!==year){sb.db.terms=getYT(year)}
       Object.assign(sb,{year,sem,grade,subj:nm,name:full,icon:$('#sjIcon').value||'book'});
-      if(moved){sb.db.term={...sb.db.terms[sem]};sb.db.trackFrom=null;if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start}
+      sb.db.trackFrom=($('#sjTrack')&&$('#sjTrack').value)||null;if(moved){sb.db.term={...sb.db.terms[sem]};sb.db.trackFrom=null;if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start}
       persist();closeM();render();toast('교과 정보를 바꿨어요.')}
     else{const terms=getYT(year);const d=emptyDB(sem,terms);d.periods=clone(DB.periods);d.events=clone(DB.events);
       const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,icon:$('#sjIcon').value||'book',db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
