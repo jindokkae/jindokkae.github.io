@@ -948,7 +948,7 @@ function buildSched(db,opt={}){
 /* 일정 (공휴일 + 학교 일정 + 평가) */
 function allEvents(db){return HOLIDAYS.map(h=>({...h,kind:'hol',block:true,src:'기본 공휴일'}))
   .concat(db.events.map(e=>({...e,kind:e.kind||'event'})))
-  .concat(db.assess.map(a=>({s:a.start,e:a.end||a.start,label:a.title,kind:a.type,assessId:a.id,block:a.type==='exam'&&a.noClass})))}
+  .concat(db.assess.filter(a=>a.start).map(a=>({s:a.start,e:a.end||a.start,label:a.title,kind:a.type,assessId:a.id,block:a.type==='exam'&&a.noClass})))}
 const eventsOn=(db,k)=>allEvents(db).filter(e=>inRange(k,e));
 function nextExam(db,c){return db.assess.filter(a=>a.type==='exam'&&a.start>TK&&(!c||targets(db,a).includes(c))).sort((a,b)=>a.start<b.start?-1:1)[0]}
 const lastBefore=(S,c,k)=>{let n=(S.nextN[c]||1)-1;for(const s of S.cls[c]||[])if((s.status==='plan'||s.status==='check')&&s.date<k)n=Math.max(n,s.n);return n};
@@ -1483,13 +1483,13 @@ function sanitizeRich(h){const t=document.createElement('template');t.innerHTML=
     else if(tg==='div'||tg==='p'||tg==='li')o+=(o&&!o.endsWith('<br>')?'<br>':'')+inner;else{const st=c.getAttribute('style')||'';let x=inner;if(/font-weight:\s*(bold|[6-9]00)/.test(st))x=`<b>${x}</b>`;if(/font-style:\s*italic/.test(st))x=`<i>${x}</i>`;if(/underline/.test(st))x=`<u>${x}</u>`;o+=x}}});return o};
   return walk(t.content).replace(/(<br>)+$/,'')}
 const lessonInfo=n=>{const les=L(n);return `<div class="psec common"><h4>수업 정보 <span class="tag info">모든 반 공통</span></h4>
-     <label class="field">수업 주제<input class="inp" data-lf="topic" data-n="${n}" value="${esc(les.topic)}" placeholder="수업 주제"></label>
-     <label class="field">수업 내용<textarea class="inp" rows="2" data-lf="content" data-n="${n}" placeholder="수업 내용을 적어요">${esc(les.content||'')}</textarea></label>
+     <label class="field">수업 주제<input class="inp" data-lf="topic" spellcheck="false" data-n="${n}" value="${esc(les.topic)}" placeholder="수업 주제"></label>
+     <label class="field">수업 내용<textarea class="inp" rows="2" data-lf="content" spellcheck="false" data-n="${n}" placeholder="수업 내용을 적어요">${esc(les.content||'')}</textarea></label>
      <div class="field"><span>수업 계획</span><div class="rtbox"><div class="rtbar"><button type="button" data-a="rtcmd" data-x="bold" title="굵게 (Ctrl+B)"><b>B</b></button><button type="button" data-a="rtcmd" data-x="italic" title="기울임 (Ctrl+I)"><i>I</i></button><button type="button" data-a="rtcmd" data-x="underline" title="밑줄 (Ctrl+U)"><u>U</u></button></div>
-       <div class="rt" contenteditable="true" role="textbox" aria-multiline="true" aria-label="수업 계획" data-n="${n}" data-ph="예: 도입 5분 · 개념 설명 · 활동 · 정리">${sanitizeRich(les.plan||'')}</div></div></div>
-     <label class="field">교과서 쪽<input class="inp" data-lf="pages" data-n="${n}" value="${esc(les.pages)}" placeholder="예: 14-17"></label>
-     <label class="field">프린트 · 수업 자료 · 준비물<input class="inp" data-lf="materials" data-n="${n}" value="${esc(les.materials||'')}" placeholder="예: PPT, 활동지"></label>
-     <label class="field">비고<textarea class="inp" rows="3" data-lf="note" data-n="${n}" placeholder="예: 활동지 미리 인쇄, 영상 확인">${esc(les.note)}</textarea></label>
+       <div class="rt" spellcheck="false" contenteditable="true" role="textbox" aria-multiline="true" aria-label="수업 계획" data-n="${n}" data-ph="예: 도입 5분 · 개념 설명 · 활동 · 정리">${sanitizeRich(les.plan||'')}</div></div></div>
+     <label class="field">교과서 쪽<input class="inp" data-lf="pages" spellcheck="false" data-n="${n}" value="${esc(les.pages)}" placeholder="예: 14-17"></label>
+     <label class="field">프린트 · 수업 자료 · 준비물<input class="inp" data-lf="materials" spellcheck="false" data-n="${n}" value="${esc(les.materials||'')}" placeholder="예: PPT, 활동지"></label>
+     <label class="field">비고<textarea class="inp" rows="3" data-lf="note" spellcheck="false" data-n="${n}" placeholder="예: 활동지 미리 인쇄, 영상 확인">${esc(les.note)}</textarea></label>
      <div class="field"><span>차시 색 <span class="lgd"><button type="button" class="lgi tipb" aria-label="차시 색 설명">?</button><div class="lgbox tipbox" role="tooltip" style="left:0;right:auto;font-weight:400">차시에 정한 색은 진도표 위쪽 <b>범위</b> 칩과 연동돼요.<br>같은 색의 차시만 모아 볼 수 있고, <b>자동</b>은 정기시험 범위의 색을 따라가요.</div></span> <small>(진도표 차시 번호 칸에 표시돼요)</small></span><div class="swatches lcol col2">
        <div class="srow"><button type="button" class="pill" data-a="lcol" data-x="${n}|a" aria-pressed="${les.col==null}" title="범위(정기시험) 색을 따라가요">자동</button>
        <button type="button" class="pill" data-a="lcol" data-x="${n}|0" aria-pressed="${les.col===0}" title="색을 표시하지 않아요">없음</button></div>
@@ -1513,7 +1513,7 @@ function panelHtml(){
    <details class="psec hist2" ${U.histOpen?'open':''}><summary>이 칸의 수정 이력</summary>${histFor(c+'|'+(les?.id||''))}</details></aside>`;
 }
 function clineHtml(n){const les=L(n);
-  return `<div class="cl" data-cl="${n}"><textarea class="ie cin ${les.content?'has':''}" rows="1" data-lf="content" data-n="${n}" placeholder="수업 내용" aria-label="${n}차시 수업 내용">${esc(les.content||'')}</textarea></div>`}
+  return `<div class="cl" data-cl="${n}"><textarea class="ie cin ${les.content?'has':''}" rows="1" data-lf="content" spellcheck="false" data-n="${n}" placeholder="수업 내용" aria-label="${n}차시 수업 내용">${esc(les.content||'')}</textarea></div>`}
 function swapCl(n){const el=document.querySelector(`.cl[data-cl="${n}"]`);if(!el||!L(n))return;el.outerHTML=clineHtml(n);const ta=document.querySelector(`.cl[data-cl="${n}"] textarea`);if(ta){autosize(ta);ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}}
 function examOfRow(n){const id=L(n).id;return DB.assess.filter(a=>a.type==='exam'&&a.fromId&&a.toId).find(a=>{const f=lessonIdx(DB,a.fromId),t=lessonIdx(DB,a.toId);return f&&t&&n>=f&&n<=t})}
 function cellHtml(c,n){const v=rec(DB,c.id,n),nxt=SCH.nextN[c.id]===n,pl=SCH.plan[c.id]?.[n],sel=U.selCell?.n===n&&U.selCell.c===c.id,also=U.selCell?.n===n&&U.draft.others.has(c.id);
@@ -1561,10 +1561,10 @@ function vSheet(){
   const lead=DB.classes.length?Math.max(...DB.classes.map(c=>SCH.nextN[c.id]-1)):0;
   const {pl,cur}=periodSel();
   const KL={exam:'정기시험',task:'수행평가',unit:'단원',free:'구간'};
-  const pchip=p=>{const st=rangeStat(p),dated=p.kind==='exam'||p.kind==='task',past=dated&&(p.end||p.date)<TK,d=dated?dday(p.date):0;
+  const pchip=p=>{const st=rangeStat(p),dated=p.kind==='exam'||(p.kind==='task'&&!!p.date),past=dated&&(p.end||p.date)<TK,d=dated?dday(p.date):0;
     const tg=p.cls.length&&p.cls.length<DB.classes.length?p.cls.map(cn).join(', '):'';
     const rg=p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시`:(p.kind==='exam'?'':' · 차시 미지정');
-    const meta=p.kind==='exam'?`${md(p.date)}${p.end&&p.end!==p.date?'~'+md(p.end):''}${tg?' · '+esc(tg):''}`:p.kind==='task'?`${md(p.date)}${tg?' · '+esc(tg):''}${rg}`:`${p.date?md(p.date)+' 까지':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,'');
+    const meta=p.kind==='exam'?`${md(p.date)}${p.end&&p.end!==p.date?'~'+md(p.end):''}${tg?' · '+esc(tg):''}`:p.kind==='task'?`${p.date?md(p.date)+' 마감':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,''):`${p.date?md(p.date)+' 까지':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,'');
     const tag=dated?(past?'지남':d<=0?'진행 중':'D-'+d):KL[p.kind];
     const stTxt=q=>q.state==='ok'?'완료':q.state==='late'?(p.date<TK?`${q.late}차시가 기한을 넘겼어요`:`${q.late}차시가 ${md(p.date)}까지 못 끝나요`):q.behind>0?`선두보다 ${q.behind}차시 늦어요`:q.done?'진행 중':p.date&&p.kind!=='unit'?'예정대로':'아직 시작 전';
     const pop=`<div class="rgpop" role="tooltip"><b>${esc(p.title)}</b><small>${KL[p.kind]}${p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시 (${st.total}차시)`:''}${p.date?` · ${p.kind==='task'?'수행':'기한'} ${md(p.date)}`:''}</small>
@@ -1572,6 +1572,7 @@ function vSheet(){
     return `<span class="pwrap"><button class="achip rg ${p.kind} ${past?'past':''} ${st.late?'late':''}" style="--pc:${p.col}" data-a="period" data-x="${p.id}" aria-pressed="${!!cur&&cur.id===p.id}"><b>${tag}</b><span>${esc(p.title)} <span class="muted">${meta}</span></span>${st.late?'<span class="rgw" title="기한 안에 못 끝낼 반이 있어요">!</span>':''}<i class="rgbar"><u style="width:${st.pct}%"></u></i></button><button class="pedit" data-a="${p.kind==='exam'?'avedit':'rgedit'}" data-x="${p.id}" aria-label="${esc(p.title)} 편집" title="편집">${ic('pen',11)}</button>${pop}</span>`};
   const pcol={};pl.forEach(q=>{if(q.kind==='exam'&&!q.empty)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if((q.kind==='unit'||q.kind==='free')&&q.from)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
+  pl.forEach(q=>{if(q.kind==='task'&&q.from)for(let k=q.from;k<=q.to;k++)pcol[k]={c:'var(--warn)',t:q.title,k:0,id:q.id}});
   const colOf=(les,n)=>les.col===0?null:les.col>0?{c:`var(--p${les.col})`,t:'',k:les.col}:(pcol[n]||null);
   /* 범위 칩을 누르면 그 범위의 차시만 보여준다. 시험 범위는 차시 색(차시별로 정한 색 > 자동 색) 기준, 나머지는 차시 번호 기준 */
   const inP=n=>{if(!cur)return true;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to);const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(les.col>0)return les.col===cur.k;return pcol[n]?.id===cur.id};
@@ -1583,7 +1584,7 @@ function vSheet(){
   if(U.sheetMode==='all'||!DB.classes.length){
     const rows=DB.lessons.map((les,i)=>{const n=i+1;if(!inP(n))return '';const ex=colOf(les,n);const tasks=pl.filter(q=>q.kind==='task'&&q.from&&n>=q.from&&n<=q.to).map(q=>({title:q.title+(q.to>q.from?` ${n-q.from+1}/${q.to-q.from+1}`:''),full:q.title+(q.to>q.from?` (${q.from}~${q.to}차시 중 ${n-q.from+1}번째)`:'')}));
       return `<tr class="${U.selRows.has(les.id)?'rsel':''}"><td class="sel0"><input type="checkbox" class="rchk" data-lid="${les.id}" ${U.selRows.has(les.id)?'checked':''} aria-label="${n}차시 선택"></td><td class="n ${ex?'inexam':''}" ${ex?`style="--pc:${ex.c}" title="${esc(ex.t)}"`:''}><div class="nw"><span class="num mono">${n}</span><button class="rm ${(!U.selCell&&U.selRow===n)||U.selCell?.n===n?'on':''}" data-a="lrow" data-x="${n}" aria-label="${n}차시 수업 정보 열기" title="수업 정보 (비고·교과서 쪽·준비물)">⋯</button></div>${tasks.map(t=>`<span class="rbadge task" title="${esc(t.full)}">${esc(t.title)}</span>`).join('')}</td>
-        <td class="tp"><textarea class="ie" rows="1" data-lf="topic" data-n="${n}" placeholder="수업 주제" aria-label="${n}차시 수업 주제">${esc(les.topic)}</textarea>${clineHtml(n)}</td>
+        <td class="tp"><textarea class="ie" rows="1" data-lf="topic" spellcheck="false" data-n="${n}" placeholder="수업 주제" aria-label="${n}차시 수업 주제">${esc(les.topic)}</textarea>${clineHtml(n)}</td>
         ${DB.classes.map(c=>cellHtml(c,n)).join('')}<td class="cell" style="cursor:default;background:var(--surface)!important"></td></tr>`}).join('');
     const vis=DB.lessons.filter((l,i)=>inP(i+1));const allSel=vis.length>0&&vis.every(l=>U.selRows.has(l.id));
     const empty=cur&&DB.lessons.length&&!rows?`<tr class="emptyrow"><td colspan="${4+DB.classes.length}">이 범위에 해당하는 차시가 없어요. 위 안내를 확인해 주세요.</td></tr>`:!DB.lessons.length?`<tr class="emptyrow"><td colspan="${4+DB.classes.length}"><b style="color:var(--fg)">아직 차시가 없어요.</b><br>아래 버튼으로 차시를 만들고 칸에 바로 적거나, 엑셀에서 '주제·교과서·내용·비고' 열을 복사해 첫 주제 칸에 붙여넣으세요. (교과서·비고는 차시 번호 옆 ⋯를 누르면 열리는 수업 정보에 들어가요.)${DB.tt.some(t=>t.slots.length)?'':`<br><button class="btn pri" style="margin-top:10px" data-a="gottedit">먼저 기본 시간표 설정하러 가기</button>`}</td></tr>`:'';
@@ -2033,24 +2034,25 @@ function readAssessForm(){const a=U.av;const g=id=>$('#'+id);
   if(g('avNo'))a.noClass=g('avNo').checked;
   if(g('avLesson'))a.lessonId=g('avLesson').value||null;if(g('avNote'))a.note=g('avNote').value.trim()}
 const RGKS=[['unit','단원'],['task','수행평가'],['free','자유 구간'],['exam','정기시험']];
-function openRange(o){U.rg=Object.assign({id:'',kind:'unit',title:'',fromId:null,toId:null,col:0,date:'',classes:'all',note:''},o||{});if(!U.rg.fromId&&DB.lessons.length){U.rg.fromId=DB.lessons[0].id;U.rg.toId=U.rg.toId||U.rg.fromId}drawRange()}
+function openRange(o){U.rg=Object.assign({id:'',kind:'unit',title:'',fromId:null,toId:null,col:0,date:'',classes:'all',note:'',start:TK,end:'',noClass:true},o||{});if(U.rg.kind!=='exam'&&!U.rg.fromId&&DB.lessons.length){U.rg.fromId=DB.lessons[0].id;U.rg.toId=U.rg.toId||U.rg.fromId}drawRange()}
 function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes==='all';
   const lopt=sel=>DB.lessons.map((l,i)=>`<option value="${l.id}" ${sel===l.id?'selected':''}>${i+1}차시 ${esc((l.topic||'').slice(0,16))}</option>`).join('');
-  const f=lessonIdx(DB,r.fromId),to=lessonIdx(DB,r.toId)||f,cnt=f?Math.abs(to-f)+1:0;
-  const PRE={unit:['1단원','2단원','3단원'],task:PRESET.task,free:['시험 대비','복습 기간']}[r.kind]||[];
+  const ex=r.kind==='exam',f=lessonIdx(DB,r.fromId),to=lessonIdx(DB,r.toId)||f,cnt=f?Math.abs(to-f)+1:0;
+  const PRE={unit:['1단원','2단원','3단원'],task:PRESET.task,free:['시험 대비','복습 기간'],exam:PRESET.exam}[r.kind]||[];
   modal(`<h3>${isNew?'범위 추가':'범위 수정'}</h3>
   ${isNew?`<div class="seg">${RGKS.map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div>`:`<p class="sub" style="margin:0">${RGKS.find(x=>x[0]===r.kind)[1]}</p>`}
-  <p class="muted" style="font-size:12.5px;margin:0">${{unit:'단원처럼 차시를 묶어 색으로 구분하고, 진도표에서 그 범위만 모아 볼 수 있어요.',task:'수행평가는 1차시만에 끝나기도, 여러 차시에 걸치기도 해요. 시작과 끝 차시를 정하면 그 차시마다 표시돼요.',free:'날짜 목표가 있는 자유로운 구간이에요. 기한까지 못 끝낼 반을 미리 알려 줘요.'}[r.kind]}</p>
+  <p class="muted" style="font-size:12.5px;margin:0">${{unit:'단원처럼 차시를 묶어 색으로 구분하고, 진도표에서 그 범위만 모아 볼 수 있어요.',task:'수행평가 수업도 진도표의 차시예요. 1차시짜리도, 여러 차시짜리도 시작·끝 차시만 고르면 그 차시들이 색으로 묶여요. 날짜는 막지 않아요.',exam:'시험 기간이에요. 이 날짜의 수업은 빼고 예정 진도를 다시 계산해요.',free:'날짜 목표가 있는 자유로운 구간이에요. 기한까지 못 끝낼 반을 미리 알려 줘요.'}[r.kind]}</p>
   ${PRE.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${PRE.map(p=>`<button class="chip" data-a="rgpreset" data-x="${esc(p)}" aria-pressed="${r.title===p}">${esc(p)}</button>`).join('')}</div>`:''}
-  <label class="field">이름<input id="rgTitle" class="inp" value="${esc(r.title)}" placeholder="${t?'예: 독립운동가 카드뉴스 만들기':'예: 1단원 선사 문화'}"></label>
-  <div class="inl"><label class="field">시작 차시<select id="rgFrom" class="inp">${lopt(r.fromId)}</select></label><label class="field">끝 차시<select id="rgTo" class="inp">${lopt(r.toId||r.fromId)}</select></label></div>
+  <label class="field">이름<input id="rgTitle" class="inp" value="${esc(r.title)}" placeholder="${ex?'예: 2차 정기시험':t?'예: 독립운동가 논술':'예: 1단원 선사 문화'}"></label>
+  ${ex?`<div class="inl"><label class="field">시작일<input type="date" id="rgStart" value="${r.start||''}"></label><label class="field">끝나는 날<input type="date" id="rgEnd" value="${r.end||r.start||''}"></label></div>`:`<div class="inl"><label class="field">시작 차시<select id="rgFrom" class="inp">${lopt(r.fromId)}</select></label><label class="field">끝 차시<select id="rgTo" class="inp">${lopt(r.toId||r.fromId)}</select></label></div>
   <p class="muted" style="font-size:12px;margin:-4px 0 0">${DB.lessons.length?(cnt===1?`${f}차시 한 번에 끝나는 범위예요.`:`${Math.min(f,to)}~${Math.max(f,to)}차시, 모두 ${cnt}차시에 걸쳐요.`):'진도표에 차시가 없어요. 먼저 차시를 만들어 주세요.'}</p>
-  <div class="inl"><label class="field">${t?'수행 날짜 (마감일)':'기한 (선택)'}<input type="date" id="rgDate" value="${r.date||''}"></label></div>
-  ${t?'':`<div class="field"><span>색</span><div class="swatches lcol col2"><div class="srow"><button type="button" class="pill" data-a="rgcol" data-x="0" aria-pressed="${!r.col}">자동</button>${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="rgcol" data-x="${k}" style="--sw:var(--p${k})" aria-pressed="${r.col===k}" aria-label="색 ${k}"></button>`).join('')}</div></div></div>`}
+  <div class="inl"><label class="field">${t?'마감일 (선택 · 날짜를 막지 않아요)':'기한 (선택)'}<input type="date" id="rgDate" value="${r.date||''}"></label></div>`}
+  ${t||ex?'':`<div class="field"><span>색</span><div class="swatches lcol col2"><div class="srow"><button type="button" class="pill" data-a="rgcol" data-x="0" aria-pressed="${!r.col}">자동</button>${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="rgcol" data-x="${k}" style="--sw:var(--p${k})" aria-pressed="${r.col===k}" aria-label="색 ${k}"></button>`).join('')}</div></div></div>`}
   <h4>대상 학급</h4><div class="others" style="flex-direction:row;flex-wrap:wrap"><label><input type="checkbox" data-rgall="1" ${all?'checked':''}>전체 학급</label>${DB.classes.map(c=>`<label><input type="checkbox" data-rgc="${c.id}" ${all||r.classes.includes(c.id)?'checked':''} ${all?'disabled':''}><span class="dot" style="background:${ccv(c.id)}"></span>${esc(cn(c.id))}</label>`).join('')}</div>
-  <label class="field">메모 (선택)<input id="rgNote" class="inp" value="${esc(r.note||'')}" placeholder="${t?'예: 채점 기준표 배부':''}"></label>
+  <label class="field">메모 (선택)<input id="rgNote" class="inp" value="${esc(r.note||'')}" placeholder="${t?'예: 채점 기준표 배부':ex?'예: 서술형 30%':''}"></label>
+  ${ex?`<label class="chk"><input type="checkbox" id="rgNo" ${r.noClass?'checked':''}><span>시험 기간에는 수업 없음 <span class="muted">(예정 진도에서 빼고 계산해요)</span></span></label>`:''}
   <div class="acts">${isNew?'':`<button class="btn bad" data-a="rgdel" data-x="${r.id}" style="margin-right:auto">삭제</button>`}<button class="btn" data-a="close">취소</button><button class="btn pri" data-a="rgsave">${isNew?'추가':'저장'}</button></div>`)}
-function readRange(){const r=U.rg,g=id=>$('#'+id);if(!g('rgTitle'))return;r.title=g('rgTitle').value.trim();r.fromId=g('rgFrom').value||null;r.toId=g('rgTo').value||null;r.date=g('rgDate').value;r.note=g('rgNote').value.trim()}
+function readRange(){const r=U.rg,g=id=>$('#'+id);if(!g('rgTitle'))return;r.title=g('rgTitle').value.trim();if(g('rgFrom')){r.fromId=g('rgFrom').value||null;r.toId=g('rgTo').value||null}if(g('rgDate'))r.date=g('rgDate').value;if(g('rgStart')){r.start=g('rgStart').value;r.end=g('rgEnd').value}if(g('rgNo'))r.noClass=g('rgNo').checked;r.note=g('rgNote').value.trim()}
 function openNeisImport(p){U.ni={p,exams:new Set(p.exams.map((_,i)=>i))};drawNeisImport()}
 function drawNeisImport(){const {p,exams}=U.ni;const hol=p.evs.filter(e=>e.block),oth=p.evs.filter(e=>!e.block);
   const d2=clone(DB);C.importNeisEvents(d2,p.evs,p.exams.filter((_,i)=>exams.has(i)));const S2=buildSched(d2);
@@ -2232,20 +2234,26 @@ document.addEventListener('click',e=>{
    case 'today':U.sel=TK;U.month={y:+TK.slice(0,4),m:+TK.slice(5,7)-1};U.week=mondayOf(TK);render();break;
    case 'day':closeM();U.sel=x;U.view='cal';U.schedMode='cal';U.month={y:+x.slice(0,4),m:+x.slice(5,7)-1};U.week=mondayOf(x);render();break;
    case 'evdel':{const ev=DB.events.find(k=>k.id===x);mutate(`일정 삭제: ${ev.label}`,db=>C.removeEvent(db,x));break}
-   case 'avnew':{const [ty,dk]=x.split('|');if(ty==='task'){openRange({kind:'task',date:dk||TK});break}openAssess(null);if(ty){U.av.type=ty;U.av.start=dk;if(ty==='task')U.av.noClass=false}drawAssess();break}
-   case 'avedit':{const a=DB.assess.find(k=>k.id===x);if(a&&a.type==='task')openRange({id:a.id,kind:'task',title:a.title,fromId:a.fromId||a.lessonId||null,toId:a.toId||a.fromId||a.lessonId||null,date:a.start,classes:a.classes,note:a.note||''});else openAssess(a);break}
+   case 'avnew':{const [ty,dk]=x.split('|');if(ty==='task'){openRange({kind:'task',date:dk||''});break}openRange({kind:'exam',start:dk||TK});break}
+   case 'avedit':{const a=DB.assess.find(k=>k.id===x);if(a&&a.type==='task')openRange({id:a.id,kind:'task',title:a.title,fromId:a.fromId||a.lessonId||null,toId:a.toId||a.fromId||a.lessonId||null,date:a.start,classes:a.classes,note:a.note||''});else if(a)openRange({id:a.id,kind:'exam',title:a.title,start:a.start,end:a.end||a.start,classes:a.classes,noClass:!!a.noClass,note:a.note||'',_a:a});break}
    case 'rgnew':openRange(null);break;
    case 'rgedit':{const r=(DB.ranges||[]).find(k=>k.id===x);if(r)openRange({...r,classes:r.classes==null?'all':clone(r.classes)});break}
-   case 'rgkind':{readRange();if(x==='exam'){const t=U.rg.title;openAssess(null);U.av.title=t;drawAssess();break}U.rg.kind=x;drawRange();break}
+   case 'rgkind':readRange();U.rg.kind=x;drawRange();break;
    case 'rgpreset':readRange();U.rg.title=x;drawRange();break;
    case 'rgcol':readRange();U.rg.col=+x;drawRange();break;
    case 'rgsel':{const ix=[...U.selRows].map(id=>lessonIdx(DB,id)).filter(Boolean).sort((a,b)=>a-b);if(!ix.length)break;const lo=ix[0],hi=ix[ix.length-1];
       openRange({kind:'unit',fromId:L(lo).id,toId:L(hi).id});if(hi-lo+1!==ix.length)toast(`선택한 차시 중 가장 앞(${lo})~뒤(${hi}) 차시를 범위로 잡았어요.`);break}
-   case 'rgsave':{readRange();const r=U.rg;if(!r.title){toast('이름을 적어 주세요.');break}if(!r.fromId){toast('차시 범위를 골라 주세요. 먼저 진도표에 차시가 있어야 해요.');break}
+   case 'rgsave':{readRange();const r=U.rg;if(!r.title){toast('이름을 적어 주세요.');break}
+      if(r.kind==='exam'){if(!r.start){toast('시작일을 골라 주세요.');break}if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
+        let en=r.end;if(!en||en<r.start)en=r.start;const w=weekdays(r.start,en);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}
+        const adj=w.start!==r.start||w.end!==en?`주말은 빼고 평일(${md(w.start)}~${md(w.end)})만 저장했어요. `:'';
+        const A={...(r._a||{}),id:r.id||undefined,type:'exam',title:r.title,start:w.start,end:w.end,classes:r.classes,noClass:!!r.noClass,fromId:null,toId:null,lessonId:null,note:r.note||''};
+        mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>C.saveAssess(db,A),{msg:adj+(A.noClass?`${r.title} 기간을 수업 없음으로 두고 예정 진도를 다시 계산했어요.`:`${r.title} 일정을 저장했어요.`)});break}
+      if(!r.fromId){toast('차시 범위를 골라 주세요. 먼저 진도표에 차시가 있어야 해요.');break}
       if(!r.toId)r.toId=r.fromId;if(lessonIdx(DB,r.toId)<lessonIdx(DB,r.fromId)){const t=r.fromId;r.fromId=r.toId;r.toId=t}
       if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
-      if(r.kind==='task'){if(!r.date){toast('수행 날짜(마감일)를 골라 주세요.');break}
-        const A={id:r.id||undefined,type:'task',title:r.title,start:r.date,end:'',classes:r.classes,noClass:false,fromId:r.fromId,toId:r.toId,lessonId:r.fromId,note:r.note||''};
+      if(r.kind==='task'){
+        const A={id:r.id||undefined,type:'task',title:r.title,start:r.date||'',end:'',classes:r.classes,noClass:false,fromId:r.fromId,toId:r.toId,lessonId:r.fromId,note:r.note||''};
         mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>C.saveAssess(db,A),{msg:`${r.title} 수행평가를 저장했어요.`})}
       else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:r.date||'',classes:r.classes,note:r.note||''}),{msg:`${r.title} 범위를 저장했어요.`});
       break}
@@ -2380,7 +2388,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
   if(id==='pasteForm'){const rows=parseTable($('#pasteTa').value);if(!rows.length){toast('붙여넣은 내용이 없어요.');return}
     const start=DB.lessons.length+1;mutate(`엑셀에서 차시 ${rows.length}개 만들기`,db=>{C.pasteGrid(db,start,'topic',rows)},{msg:`${rows.length}개 차시를 만들었어요.`})}
   if(id==='evForm'){const v=$('#evT').value.trim(),kind=$('#evK').value;let st=$('#evS').value||U.sel,en=$('#evE').value||st;if(en<st)[st,en]=[en,st];
-    if(kind==='task'||kind==='exam'){openAssess(null);U.av.type=kind;U.av.start=st;U.av.end=kind==='exam'?en:'';U.av.noClass=kind==='exam';U.av.title=v;drawAssess();return}
+    if(kind==='task'||kind==='exam'){openRange(kind==='exam'?{kind:'exam',title:v,start:st,end:en}:{kind:'task',title:v,date:st});return}
     if(!v){toast('제목을 적어 주세요.');$('#evT').focus();return}
     const multi=en>st,act=[];for(let d=st;d<=en;d=addK(d,1))(SCH.by[d]||[]).forEach(x=>{if(['plan','check','done'].includes(x.status))act.push(x)});
     mutate(`일정 추가: ${multi?md(st)+'~'+md(en):md(st)} ${v}`,db=>C.addEvent(db,{s:st,e:en,label:v,kind,block:kind==='hol',src:'직접'}),{msg:kind==='hol'&&act.length?`휴업일로 추가해서 수업 ${act.length}개를 빼고 다시 계산했어요.`:'일정을 추가했어요.'});
