@@ -246,8 +246,10 @@ table.sheet{border-collapse:separate;border-spacing:0;width:max-content;min-widt
 .sheet tbody td.n.inexam{background:color-mix(in srgb,var(--pc) 13%,var(--surface))}
 .crow.inper{box-shadow:inset 4px 0 0 var(--pc)}
 .pinfo .note{border-left:4px solid var(--pc,var(--line-2))}
-.rbadge{display:block;font-size:10px;font-weight:700;border-radius:4px;padding:0 3px;margin:2px auto 0;width:max-content;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rbadge.task{background:var(--warn-soft);color:var(--warn)}
+.achip.rg>span{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet td.n,.sheet th.n{width:84px}.sheet td.n .rbadge{width:0;min-width:100%}
+.rbadge{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;font-size:10px;font-weight:700;line-height:1.25;border-radius:4px;padding:1px 3px;margin:2px auto 0;width:max-content;max-width:100%;box-sizing:border-box;overflow:hidden;overflow-wrap:anywhere;word-break:keep-all;text-align:center;white-space:normal}
+button.rbadge{border:0;cursor:pointer;font-family:inherit}.rbadge.task{background:var(--warn-soft);color:var(--warn)}
 .ie{display:block;width:100%;border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 6px;font-size:13px;line-height:1.45;color:var(--fg);resize:none;field-sizing:content;min-height:28px;overflow:hidden;font-family:inherit}
 textarea.ie{min-height:28px}
 .ie::placeholder{color:var(--line-2)}
@@ -1569,7 +1571,7 @@ function vSheet(){
     const stTxt=q=>q.state==='ok'?'완료':q.state==='late'?(p.date<TK?`${q.late}차시가 기한을 넘겼어요`:`${q.late}차시가 ${md(p.date)}까지 못 끝나요`):q.behind>0?`선두보다 ${q.behind}차시 늦어요`:q.done?'진행 중':p.date&&p.kind!=='unit'?'예정대로':'아직 시작 전';
     const pop=`<div class="rgpop" role="tooltip"><b>${esc(p.title)}</b><small>${KL[p.kind]}${p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시 (${st.total}차시)`:''}${p.date?` · ${p.kind==='task'?'수행':'기한'} ${md(p.date)}`:''}</small>
       ${p.from&&st.per.length?st.per.map(q=>`<div class="rgp"><span class="dot" style="background:${ccv(q.c)}"></span><span class="rgn">${esc(cn(q.c))}</span><span class="rgb"><u class="${q.state}" style="width:${q.total?Math.round(q.done/q.total*100):0}%"></u></span><span class="rgc mono">${q.done}/${q.total}</span><em class="${q.state}">${stTxt(q)}</em></div>`).join(''):`<div class="muted" style="font-size:12px">${p.kind==='exam'?'이 시험 전까지 수업할 차시가 아직 없어요.':'차시 범위를 정하면 반별 진척이 보여요.'}</div>`}</div>`;
-    return `<span class="pwrap"><button class="achip rg ${p.kind} ${past?'past':''} ${st.late?'late':''}" style="--pc:${p.col}" data-a="period" data-x="${p.id}" aria-pressed="${!!cur&&cur.id===p.id}"><b>${tag}</b><span>${esc(p.title)} <span class="muted">${meta}</span></span>${st.late?'<span class="rgw" title="기한 안에 못 끝낼 반이 있어요">!</span>':''}<i class="rgbar"><u style="width:${st.pct}%"></u></i></button><button class="pedit" data-a="${p.kind==='exam'?'avedit':'rgedit'}" data-x="${p.id}" aria-label="${esc(p.title)} 편집" title="편집">${ic('pen',11)}</button>${pop}</span>`};
+    return `<span class="pwrap"><button class="achip rg ${p.kind} ${past?'past':''} ${st.late?'late':''}" style="--pc:${p.col}" data-a="period" data-x="${p.id}" aria-pressed="${!!cur&&cur.id===p.id}"><b>${tag}</b><span>${esc(p.title)} <span class="muted">${meta}</span></span>${st.late?'<span class="rgw" title="기한 안에 못 끝낼 반이 있어요">!</span>':''}<i class="rgbar"><u style="width:${st.pct}%"></u></i></button><button class="pedit" data-a="${p.kind==='exam'||p.kind==='task'?'avedit':'rgedit'}" data-x="${p.id}" aria-label="${esc(p.title)} 편집" title="편집">${ic('pen',11)}</button>${pop}</span>`};
   const pcol={};pl.forEach(q=>{if(q.kind==='exam'&&!q.empty)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if((q.kind==='unit'||q.kind==='free')&&q.from)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if(q.kind==='task'&&q.from)for(let k=q.from;k<=q.to;k++)pcol[k]={c:'var(--warn)',t:q.title,k:0,id:q.id}});
@@ -1582,8 +1584,8 @@ function vSheet(){
     ${cur&&cur.empty?`<div class="pinfo"><span class="warnbox">${cur.kind==='exam'?'이 시험 범위에 해당하는 차시가 아직 없어요. 차시 ⋯ 수업 정보에서 색을 정하거나 시간표를 확인해 보세요.':'이 범위의 차시가 없어요. 범위를 편집해서 차시를 다시 골라 주세요.'}</span></div>`:''}`;
   let body;
   if(U.sheetMode==='all'||!DB.classes.length){
-    const rows=DB.lessons.map((les,i)=>{const n=i+1;if(!inP(n))return '';const ex=colOf(les,n);const tasks=pl.filter(q=>q.kind==='task'&&q.from&&n>=q.from&&n<=q.to).map(q=>({title:q.title+(q.to>q.from?` ${n-q.from+1}/${q.to-q.from+1}`:''),full:q.title+(q.to>q.from?` (${q.from}~${q.to}차시 중 ${n-q.from+1}번째)`:'')}));
-      return `<tr class="${U.selRows.has(les.id)?'rsel':''}"><td class="sel0"><input type="checkbox" class="rchk" data-lid="${les.id}" ${U.selRows.has(les.id)?'checked':''} aria-label="${n}차시 선택"></td><td class="n ${ex?'inexam':''}" ${ex?`style="--pc:${ex.c}" title="${esc(ex.t)}"`:''}><div class="nw"><span class="num mono">${n}</span><button class="rm ${(!U.selCell&&U.selRow===n)||U.selCell?.n===n?'on':''}" data-a="lrow" data-x="${n}" aria-label="${n}차시 수업 정보 열기" title="수업 정보 (비고·교과서 쪽·준비물)">⋯</button></div>${tasks.map(t=>`<span class="rbadge task" title="${esc(t.full)}">${esc(t.title)}</span>`).join('')}</td>
+    const rows=DB.lessons.map((les,i)=>{const n=i+1;if(!inP(n))return '';const ex=colOf(les,n);const tasks=pl.filter(q=>q.kind==='task'&&q.from&&n>=q.from&&n<=q.to).map(q=>({id:q.id,title:q.title+(q.to>q.from?` ${n-q.from+1}/${q.to-q.from+1}`:''),full:q.title+(q.to>q.from?` (${q.from}~${q.to}차시 중 ${n-q.from+1}번째)`:'')}));
+      return `<tr class="${U.selRows.has(les.id)?'rsel':''}"><td class="sel0"><input type="checkbox" class="rchk" data-lid="${les.id}" ${U.selRows.has(les.id)?'checked':''} aria-label="${n}차시 선택"></td><td class="n ${ex?'inexam':''}" ${ex?`style="--pc:${ex.c}" title="${esc(ex.t)}"`:''}><div class="nw"><span class="num mono">${n}</span><button class="rm ${(!U.selCell&&U.selRow===n)||U.selCell?.n===n?'on':''}" data-a="lrow" data-x="${n}" aria-label="${n}차시 수업 정보 열기" title="수업 정보 (비고·교과서 쪽·준비물)">⋯</button></div>${tasks.map(t=>`<button type="button" class="rbadge task" data-a="avedit" data-x="${t.id}" title="${esc(t.full)} — 눌러서 수정">${esc(t.title)}</button>`).join('')}</td>
         <td class="tp"><textarea class="ie" rows="1" data-lf="topic" spellcheck="false" data-n="${n}" placeholder="수업 주제" aria-label="${n}차시 수업 주제">${esc(les.topic)}</textarea>${clineHtml(n)}</td>
         ${DB.classes.map(c=>cellHtml(c,n)).join('')}<td class="cell" style="cursor:default;background:var(--surface)!important"></td></tr>`}).join('');
     const vis=DB.lessons.filter((l,i)=>inP(i+1));const allSel=vis.length>0&&vis.every(l=>U.selRows.has(l.id));
@@ -2313,6 +2315,7 @@ document.addEventListener('change',e=>{const tg=e.target;
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
   if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos[+ix].d=tg.checked;persist();render()}return}
   if(tg.id==='impFile'&&tg.files[0]){const r=new FileReader();r.onload=()=>openImport(String(r.result));r.readAsText(tg.files[0]);tg.value='';return}
+  if(U.rg&&(tg.id==='rgFrom'||tg.id==='rgTo')){const f=$('#rgFrom'),t=$('#rgTo');if(f&&t){const fi=lessonIdx(DB,f.value),ti=lessonIdx(DB,t.value);if(tg.id==='rgFrom'&&ti<fi)t.value=f.value;if(tg.id==='rgTo'&&ti<fi)f.value=t.value;readRange();drawRange();return}}
   if(U.rg&&(tg.dataset.rgall||tg.dataset.rgc)){readRange();if(tg.dataset.rgall)U.rg.classes=tg.checked?'all':DB.classes.map(c=>c.id);
     else{const ids=new Set(U.rg.classes==='all'?DB.classes.map(c=>c.id):U.rg.classes);tg.checked?ids.add(tg.dataset.rgc):ids.delete(tg.dataset.rgc);U.rg.classes=[...ids]}drawRange();return}
   if(U.rg&&(tg.id==='rgFrom'||tg.id==='rgTo')){readRange();const f=lessonIdx(DB,U.rg.fromId),t=lessonIdx(DB,U.rg.toId);if(tg.id==='rgFrom'&&(!t||t<f))U.rg.toId=U.rg.fromId;if(tg.id==='rgTo'&&t<f)U.rg.fromId=U.rg.toId;drawRange();return}
