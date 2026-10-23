@@ -250,6 +250,7 @@ table.sheet{border-collapse:separate;border-spacing:0;width:max-content;min-widt
 .crow.inper{box-shadow:inset 4px 0 0 var(--pc)}
 .pinfo .note{border-left:4px solid var(--pc,var(--line-2))}
 .achip.rg.off{opacity:.62}button.chip.opt[aria-pressed="false"]{opacity:1;text-decoration:none}
+.astrip .basis{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:12px}.astrip .basis .seg button{padding:3px 9px;font-size:12px}
 .psep{align-self:center;width:1px;height:20px;background:var(--line-2);margin:0 2px}
 .achip.rg>span{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet td.n .rbw{width:0;min-width:100%;display:flex;flex-direction:column;align-items:center}.sheet td.n .rbadge{width:fit-content;max-width:100%}
@@ -1595,7 +1596,7 @@ function vSheet(){
   /* 범위 칩을 누르면 그 범위의 차시만 보여준다. 시험 범위는 차시 색(차시별로 정한 색 > 자동 색) 기준, 나머지는 차시 번호 기준 */
   const inP=n=>{if(!cur)return true;if(cur.kind==='exam'&&BAS!=='exam')return !cur.empty0&&cur.from&&n>=cur.from&&n<=cur.to;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to);const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(les.col>0)return les.col===cur.k;return pcol[n]?.id===cur.id};
   if(cur)cur.empty=cur.kind==='exam'&&BAS==='exam'?!DB.lessons.some((l,i)=>inP(i+1)):(!cur.from||cur.from>DB.lessons.length);
-  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button></div>
+  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button><span class="basis" title="진도표 차시 색은 정기시험 또는 단원/파트 중 하나만 기준으로 써요"><span class="muted">색 기준</span><span class="seg" role="group" aria-label="색 기준"><button data-a="rgbasis" data-x="unit" aria-pressed="${BAS==='unit'}">단원/파트</button><button data-a="rgbasis" data-x="exam" aria-pressed="${BAS==='exam'}">정기시험</button></span></span></div>
     ${cur&&cur.empty?`<div class="pinfo"><span class="warnbox">${cur.kind==='exam'?'이 시험 범위에 해당하는 차시가 아직 없어요. 차시 ⋯ 수업 정보에서 색을 정하거나 시간표를 확인해 보세요.':'이 범위의 차시가 없어요. 범위를 편집해서 차시를 다시 골라 주세요.'}</span></div>`:''}`;
   let body;
   if(U.sheetMode==='all'||!DB.classes.length){
@@ -2062,7 +2063,7 @@ function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes===
   modal(`<h3>${isNew?'범위 추가':'범위 수정'}</h3>
   ${isNew?`<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="muted" style="font-size:11px;margin-bottom:3px">색으로 구분</div><div class="seg">${RGKS.slice(0,2).map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div></div><div><div class="muted" style="font-size:11px;margin-bottom:3px">태그로 구분</div><div class="seg">${RGKS.slice(2).map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div></div></div>`:`<p class="sub" style="margin:0">${RGKS.find(x=>x[0]===r.kind)[1]}</p>`}
   <p class="muted" style="font-size:12.5px;margin:0">${{unit:'단원·파트(예: 문학/비문학/문법, 물리/지구과학)처럼 차시를 묶어 색으로 구분해요. 진도표에서 그 범위만 모아 볼 수도 있어요.',task:'수행평가 수업도 진도표의 차시예요. 1차시짜리도, 여러 차시짜리도 시작·끝 차시만 고르면 그 차시들이 색으로 묶여요. 날짜는 막지 않아요.',exam:'<b>시작일~끝나는 날</b>은 수업이 없는 날로 보고 차시를 계산하지 않아요(아래 \'수업 없음\'을 켠 경우). 이 시험의 <b>범위</b>는 앞 시험 범위 다음 차시부터 <b>시험 시작일 직전 수업일</b>까지 진행되는 차시예요.',}[r.kind]}</p>
-  ${(r.kind==='exam'||r.kind==='unit')&&r.kind!==(DB.rgBasis||'exam')?`<p class="warnbox" style="font-size:12px;margin:0">진도표 색 구분은 정기시험 또는 단원/파트 중 <b>하나</b>만 써요. 지금은 ${DB.rgBasis==='unit'?'단원/파트':'정기시험'} 기준이에요. 저장하면 ${KL2[r.kind]} 기준으로 바뀌고, 기존 ${DB.rgBasis==='unit'?'단원/파트':'정기시험'} 범위는 색 없이 칩으로만 남아요.</p>`:''}
+  ${r.kind==='unit'&&(DB.rgBasis||'exam')!=='unit'?`<div class="warnbox" style="font-size:12.5px">지금 진도표 색은 <b>정기시험</b> 기준이에요. 색 구분은 정기시험 또는 단원/파트 중 하나만 쓸 수 있어요. 단원/파트를 쓰려면 기준을 바꿔 주세요. <button type="button" class="btn sm" data-a="rgbasisgo" data-x="unit" style="margin-top:6px">단원/파트 기준으로 바꾸기</button></div>`:r.kind==='exam'&&(DB.rgBasis||'exam')==='unit'?`<p class="muted" style="font-size:12px;margin:0">지금 진도표 색은 단원/파트 기준이라, 정기시험은 <b>시험 날짜(수업 없음)만</b> 등록돼요. 시험 범위로 색을 나누려면 진도표 위 '색 기준'을 정기시험으로 바꾸세요.</p>`:''}
   ${t?`<h4 style="margin:4px 0 0">수행평가 번호 <span class="muted" style="font-weight:400">(필수)</span></h4><div style="display:flex;gap:6px;flex-wrap:wrap">${[1,2,3].map(k=>`<button class="chip opt" data-a="rgno" data-x="${k}" aria-pressed="${r.no===k}">수행평가 ${CIRC[k]}</button>`).join('')}</div>`:''}
   ${ex?`<h4 style="margin:4px 0 0">정기시험 선택 <span class="muted" style="font-weight:400">(필수)</span></h4>`:''}
   ${PRE.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${PRE.map(p=>`<button class="chip opt" data-a="rgpreset" data-x="${esc(p)}" aria-pressed="${r.title===p}">${esc(p)}</button>`).join('')}</div>`:''}
@@ -2263,6 +2264,8 @@ document.addEventListener('click',e=>{
    case 'rgnew':openRange(null);break;
    case 'rgedit':{const r=(DB.ranges||[]).find(k=>k.id===x);if(r)openRange({...r,classes:r.classes==null?'all':clone(r.classes)});break}
    case 'rgkind':readRange();U.rg.kind=x;drawRange();break;
+   case 'rgbasisgo':{readRange();const sv=U.rg;mutate('색 기준 변경: 단원/파트',db=>{db.rgBasis='unit'},{silent:true,norender:false});openRange(sv);break}
+   case 'rgbasis':{if((DB.rgBasis||'exam')===x)break;mutate(`색 기준 변경: ${x==='unit'?'단원/파트':'정기시험'}`,db=>{db.rgBasis=x},{msg:`진도표 색 구분을 ${x==='unit'?'단원/파트':'정기시험'} 기준으로 바꿨어요. 다른 쪽 범위는 지우지 않고 칩으로만 남아요.`});break}
    case 'rgno':readRange();U.rg.no=+x;drawRange();break;
    case 'rgpreset':readRange();U.rg.title=x;drawRange();break;
    case 'rgcol':readRange();U.rg.col=+x;drawRange();break;
@@ -2273,15 +2276,16 @@ document.addEventListener('click',e=>{
         let en=r.end;if(!en||en<r.start)en=r.start;const w=weekdays(r.start,en);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}
         const adj=w.start!==r.start||w.end!==en?`주말은 빼고 평일(${md(w.start)}~${md(w.end)})만 저장했어요. `:'';
         const A={...(r._a||{}),id:r.id||undefined,type:'exam',title:r.title,start:w.start,end:w.end,classes:r.classes,noClass:!!r.noClass,fromId:null,toId:null,lessonId:null,note:r.note||''};
-        mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{C.saveAssess(db,A);db.rgBasis='exam'},{msg:adj+(A.noClass?`${r.title} 기간을 수업 없음으로 두고 예정 진도를 다시 계산했어요.`:`${r.title} 일정을 저장했어요.`)});break}
+        mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{C.saveAssess(db,A)},{msg:adj+(A.noClass?`${r.title} 기간을 수업 없음으로 두고 예정 진도를 다시 계산했어요.`:`${r.title} 일정을 저장했어요.`)});break}
       if(r.kind==='task'&&!r.no){toast('수행평가 ①·②·③ 중 번호를 골라 주세요.');break}
+      if(r.kind==='unit'&&(DB.rgBasis||'exam')!=='unit'){toast("색 기준이 정기시험이에요. '단원/파트 기준으로 바꾸기'를 먼저 눌러 주세요.");break}
       if(!r.fromId){toast('차시 범위를 골라 주세요. 먼저 진도표에 차시가 있어야 해요.');break}
       if(!r.toId)r.toId=r.fromId;if(lessonIdx(DB,r.toId)<lessonIdx(DB,r.fromId)){const t=r.fromId;r.fromId=r.toId;r.toId=t}
       if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
       if(r.kind==='task'){
         const A={id:r.id||undefined,type:'task',no:r.no,title:r.title,start:'',end:'',classes:r.classes,noClass:false,fromId:r.fromId,toId:r.toId,lessonId:r.fromId,note:r.note||''};
         mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>C.saveAssess(db,A),{msg:`${r.title} 수행평가를 저장했어요.`})}
-      else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{db.rgBasis='unit';C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:'',classes:r.classes,note:r.note||''})},{msg:`${r.title} 범위를 저장했어요.`});
+      else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:'',classes:r.classes,note:r.note||''})},{msg:`${r.title} 범위를 저장했어요.`});
       break}
    case 'rgdel':{const isT=DB.assess.some(a=>a.id===x);mutate(`범위 삭제`,db=>isT?C.removeAssess(db,x):C.removeRange(db,x),{msg:'범위를 삭제했어요.'});break}
    case 'avtype':{readAssessForm();if(x==='task'){const a=U.av;openRange({kind:'task',title:a.title,date:a.start,classes:a.classes});break}U.av.type=x;U.av.noClass=x==='exam';drawAssess();break}
