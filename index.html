@@ -1151,10 +1151,13 @@ function refreshChrome(){
    document.querySelectorAll('.savechip').forEach(el=>{el.classList.toggle('bad',!SAVE.ok);el.innerHTML=`<i></i>${SAVE.ok?'저장됨':'저장 실패'}`;el.title=SAVE.ok?`이 브라우저에 저장됨 ${SAVE.t} · 다른 기기와는 동기화되지 않아요`:'저장에 실패했어요. 설정에서 백업을 받아 두세요'})
   const ub=$('[data-a=undo].tb'),rb=$('[data-a=redo].tb');if(ub)ub.disabled=!UNDO.length;if(rb)rb.disabled=!REDO.length;
 }
+let RV=null;
 function render(){try{if(!TOUR&&STORE.subjects.map(autoAbs).some(Boolean))persist()}catch(e){}
 
   SCH=buildSched(DB);
+  const sameV=RV===U.view,wy=window.scrollY,sw=document.querySelector('.sheet-wrap'),swt=sw?sw.scrollTop:0,swl=sw?sw.scrollLeft:0;RV=U.view;
   $('#main').innerHTML={home:vHome,sheet:vSheet,cal:vSched,meal:vMeal,set:vSet}[U.view]();
+  if(sameV){const w2=document.querySelector('.sheet-wrap');if(w2){w2.scrollTop=swt;w2.scrollLeft=swl}if(window.scrollY!==wy)window.scrollTo(0,wy)}
   refreshChrome();
   document.querySelectorAll('td.cell,.crow').forEach(x=>x.tabIndex=0);
   document.querySelectorAll('textarea.ie').forEach(autosize);
