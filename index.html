@@ -491,7 +491,13 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .dg small{display:block;font-size:11.5px;font-weight:600;color:var(--muted)}
 .seg3 button .pw{display:inline-flex}.seg3 .pw.off{color:var(--paw-off)}.seg3 .pw.dg{color:var(--doing)}.seg3 .pw.ok{color:var(--ok)}
 .seg3 button[aria-pressed="true"]{background:var(--surface-2);color:var(--fg);box-shadow:inset 0 -3px 0 var(--accent)}
-.semrow{margin:0 0 8px}.semseg button{font-size:12px}
+.semwrap{align-self:center;margin:0 6px 2px 0}
+.semdd{position:relative;display:inline-block}
+.semdd summary{list-style:none;cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:99px;padding:5px 13px;font-size:13px;font-weight:700;white-space:nowrap;user-select:none}
+.semdd summary::-webkit-details-marker{display:none}
+.semdd .semmenu{position:absolute;z-index:30;top:calc(100% + 6px);left:0;min-width:140px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 8px 24px rgba(20,40,100,.18);padding:5px;display:flex;flex-direction:column;gap:2px}
+.semdd .semmenu button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap}
+.semdd .semmenu button:hover{background:var(--accent-soft)}.semdd .semmenu button[aria-pressed=true]{color:var(--accent);background:var(--accent-soft)}
 .stabs{display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap;margin:0 0 12px;border-bottom:2px solid var(--line-2)}
 .stab{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2);margin-bottom:-2px}
 .stab > button{border:0;background:none;padding:7px 14px;font-size:13.5px;font-weight:700;color:var(--muted);border-radius:10px 10px 0 0}
@@ -1017,7 +1023,7 @@ const EXN={absence:'결손',move:'교환',extra:'보강'};
 
 /* ---- 렌더 ---- */
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
-function subjTabs(){const cs=curSub();return `<div class="semrow">${semBar()}</div><div class="stabs" role="tablist" aria-label="교과 시트">${STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0)).map(x=>`<span class="stab ${x.id===STORE.cur?'on':''}"><button role="tab" data-a="subj" data-x="${x.id}" aria-selected="${x.id===STORE.cur}" title="${esc(x.name)}"><span class="sm1">${esc(subjMain(x))}</span><small class="mono">${esc(subjMeta(x))}</small></button>${x.id===STORE.cur?`<button class="sm" data-a="subjmenu" data-x="${x.id}" aria-label="교과 정보 바꾸기·삭제" title="교과 정보 바꾸기·삭제">⋯</button>`:''}</span>`).join('')}<button class="stab add" data-a="subjadd">+ 교과 추가</button></div>`}
+function subjTabs(){const cs=curSub();return `<div class="stabs" role="tablist" aria-label="교과 시트"><div class="semwrap">${semBar()}</div>${STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0)).map(x=>`<span class="stab ${x.id===STORE.cur?'on':''}"><button role="tab" data-a="subj" data-x="${x.id}" aria-selected="${x.id===STORE.cur}" title="${esc(x.name)}"><span class="sm1">${esc(subjMain(x))}</span><small class="mono">${esc(subjMeta(x))}</small></button>${x.id===STORE.cur?`<button class="sm" data-a="subjmenu" data-x="${x.id}" aria-label="교과 정보 바꾸기·삭제" title="교과 정보 바꾸기·삭제">⋯</button>`:''}</span>`).join('')}<button class="stab add" data-a="subjadd">+ 교과 추가</button></div>`}
 const TUT=[
  {t:'진도깨 시작하기',go:['home','홈 열기'],b:`<p>세 가지만 입력하면 오늘 수업과 예정 진도가 자동으로 계산돼요.</p><ol><li><b>학급 추가</b> — 2-1, 2-3처럼 수업하는 반과 교과부장을 적어요.</li><li><b>차시 입력</b> — 진도표에 수업 주제·내용·비고를 적어요. 엑셀에서 복사해 붙여넣어도 돼요.</li><li><b>시간표 입력</b> — 요일·교시마다 어느 반 수업인지 고르면 날짜별 수업이 만들어져요.</li></ol>`},
  {t:'진도표에 바로 쓰기',go:['sheet','진도표 열기'],b:`<ol><li>학급 이름·수업 주제는 <b>표 칸에 바로</b> 적어요. Enter는 아래 칸, Shift+Enter는 줄바꿈이에요.</li><li>'수업 주제 · 내용' 열의 오른쪽 경계를 끌면 열 너비를 바꿀 수 있어요. 더블클릭하면 기본 너비로 돌아가요.</li><li>엑셀에서 여러 칸을 복사해 주제 칸에 붙여넣으면 한 번에 채워져요.</li></ol>`},
@@ -1151,7 +1157,7 @@ function render(){try{if(!TOUR&&STORE.subjects.map(autoAbs).some(Boolean))persis
 function autosize(t){if(CSS.supports&&CSS.supports('field-sizing','content'))return;t.style.height='auto';t.style.height=Math.max(28,t.scrollHeight+2)+'px'}
 const saveChip=()=>`<span class="savechip ${SAVE.ok?'':'bad'}" title="${SAVE.ok?'이 브라우저에 저장됨 '+esc(SAVE.t):'저장 실패'}"><i></i>${SAVE.ok?'저장됨':'저장 실패'}</span>`;
 function topbar(t,extra=''){const ex=nextExam(DB);
-  return `<div class="top"><h1>${t}</h1><div class="meta">${extra}${saveChip()}<button class="btn sm tb" data-a="undo" ${UNDO.length?'':'disabled'}>되돌리기</button><button class="btn sm tb" data-a="redo" ${REDO.length?'':'disabled'}>다시 실행</button><span class="chip mono">${+TK.slice(5,7)}월 ${+TK.slice(8)}일 (${wd(TK)})</span>${ex?`<span class="chip hot">${esc(ex.title)} D-${dday(ex.start)}</span>`:''}</div></div>`}
+  return `<div class="top"><h1>${t}</h1><div class="meta">${extra}${saveChip()}<button class="btn sm tb" data-a="undo" ${UNDO.length?'':'disabled'}>되돌리기</button><button class="btn sm tb" data-a="redo" ${REDO.length?'':'disabled'}>다시 실행</button><span class="chip mono">${+TK.slice(5,7)}월 ${+TK.slice(8)}일 (${wd(TK)})</span>${ex?`<button class="chip hot" data-a="avedit" data-x="${ex.id}" title="눌러서 일정 수정">${esc(ex.title)} D-${dday(ex.start)}</button>`:''}</div></div>`}
 const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK).length>0||DB.tt.some(t=>t.slots.length)});
 
 /* ---------- 홈 ---------- */
@@ -1470,8 +1476,8 @@ const schedSeg=()=>`<span class="seg" role="group" aria-label="보기"><button d
 /* 주간 시간표는 교사의 시간표 하나: 같은 학년도·학기의 모든 교과를 한꺼번에 보여준다 */
 const subPre=(sb,subs)=>subs.length>1?(subs.filter(z=>z.subj===sb.subj).length>1?subjMain(sb):(sb.subj||subjMain(sb))):'';
 const semList=()=>{const m=new Map();STORE.subjects.forEach(x=>{const y=x.year||0,e=x.sem||0;m.set(y+'|'+e,{y,e})});return [...m.values()].sort((a,b)=>a.y-b.y||a.e-b.e)};
-const semBar=()=>{const cs=curSub(),l=semList();if(l.length<2&&!l.length)return '';
-  return `<span class="seg semseg" role="group" aria-label="학기 선택">${l.map(z=>`<button data-a="semsel" data-x="${z.y}|${z.e}" aria-pressed="${(cs.year||0)===z.y&&(cs.sem||0)===z.e}">${z.y?z.y+' ':''}${z.e}학기</button>`).join('')}</span>`};
+const semBar=()=>{const cs=curSub(),l=semList();if(!l.length)return '';const cur=`${cs.year?cs.year+' ':''}${cs.sem}학기`;
+  return `<details class="semdd"><summary>${cur} <span aria-hidden="true">▾</span></summary><div class="semmenu">${l.map(z=>`<button data-a="semsel" data-x="${z.y}|${z.e}" aria-pressed="${(cs.year||0)===z.y&&(cs.sem||0)===z.e}">${z.y?z.y+' ':''}${z.e}학기</button>`).join('')}</div></details>`};
 function schedRange(){const t=ttSubs().map(x=>x.db.term);return {lo:t.reduce((a,x)=>x.start<a?x.start:a,t[0].start),hi:t.reduce((a,x)=>x.end>a?x.end:a,t[0].end)}}
 const clampK=(k,r)=>k<r.lo?r.lo:k>r.hi?r.hi:k;
 function clampSched(){const r=schedRange(),mlo=mondayOf(r.lo),mhi=mondayOf(r.hi);
@@ -2129,6 +2135,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
+document.addEventListener('click',e=>{document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 document.addEventListener('keydown',e=>{const tg=e.target;
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
   if(e.key==='Escape'){if(TOUR){endTour();return}if($('#layer').innerHTML)closeM();else if((U.selCell||U.selRow)&&U.view==='sheet'){U.selCell=null;U.draft=null;U.selRow=null;render()}return}
