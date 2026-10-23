@@ -1947,7 +1947,7 @@ function openCalReview(){const sb=curSub(),db=DB,gs=calGroups(db),TG={hol:'휴�
   <div class="rvlist">${list}</div>
   ${per.length?`<div class="rvsum"><b>이 학기 수업 가능 횟수</b> <span class="muted">(차시를 몇 개 만들지 참고하세요)</span><div>${per.map(p=>`<span class="tag" style="border-left:4px solid ${p.col}">${esc(p.n)} <b>${p.can}회</b>${p.ab?` · 결손 ${p.ab}`:''}</span>`).join('')}</div></div>`:''}
   <div class="acts"><button class="btn" data-a="go" data-x="cal">캘린더에서 일정 추가</button><span style="flex:1"></span><button class="btn pri" data-a="revok">${DB.calOk?'닫기':'확인했어요'}</button></div>`)}
-function openAbsence(k,pre=[],reason='복무',hint=''){U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
+function openAbsence(k,pre=[],reason='교내 일정',hint=''){U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
 function absPreview(){const a=U.abs;const list=[...a.keys].map(x=>SCH.key[x]).filter(Boolean);
   if(!list.length)return '<span class="empty">결손 처리할 수업을 고르세요.</span>';
   const extra=list.map((s,i)=>({id:'tmp'+i,type:'absence',date:s.date,c:s.c,p:s.p,state:'active'}));
