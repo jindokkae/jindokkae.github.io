@@ -347,7 +347,21 @@ textarea.ie{min-height:28px}
 table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;table-layout:fixed}
 .tt th{font-size:12px;color:var(--muted);font-weight:600;padding:2px}
 .tt th.today{color:var(--accent)}
-.tt td{height:44px;border-radius:8px;background:var(--surface-2);vertical-align:middle;padding:3px}
+.tt td{height:54px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
+.tt td.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));outline:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
+.tt th{padding:4px 2px}.tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
+.tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
+.tt thead th .btn{opacity:0;transition:opacity .15s}.tt thead th:hover .btn{opacity:1}
+.tc{display:flex;flex-direction:column;gap:1px;width:100%;text-align:left;padding:4px 7px 4px 8px;border-radius:8px;border:1px solid color-mix(in srgb,var(--cc) 38%,var(--line));border-left:5px solid var(--cc);background:color-mix(in srgb,var(--cc) 13%,var(--surface));min-width:0;line-height:1.25}
+.tc:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(30,50,100,.12)}
+.tc1{display:flex;align-items:center;gap:5px;min-width:0}.tc1 b{font-size:14px}.tc1 small{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}.tc1 i{font-style:normal;font-size:10px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:0 4px}
+.tc .tci{display:inline-grid;color:var(--muted)}.tc .tcs{margin-left:auto;display:inline-grid}
+.tc2{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px}.tc2 em{font-style:normal;font-weight:700}
+.tc.done .tcs{color:var(--ok)}.tc.plan{background:color-mix(in srgb,var(--cc) 7%,var(--surface))}.tc.plan .tcs{color:var(--accent)}
+.tc.now{box-shadow:0 0 0 2px var(--accent)}
+.tc.check{background:var(--warn-soft);border-color:var(--warn)}.tc.check .tcs{color:var(--warn)}.tc.check b{color:var(--warn)}
+.tc.absent{background:var(--bad-soft);border-style:dashed;border-left-style:solid}.tc.absent b{text-decoration:line-through;color:var(--bad)}.tc.absent .tcs{color:var(--bad)}.tc.absent .tc2{color:var(--bad)}
+.tc.moved{background:var(--surface-2);border-style:dashed;opacity:.75}.tc.moved b{text-decoration:line-through;color:var(--muted)}
 .tt td .stk{display:flex;flex-direction:column;gap:3px}
 .tt td.addable{cursor:pointer}.tt td.addable .plus{display:none;font-size:11px;font-weight:600;color:var(--accent);text-align:center;width:100%}.tt td.addable:hover{background:var(--accent-soft);outline:1px dashed var(--accent)}.tt td.addable:hover .plus{display:block}
 .tt td.hol{font-size:11px;color:var(--bad);text-align:center}
@@ -644,6 +658,7 @@ body.touring main{padding-bottom:300px}
 .lrow .tm b{font-size:13.5px;color:var(--fg)}
 .lrow .bd{padding:3px 10px;min-width:0;display:flex;gap:9px;align-items:center}
 .lrow .sq,.prog .sq{width:26px;height:26px;border-radius:8px;background:var(--cc);display:grid;place-items:center;color:#1A2440;flex:none}
+.prog .sq{background:transparent;color:var(--muted);width:24px}
 .lrow .tx{min-width:0;display:flex;flex-direction:column;line-height:1.3}
 .lrow .tx .l1{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
 .lrow .tx .l1 b{font-size:14.5px}
@@ -852,7 +867,9 @@ function buildSched(db,opt={}){
       else if(s.st==='movedOut')s.status='moved';
       else{const r=rd[s.c][k]||[],u=used[s.c][k]||0;
         if(u<r.length){s.status='done';s.n=r[u];used[s.c][k]=u+1}
-        else if(isPast(db,k,s.p)){s.status='check';s.n=nx[s.c]++;if(!S.plan[s.c][s.n])S.plan[s.c][s.n]=s}
+        else if(isPast(db,k,s.p)){const rr=rec(db,s.c,nx[s.c]);
+          if(rr&&rr.doing&&!rr.done){s.status='plan';s.n=nx[s.c];s.doing=true;if(!S.plan[s.c][s.n])S.plan[s.c][s.n]=s}
+          else{s.status='check';s.n=nx[s.c]++;if(!S.plan[s.c][s.n])S.plan[s.c][s.n]=s}}
         else{s.status='plan';s.n=nx[s.c]++;if(!S.plan[s.c][s.n])S.plan[s.c][s.n]=s}}
       S.key[s.key]=s;S.cls[s.c].push(s)}
   }
@@ -1047,6 +1064,10 @@ const sjic=(k,sz=15)=>{const e=SJI[k];return e&&e[1]?`<svg width="${sz}" height=
 const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 const sessChip=(s,showN=true,pre='',attr='')=>`<button class="sess ${s.status}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${STM[s.status][0]}${s.extra?' · 수업 보강':''}">${sic(s.status,11)}<span>${pre?`<small>${esc(pre)}</small> `:''}${esc(cn(s.c))}${s.extra?' <small>보강</small>':''}${showN&&s.n&&s.status!=='check'?` <small>${s.n}차시</small>`:''}</span></button>`;
 const EXN={absence:'결손',move:'교환',extra:'보강'};
+const ttChip=(s,sb,pre,attr)=>{const nowS=s.status==='plan'&&isNow(DB,s.date,s.p);const dead=s.status==='absent'||s.status==='moved';
+  return `<button class="tc ${s.status} ${nowS?'now':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${STM[s.status][0]}${s.extra?' · 수업 보강':''}${!dead&&s.n?' · '+esc(lname(s.n)):''}">
+    <span class="tc1"><span class="tci">${sjic(sb.icon,13)}</span><b>${esc(cn(s.c))}</b>${s.extra?'<i>보강</i>':''}${!dead&&s.n&&s.status!=='check'?`<small>${s.n}차시</small>`:''}<span class="tcs">${sic(s.status,13)}</span></span>
+    <span class="tc2">${dead?(s.status==='absent'?esc(excOf(s)?.reason||'결손'):'교환됨'):(pre?`<em>${esc(pre)}</em> `:'')+esc(s.n?lname(s.n):'')}</span></button>`};
 
 /* ---- 렌더 ---- */
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
@@ -1311,7 +1332,7 @@ function vHome(){
     ${progs.map(p=>`<div class="prog" style="--cc:${p.sq}"><div class="ph1"><span class="sq">${sjic(p.icon,15)}</span><span class="pn"><b>${esc(p.name)}</b><small class="mono">${esc(p.meta)}</small></span><span class="mono pc"><span class="muted">${p.done} / ${p.total}차시</span><b>${p.pct}%</b></span></div>
       <div class="pbar"><i style="width:${p.pct}%"></i></div>
       <details class="cdet" open><summary>반별 보기</summary><div class="mini">${p.cls.map(c=>`<div style="--cc:${c.color}"><b>${esc(c.name)}</b><span class="tr"><i style="width:${p.total?c.d/p.total*100:0}%"></i></span><span class="mono" style="font-size:12px">${c.d}차시 ${c.gap===0?'<span class="tag ok">선두</span>':`<span class="tag ${c.gap>=2?'warn':'gray'}">-${c.gap}</span>`}</span></div>`).join('')}</div></details></div>`).join('')||'<p class="muted" style="margin:0">차시가 있는 교과가 아직 없어요. 진도표에서 차시를 만들어 보세요.</p>'}
-    ${nCheck?`<button class="pendbox" id="pendbox" data-a="needrec"><span class="ic">${ic('warn',18)}</span><span><b>미완료 기록 ${nCheck}건</b><small>${pendBy.map(p=>`${esc(p.name)} ${p.nCheck}건`).join(' · ')}</small></span><span class="chv">${ic('chev',16)}</span></button>`:''}</div>`;
+</div>`;
   /* 다음 수업 */
   const nextCard=withCls.length?`<div class="card"><h2>${ic('clock',18)} 다음 수업<span class="right"><button class="hlink" data-a="go" data-x="tt">전체 일정 보기 →</button></span></h2>
     ${nxAll?`<div class="nxcard" data-sub="${nxAll.sbId}" data-a="sess" data-x="${nxAll.key}" role="button" tabindex="0"><span class="ic">${ic('cal',20)}</span><div class="nxt"><b>${nxAll.date===TK?(nxAll.now?'지금':'오늘'):mdw(nxAll.date)} ${nxAll.p}교시 · ${esc(nxAll.cn)}</b><span>${multi?esc(nxAll.subj)+' · ':''}${nxAll.n}차시 · ${esc(nxAll.topic)}</span><span class="mono muted">${nxAll.t1} ~ ${nxAll.t2}</span>
@@ -1474,8 +1495,7 @@ function vSheet(){
   const tools=legendH;
   U.selRows.forEach(id=>{if(!DB.lessons.some(l=>l.id===id))U.selRows.delete(id)});
   const bulk=U.selRows.size&&U.sheetMode==='all'?`<div class="bulkbar"><b>${U.selRows.size}개 차시 선택됨</b><span class="muted">색</span><span class="swatches lcol"><button type="button" class="pill" data-a="bcol" data-x="a">자동</button><button type="button" class="pill" data-a="bcol" data-x="0">없음</button>${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="bcol" data-x="${k}" style="--sw:var(--p${k})" aria-label="색 ${k}로 변경"></button>`).join('')}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm bad" data-a="bdelask">삭제</button><button class="btn sm" data-a="bclear">선택 해제</button></span></div>`:'';
-  const exm=nextExam(DB);
-  return topbar('진도표',mode+tools,exm?`<button class="chip hot" data-a="avedit" data-x="${exm.id}" title="눌러서 일정 수정">${esc(exm.title)} D-${dday(exm.start)}</button>`:'')+subjTabs()+strip+bulk+`
+  return topbar('진도표',mode+tools)+subjTabs()+strip+bulk+`
   <div class="sheetlay ${PH?'withp':''}"><div style="min-width:0">${body}</div>${PH}</div>`;
 }
 
@@ -1530,7 +1550,7 @@ function ttBody(){
     const pre=subPre(sb,subs);
     DB.classes.forEach(c=>filt.push({id:sb.id+'|'+c.id,html:`<button class="chip ttf" data-a="ttc" data-x="${sb.id}|${c.id}" aria-pressed="@@${sb.id}|${c.id}"><span class="dot" style="background:${ccv(c.id)}"></span>${pre?`<small class="muted">${esc(pre)}</small> `:''}${esc(cn(c.id))}</button>`}));
     days.forEach(k=>(SCH.by[k]||[]).forEach(x=>{if(!['plan','check','done','absent','moved'].includes(x.status))return;
-      (cellH[k+'|'+x.p]=cellH[k+'|'+x.p]||[]).push({id:sb.id+'|'+x.c,html:sessChip(x,true,pre,`data-sub="${sb.id}"`)})}));
+      (cellH[k+'|'+x.p]=cellH[k+'|'+x.p]||[]).push({id:sb.id+'|'+x.c,html:ttChip(x,sb,pre,`data-sub="${sb.id}"`)})}));
     DB.inbox.filter(i=>i.state==='pending').forEach(i=>pends.push(`<div data-sub="${sb.id}">${(pre?`<p class="muted" style="margin:0 0 4px;font-size:12px;font-weight:700">${esc(pre)}</p>`:'')+inboxCard(i)}</div>`));
     SCH.conflicts.forEach(x=>confs.push({sb,pre,x,txt:`${pre?pre+' ':''}${esc(cn(x.c))} ${x.n}차시(${md(x.date)})`}));
     if(!DB.tt.some(t=>t.slots.length))emptys.push({sb,pre});
@@ -1538,11 +1558,11 @@ function ttBody(){
     ttBtns.push(`<button class="btn sm ${DB.tt.some(t=>t.slots.length)?'':'pri'}" data-sub="${sb.id}" data-a="ttedit">${pre?esc(pre)+' ':''}기본 시간표 편집</button>`)}));
   if(U.ttClass!=='all'&&!filt.some(f=>f.id===U.ttClass))U.ttClass='all';
   const blockOf=k=>subs.every(sb=>dayBlock(sb.db,k))?dayBlock(subs[0].db,k):null;
-  let rows='';for(let p=1;p<=7;p++){rows+=`<tr><th class="mono">${p}<br><span style="font-weight:400;font-size:10px">${PT(p)}</span></th>${days.map(k=>{
-    const g=blockOf(k);if(g)return p===1?`<td rowspan="7" class="hol">${esc(g)}</td>`:'';
+  let rows='';for(let p=1;p<=7;p++){const nowP=subs.some(sb=>{const t=toMin(sb.db.periods[p]);return NOWMIN>=t&&NOWMIN<t+50});rows+=`<tr><th class="mono ${nowP&&days.includes(TK)?'nowp':''}">${p}<br><span style="font-weight:400;font-size:10px">${PT(p)}</span></th>${days.map(k=>{
+    const g=blockOf(k);if(g)return p===1?`<td rowspan="7" class="hol ${k===TK?'today':''}">${esc(g)}</td>`:'';
     const all=cellH[k+'|'+p]||[],ss=all.filter(x=>U.ttClass==='all'||x.id===U.ttClass);
-    if(!all.length)return `<td class="addable" data-a="bogang" data-x="${k}|${p}" title="빈 칸을 누르면 수업 보강을 추가해요"><span class="plus">+ 보강</span></td>`;
-    return `<td>${ss.length?`<div class="stk">${ss.map(x=>x.html).join('')}</div>`:''}</td>`}).join('')}</tr>`}
+    if(!all.length)return `<td class="addable ${k===TK?'today':''}" data-a="bogang" data-x="${k}|${p}" title="빈 칸을 누르면 수업 보강을 추가해요"><span class="plus">+ 보강</span></td>`;
+    return `<td class="${k===TK?'today':''}">${ss.length?`<div class="stk">${ss.map(x=>x.html).join('')}</div>`:''}</td>`}).join('')}</tr>`}
   const exs=exAll.filter(e=>U.ttClass==='all'||e.id===U.ttClass).sort((a,b)=>a.date<b.date?1:-1);
   const noTT=emptys[0];
   return (noTT?`<div class="alertbar w"><span>${multi?`<b>${esc(noTT.pre)}</b> `:''}아직 기본 시간표가 없어요. 요일·교시별로 어느 반 수업인지 입력하세요.</span><button class="btn sm pri" data-sub="${noTT.sb.id}" data-a="ttedit">기본 시간표 입력</button></div>`:'')+
@@ -1552,7 +1572,7 @@ function ttBody(){
     <div class="card"><h2>주간 시간표 <span class="sub">${multi?'모든 교과 · ':''}칸을 누르면 완료·결손·교환을 처리하고, 빈 칸을 누르면 수업 보강을 추가해요</span></h2>
       <div class="calbar"><button class="btn sm" data-a="ttw" data-x="-1" aria-label="이전 주" ${mon<=SR.mlo?'disabled':''}>‹</button><span class="ttl mono">${md(days[0])} ~ ${md(days[4])}</span><button class="btn sm" data-a="ttw" data-x="1" aria-label="다음 주" ${mon>=SR.mhi?'disabled':''}>›</button><button class="btn sm" data-a="ttw" data-x="0" ${mon===mondayOf(TK)||TK<SR.lo||TK>SR.hi?'disabled':''}>이번 주</button>
         <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div></div>
-      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}">${wd(k)} <span class="mono">${md(k)}</span>${blockOf(k)||multi?'':` <button class="btn sm mobhide" data-a="absday" data-x="${k}" title="이날 수업 결손 처리" style="padding:0 5px">결손</button>`}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span>${blockOf(k)||multi?'':` <button class="btn sm mobhide" data-a="absday" data-x="${k}" title="이날 수업 결손 처리" style="padding:0 5px">결손</button>`}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
       <div class="legend" style="margin:10px 0 0">${['done','plan','check','absent','moved'].map(s=>`<span>${stag(s)}</span>`).join('')}<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${ttBtns.join('')}</span></div></div>
     <div class="card"><h2>결손 · 교환 · 보강 기록 <span class="sub">지우지 않고 남겨서 언제든 되돌릴 수 있어요</span><span class="right"><span class="seg"><button data-a="excf" data-x="active" aria-pressed="${U.excFilter==='active'}">적용 중</button><button data-a="excf" data-x="all" aria-pressed="${U.excFilter==='all'}">전체</button></span></span></h2>
       <div class="excl">${exs.map(e=>e.html).join('')||'<p class="muted" style="margin:0">기록이 없어요. 시간표 칸을 눌러 결손이나 교환을, 빈 칸을 눌러 보강을 등록하세요.</p>'}</div></div>
