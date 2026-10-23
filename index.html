@@ -542,6 +542,9 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 #tourCard .tcbody{font-size:13.5px;line-height:1.6}#tourCard .tcbody p{margin:0 0 6px}
 #tourCard .tcft{display:flex;gap:8px;align-items:center}
 body.touring main{padding-bottom:300px}
+.tc{container-type:inline-size}.tc .tc1 b{white-space:nowrap}.tc .tc1 small{white-space:nowrap}
+@container (max-width:118px){.tc .tc1 small{display:none}}
+.zoomseg button:disabled{opacity:.35;cursor:default;background:none;color:var(--muted)}
 .zoomseg{display:flex;flex-direction:column;gap:4px;margin-bottom:2px}.zoomseg span{font-size:11px;color:var(--muted);font-weight:600;padding-left:2px}
 .zoomseg div{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
 .zoomseg button{font-size:11.5px;font-weight:600;color:var(--muted);padding:5px 0;border:0;background:none;cursor:pointer}.zoomseg button+button{border-left:1px solid var(--line)}
@@ -665,7 +668,7 @@ body.tplay #tourCard,body.tplay #tourCard *,body.tplay .lrow .tog,body.tplay .lr
 .hero .cheer{position:absolute;top:6px;left:-26px;background:var(--surface);border:2px solid var(--line-2);border-radius:14px;padding:1px 11px;font-weight:800;font-size:13px;color:var(--accent);transform:rotate(-7deg);z-index:1}
 .hero .mascot .jd{transform-origin:50% 100%}
 .hero.pop .jd{animation:dogHop .6s ease-out}
-.hpair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}.hpair>.card{min-width:0}
+.hpair{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}.hpair>.card{min-width:0}
 @media (max-width:640px){.hpair{grid-template-columns:minmax(0,1fr)}}
 .hmain{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
 .card h2 svg{color:var(--accent);flex:none}
@@ -2262,8 +2265,18 @@ document.addEventListener('keydown',e=>{const tg=e.target;
   if(e.key==='Enter'&&tg.matches('td.cell,.crow')){e.preventDefault();tg.click()}});
 
 var ZK='jindokkae.zoom';
-function setZoom(z,keep){if(![1,1.1,1.25,1.5].includes(z))z=1;document.documentElement.style.zoom=z===1?'':z;document.documentElement.style.setProperty('--z',z);
-  document.querySelectorAll('.zoomseg button').forEach(b=>b.classList.toggle('on',+b.dataset.x===z));if(!keep)try{localStorage.setItem(ZK,String(z))}catch(e){}}
+/* CSS zoom은 미디어쿼리 기준 너비를 바꾸지 않아서, 확대한 만큼 breakpoint를 같이 키워 브라우저 확대처럼 동작하게 해요 */
+var MQ0=new WeakMap();
+function zoomMedia(z){try{for(const sh of document.styleSheets){let rs;try{rs=sh.cssRules}catch(e){continue}
+  (function walk(rs){for(const r of rs){if(r.type===CSSRule.MEDIA_RULE){if(!MQ0.has(r))MQ0.set(r,r.media.mediaText);
+    r.media.mediaText=MQ0.get(r).replace(/\((max|min)-width:\s*([\d.]+)px\)/g,(m,k,n)=>`(${k}-width:${Math.round(n*z*100)/100}px)`)}
+    else if(r.cssRules&&r.type!==CSSRule.KEYFRAMES_RULE)walk(r.cssRules)}})(rs)}}catch(e){}}
+var ZWANT=1;
+function setZoom(z,keep){if(![1,1.1,1.25,1.5].includes(z))z=1;if(!keep){ZWANT=z;try{localStorage.setItem(ZK,String(z))}catch(e){}}else ZWANT=z;applyZoom()}
+function applyZoom(){const W=window.innerWidth,ok=v=>v===1||(W>760&&W/v>=800);let z=ZWANT;while(z>1&&!ok(z))z=[1,1.1,1.25,1.5][[1,1.1,1.25,1.5].indexOf(z)-1];
+  document.documentElement.style.zoom=z===1?'':z;document.documentElement.style.setProperty('--z',z);zoomMedia(z);
+  document.querySelectorAll('.zoomseg button').forEach(b=>{b.classList.toggle('on',+b.dataset.x===z);b.disabled=!ok(+b.dataset.x)})}
+window.addEventListener('resize',()=>{try{applyZoom()}catch(e){}})
 try{setZoom(+localStorage.getItem(ZK)||1,true)}catch(e){}
 boot();
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').then(()=>{if(NOTIF.push&&Notification.permission==='granted')pushSync(false).then(()=>remSync()).catch(()=>{})}).catch(()=>{})}catch(e){}
