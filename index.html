@@ -795,9 +795,10 @@ function dayBlock(db,k){const dw=D(k).getDay();if(dw===0||dw===6)return '주말'
   const h=HOLIDAYS.find(e=>inRange(k,e))||db.events.find(e=>e.block&&inRange(k,e));return h?h.label:null}
 function classBlock(db,k,c){const g=dayBlock(db,k);if(g)return g;
   const a=db.assess.find(x=>x.type==='exam'&&x.noClass&&k>=x.start&&k<=(x.end||x.start)&&targets(db,x).includes(c));return a?a.title:null}
-const MOCK_RE=/전국연합학력평가|모의고사|모의평가/;
-function autoAbs(sb){const db=sb.db;if(!db||!db.events||!db.events.length)return false;let ch=false;
-  for(const ev of db.events){const lab=String(ev.label||'');if(!MOCK_RE.test(lab))continue;
+const MOCK_RE=/학력평가|모의고사|모의평가|전국연합/;
+function autoAbs(sb){const db=sb.db;if(!db)return false;let ch=false;
+  const evs=STORE.subjects.filter(x=>x.year===sb.year&&x.sem===sb.sem).flatMap(x=>(x.db&&x.db.events)||[]);
+  for(const ev of evs){const lab=String(ev.label||'');if(!MOCK_RE.test(lab))continue;
     const gs=new Set();let m=lab.match(/고\s*([1-3](?:\s*[,·ㆍ.\/]\s*[1-3])*)/);if(m)(m[1].match(/[1-3]/g)||[]).forEach(x=>gs.add(x));
     (lab.match(/([1-3])\s*학년/g)||[]).forEach(x=>gs.add(x[0]));
     if(gs.size&&sb.grade&&!gs.has(String(sb.grade)))continue;
