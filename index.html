@@ -165,7 +165,7 @@ button.sum:hover{border-color:var(--accent)}
 .row.absent{border-style:dashed;background:var(--bad-soft)}
 .row.absent .ls b{text-decoration:line-through;color:var(--bad)}
 .stamp{color:var(--ok);display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:12px}
-.blink{animation:blinkb .5s ease-in-out 4;position:relative}@keyframes blinkb{0%,100%{box-shadow:inset 0 0 0 0 transparent}50%{box-shadow:inset 0 0 0 3px var(--warn),0 0 0 3px var(--warn)}}
+.blink{animation:blinkb .9s ease-in-out 1;position:relative}@keyframes blinkb{0%,100%{box-shadow:inset 0 0 0 0 transparent}50%{box-shadow:inset 0 0 0 1.5px var(--warn)}}
 .todo{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .todo li{display:flex;gap:9px;align-items:flex-start;font-size:13px}
 .todo input[type=checkbox]{margin-top:4px;accent-color:var(--accent)}.todo .tdb{border:0;background:none;color:var(--muted);font-size:12px;padding:0 3px;opacity:.55;line-height:1.6}.todo li:hover .tdb{opacity:1}.todo .tdb:hover{color:var(--accent)}.todo .tdedit{align-items:center}
@@ -1218,7 +1218,7 @@ function needRec(){let hit=null;
   useSub(hit.sb.id);U.period='all';U.sheetMode='all';U.selCell=null;U.draft=null;go('sheet');
   setTimeout(()=>{let first=null;hit.ks.forEach(k=>{const el=document.querySelector(`td.cell[data-x="${k}"]`);if(el){el.classList.add('blink');first=first||el}});
     if(first)first.scrollIntoView({block:'center',behavior:'smooth'});else toast('진도표에 아직 없는 차시예요. 차시를 먼저 추가해 주세요.');
-    setTimeout(()=>document.querySelectorAll('.blink').forEach(e=>e.classList.remove('blink')),2600)},120)}
+    setTimeout(()=>document.querySelectorAll('.blink').forEach(e=>e.classList.remove('blink')),1200)},120)}
 function vHome(){
   const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
   const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
