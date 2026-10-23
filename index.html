@@ -807,12 +807,12 @@ function suggestDateDb(db,c,n){const ex=activeExc(db),recs=db.records[c]||{};
 function buildSched(db,opt={}){
   const ex=activeExc(db,opt);
   const S={by:{},cls:{},key:{},plan:{},conflicts:[],nextN:{},absent:{}};
-  const rd={},used={},nx={};
-  clsIds(db).forEach(c=>{rd[c]=recDates(db,c);used[c]={};nx[c]=nextN(db,c);S.cls[c]=[];S.plan[c]={};S.nextN[c]=nx[c];S.absent[c]=0});
+  const rd={},used={},nx={},lastD={};
+  clsIds(db).forEach(c=>{rd[c]=recDates(db,c);lastD[c]=Object.keys(rd[c]).sort().pop()||'';used[c]={};nx[c]=nextN(db,c);S.cls[c]=[];S.plan[c]={};S.nextN[c]=nx[c];S.absent[c]=0});
   const {start,end}=db.term;
   for(let k=start;k<=end;k=addK(k,1)){
     const ss=rawSessions(db,k,ex);
-    S.by[k]=ss.filter(s=>!(db.trackFrom&&k<db.trackFrom&&s.st==='on'&&!(rd[s.c][k]||[]).length));
+    S.by[k]=ss.filter(s=>!(s.st==='on'&&!(rd[s.c][k]||[]).length&&((db.trackFrom&&k<db.trackFrom)||k<lastD[s.c])));
     for(const s of S.by[k]){s.key=`${k}|${s.c}|${s.p}`;
       if(s.st==='absent'){s.status='absent';S.absent[s.c]++}
       else if(s.st==='movedOut')s.status='moved';
@@ -978,7 +978,7 @@ function mutate(label,fn,opt={}){
   if(opt.norender){SCH=buildSched(DB);refreshChrome();return true}
   U.flash=opt.flash||null;closeM();refreshDraft();render();if(!opt.silent)toast(opt.msg||label,{undo:true,paw:opt.paw});return true}
 function useSub(id){if(id===STORE.cur||!STORE.subjects.some(x=>x.id===id))return;HIST[STORE.cur]={U:UNDO,R:REDO};persist();STORE.cur=id;DB=curSub().db;const h=HIST[id];UNDO=h?h.U:[];REDO=h?h.R:[];
-  U.selCell=U.draft=U.selRow=null;U.period='all';U.cOpen.clear();U.sheetClass=DB.classes[0]?.id||null;U.abs=U.mv=U.ttEdit=U.sess=U.av=U.ni=null;persist();closeM();render()}
+  U.selCell=U.draft=U.selRow=null;U.period='all';U.periodSub=null;U.cOpen.clear();U.sheetClass=DB.classes[0]?.id||null;U.abs=U.mv=U.ttEdit=U.sess=U.av=U.ni=null;persist();closeM();render()}
 function quick(fn){fn(DB);persist();render()}
 function undo(){const u=UNDO.pop();if(!u){toast('되돌릴 작업이 없어요.');return}
   REDO.push({label:u.label,snap:JSON.stringify(DB)});DB=JSON.parse(u.snap);logAdd('실행 취소: '+u.label);persist();closeM();refreshDraft();render();toast('되돌렸어요: '+u.label,{redo:true})}
@@ -1380,7 +1380,7 @@ function periodList(){const exs=DB.assess.filter(a=>a.type==='exam').slice().sor
     to=Math.min(to,N);const from=prev+1;
     if(to>prev)prev=to;
     return {a,from,to,empty:to<from}}).map((x,i)=>({...x,k:i%6+1,col:`var(--p${i%6+1})`}))}
-function periodSel(){const pl=periodList();const cur=U.period==='all'?null:pl.find(p=>p.a.id===U.period);if(U.period!=='all'&&!cur)U.period='all';return {pl,cur}}
+function periodSel(){if(U.periodSub!==STORE.cur){U.periodSub=STORE.cur;U.period=DB.uiPeriod||'all'}const pl=periodList();const cur=U.period==='all'?null:pl.find(p=>p.a.id===U.period);if(U.period!=='all'&&!cur)U.period='all';return {pl,cur}}
 function vSheet(){
   const tabs=['2학기 수업'];
   const mode=`<span class="seg" role="group" aria-label="보기"><button data-a="mode" data-x="all" aria-pressed="${U.sheetMode==='all'}">전체 진도표</button><button data-a="mode" data-x="class" aria-pressed="${U.sheetMode==='class'}" ${DB.classes.length?'':'disabled'}>반별 진도표</button></span>`;
@@ -1872,7 +1872,7 @@ document.addEventListener('click',e=>{
    case 'dd':U.draft.done=x==='1';U.draft.doing=x==='2';if(!draftItems().length)render();else commitDraft(false);break;
    case 'mode':U.sheetMode=x;if(x==='class'&&U.selCell)U.sheetClass=U.selCell.c;render();break;
    case 'cls':U.sheetClass=x;render();break;
-   case 'period':U.period=x;render();break;
+   case 'period':U.period=x;DB.uiPeriod=x==='all'?null:x;persist();render();break;
    case 'addrows':U.period='all';mutate(`차시 ${x}개 추가`,db=>{C.addLessons(db,+x)},{silent:true});setTimeout(()=>{const els=document.querySelectorAll('[data-lf=topic]');const el=els[DB.lessons.length-+x];el&&el.focus()},30);break;
    case 'pasteask':openPasteAsk();break;
    case 'rowmenu':openRowMenu(+x);break;
