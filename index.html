@@ -500,6 +500,8 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .semdd .semmenu{position:absolute;z-index:30;top:calc(100% + 6px);left:0;min-width:140px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 8px 24px rgba(20,40,100,.18);padding:5px;display:flex;flex-direction:column;gap:2px}
 .semdd .semmenu button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap}
 .semdd .semmenu button:hover{background:var(--accent-soft)}.semdd .semmenu button[aria-pressed=true]{color:var(--accent);background:var(--accent-soft)}
+.sjicons{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}.sjicons button{border:1px solid var(--line-2);background:var(--surface);border-radius:10px;height:38px;display:grid;place-items:center;color:var(--muted);padding:0}.sjicons button:hover{border-color:var(--accent);color:var(--accent)}.sjicons button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.sm1 svg{vertical-align:-2px;margin-right:2px}
 .stabs{display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap;margin:0 0 12px;border-bottom:2px solid var(--line-2)}
 .stab{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-bottom:0;border-radius:10px 10px 0 0;background:var(--surface-2);margin-bottom:-2px}
 .stab > button{border:0;background:none;padding:7px 14px;font-size:13.5px;font-weight:700;color:var(--muted);border-radius:10px 10px 0 0}
@@ -768,6 +770,7 @@ const subjName=sb=>`${sb.year} ${sb.sem}학기 ${subjMain(sb)}`;
 function ensureSub(sb,db=sb.db){
   if(!sb.subj){sb.subj=sb.name||'내 교과'}
   if(sb.grade==null)sb.grade='';
+  if(!sb.icon||!SJI[sb.icon])sb.icon='book';
   const t=db.term||OLD_TERM;
   if(!sb.year)sb.year=+t.start.slice(0,4);
   if(sb.sem!==1&&sb.sem!==2){const m=+t.start.slice(5,7);sb.sem=m>=3&&m<=7?1:2}
@@ -1022,13 +1025,31 @@ const sic=(st,s=12)=>st==='done'?paw(s):`<svg width="${s}" height="${s}" viewBox
 const STM={done:['완료','ok'],plan:['예정','info'],check:['확인 필요','warn'],absent:['결손','bad'],moved:['교환됨','gray']};
 const stag=st=>`<span class="tag ${STM[st][1]}">${sic(st,11)}${STM[st][0]}</span>`;
 const ICON={warn:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4v.4"/>',checkc:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H19v-5M9 8h6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',chev:'<path d="M9 6l6 6-6 6"/>',users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.2A5 5 0 0 1 21 19"/>',bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',doc:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',chart:'<path d="M4 20V11M10 20V4M16 20v-7M2 20h20"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',pen:'<path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14 6l3 3"/>',home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',sheet:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/>',tt:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M13 13h3M8 16h3"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',meal:'<path d="M4 12a8 8 0 0 0 16 0z"/><path d="M2 12h20M9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'};
+const SJI={
+ book:['책',null],
+ calc:['수학','<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/>'],
+ type:['국어·영어','<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>'],
+ landmark:['역사','<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>'],
+ globe:['지리·세계','<circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>'],
+ map:['사회','<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>'],
+ flask:['과학','<path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>'],
+ atom:['물리','<circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"/>'],
+ leaf:['생명','<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'],
+ music:['음악','<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'],
+ palette:['미술','<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>'],
+ activity:['체육','<path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/>'],
+ laptop:['정보','<rect width="18" height="12" x="3" y="4" rx="2"/><path d="M2 20h20"/>'],
+ heart:['도덕·진로','<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>'],
+ bulb:['탐구','<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'],
+ star:['기타','<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>']};
+const sjic=(k,sz=15)=>{const e=SJI[k];return e&&e[1]?`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e[1]}</svg>`:ic('book',sz)};
 const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 const sessChip=(s,showN=true,pre='',attr='')=>`<button class="sess ${s.status}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${STM[s.status][0]}${s.extra?' · 수업 보강':''}">${sic(s.status,11)}<span>${pre?`<small>${esc(pre)}</small> `:''}${esc(cn(s.c))}${s.extra?' <small>보강</small>':''}${showN&&s.n&&s.status!=='check'?` <small>${s.n}차시</small>`:''}</span></button>`;
 const EXN={absence:'결손',move:'교환',extra:'보강'};
 
 /* ---- 렌더 ---- */
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
-function subjTabs(){const cs=curSub();return `<div class="stabs" role="tablist" aria-label="교과 시트"><div class="semwrap">${semBar()}</div>${STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0)).map(x=>`<span class="stab ${x.id===STORE.cur?'on':''}"><button role="tab" data-a="subj" data-x="${x.id}" aria-selected="${x.id===STORE.cur}" title="${esc(x.name)}"><span class="sm1">${esc(subjMain(x))}</span><small class="mono">${esc(subjMeta(x))}</small></button>${x.id===STORE.cur?`<button class="sm" data-a="subjmenu" data-x="${x.id}" aria-label="교과 정보 바꾸기·삭제" title="교과 정보 바꾸기·삭제">⋯</button>`:''}</span>`).join('')}<button class="stab add" data-a="subjadd">+ 교과 추가</button></div>`}
+function subjTabs(){const cs=curSub();return `<div class="stabs" role="tablist" aria-label="교과 시트"><div class="semwrap">${semBar()}</div>${STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0)).map(x=>`<span class="stab ${x.id===STORE.cur?'on':''}"><button role="tab" data-a="subj" data-x="${x.id}" aria-selected="${x.id===STORE.cur}" title="${esc(x.name)}"><span class="sm1">${sjic(x.icon,13)} ${esc(subjMain(x))}</span><small class="mono">${esc(subjMeta(x))}</small></button>${x.id===STORE.cur?`<button class="sm" data-a="subjmenu" data-x="${x.id}" aria-label="교과 정보 바꾸기·삭제" title="교과 정보 바꾸기·삭제">⋯</button>`:''}</span>`).join('')}<button class="stab add" data-a="subjadd">+ 교과 추가</button></div>`}
 const TUT=[
  {t:'진도깨 시작하기',go:['home','홈 열기'],b:`<p>세 가지만 입력하면 오늘 수업과 예정 진도가 자동으로 계산돼요.</p><ol><li><b>학급 추가</b> — 2-1, 2-3처럼 수업하는 반과 교과부장을 적어요.</li><li><b>차시 입력</b> — 진도표에 수업 주제·내용·비고를 적어요. 엑셀에서 복사해 붙여넣어도 돼요.</li><li><b>시간표 입력</b> — 요일·교시마다 어느 반 수업인지 고르면 날짜별 수업이 만들어져요.</li></ol>`},
  {t:'진도표에 바로 쓰기',go:['sheet','진도표 열기'],b:`<ol><li>학급 이름·수업 주제는 <b>표 칸에 바로</b> 적어요. Enter는 아래 칸, Shift+Enter는 줄바꿈이에요.</li><li>'수업 주제 · 내용' 열의 오른쪽 경계를 끌면 열 너비를 바꿀 수 있어요. 더블클릭하면 기본 너비로 돌아가요.</li><li>엑셀에서 여러 칸을 복사해 주제 칸에 붙여넣으면 한 번에 채워져요.</li></ol>`},
@@ -1142,6 +1163,7 @@ function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
   <div class="field" style="flex:1.2"><span>학기</span><span class="seg" role="group" aria-label="학기" style="align-self:flex-start"><button type="button" data-a="sjsem" data-x="1" aria-pressed="${sm==1}">1학기</button><button type="button" data-a="sjsem" data-x="2" aria-pressed="${sm==2}">2학기</button></span></div>
   <label class="field">학년<select id="sjGrade" class="inp"><option value="">-</option>${[1,2,3].map(g=>`<option value="${g}" ${sb&&String(sb.grade)===String(g)?'selected':''}>${g}학년</option>`).join('')}</select></label></div>
   <label class="field">교과<input id="sjName" class="inp" autofocus maxlength="20" value="${sb?esc(sb.subj):''}" placeholder="예: 한국사, 통합사회"></label>
+  <div class="field"><span>아이콘</span><input type="hidden" id="sjIcon" value="${sb&&sb.icon||'book'}"><div class="sjicons">${Object.entries(SJI).map(([k,v])=>`<button type="button" data-a="sjicon" data-x="${k}" aria-pressed="${(sb&&sb.icon||'book')===k}" title="${v[0]}">${sjic(k,20)}</button>`).join('')}</div></div>
   <div class="acts">${sb?`<button type="button" class="btn bad" data-a="subjdel" data-x="${sb.id}" ${STORE.subjects.length<2?'disabled title="마지막 교과는 지울 수 없어요"':''}>이 교과 삭제</button>`:''}<span style="flex:1"></span><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">${sb?'저장':'만들기'}</button></div></form>`)}
 function refreshChrome(){
   const pend=DB.inbox.filter(i=>i.state==='pending').length+SCH.conflicts.length;
@@ -1191,9 +1213,9 @@ function homeSub(sb){
     const sub2=s.status==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:s.status==='moved'?moveDest(s):esc(lname(n));
     const pawb=dead?'':s.status==='done'?`<button class="tog on" data-a="uncomplete" data-x="${s.c}|${s.n}" title="완료 취소" aria-label="${esc(cn(s.c))} ${s.p}교시 완료 취소">${paw(20)}</button>`
       :`<button class="tog" data-a="done" data-x="${s.key}" title="수업 완료로 기록" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
-    return {p:s.p,html:`<div class="lrow ${k}" style="--cc:${sq}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0">
+    return {p:s.p,html:`<div class="lrow ${k}" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0">
       <div class="tm"><b>${s.p}교시</b><span class="mono">${PT(s.p)}~${endT(s.p)}</span></div>
-      <div class="bd"><span class="sq">${ic('book',13)}</span><div class="tx"><span class="l1"><b>${esc(cn(s.c))}</b><small>${esc(subjMain(sb))}${dead?'':` · ${n}차시`}</small>${s.movedIn?`<span class="tag gray">${sic('moved',11)} ${s.from.p}교시에서 교환</span>`:''}</span><span class="tp">${sub2}</span></div></div>
+      <div class="bd"><span class="sq" title="${esc(cn(s.c))}">${sjic(sb.icon,15)}</span><div class="tx"><span class="l1"><b>${esc(cn(s.c))}</b><small>${esc(subjMain(sb))}${dead?'':` · ${n}차시`}</small>${s.movedIn?`<span class="tag gray">${sic('moved',11)} ${s.from.p}교시에서 교환</span>`:''}</span><span class="tp">${sub2}</span></div></div>
       <div class="rt"><span class="tag lg ${tg}">${lab}</span>${pawb}</div></div>`}});
   /* 오늘 이전에 기록이 빠진 수업과 일정 충돌 (오늘 것은 위 목록에 보여요) */
   const olds=checks.filter(s=>s.date<TK);
@@ -1203,7 +1225,7 @@ function homeSub(sb){
   const auto=plan.map(s=>{const l=L(s.n);return l&&(l.note||l.materials)?{t:`${cn(s.c)}: ${[l.materials,l.note].filter(Boolean).join(' / ')}`}:null}).filter(Boolean);
   /* 교과 진도 현황: 가장 앞선 반 기준 */
   const total=DB.lessons.length,lead=DB.classes.length?Math.max(...DB.classes.map(c=>SCH.nextN[c.id]-1)):0;
-  const prog=DB.classes.length&&total?{sbId:sb.id,name:subjMain(sb),meta:subjMeta(sb),sq,done:lead,total,pct:Math.round(lead/total*100),nCheck:checks.length,
+  const prog=DB.classes.length&&total?{sbId:sb.id,icon:sb.icon,name:subjMain(sb),meta:subjMeta(sb),sq,done:lead,total,pct:Math.round(lead/total*100),nCheck:checks.length,
     cls:DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return {name:cn(c.id),d,gap:lead-d,color:ccv(c.id)}})}:null;
   /* 다음 수업 */
   let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan');if(f){const les=L(f.n)||{};
@@ -1285,7 +1307,7 @@ function vHome(){
   const progs=withCls.map(p=>p.h.prog).filter(Boolean);
   const pendBy=progs.filter(p=>p.nCheck);
   const progCard=`<div class="card"><h2>${ic('chart',18)} 교과별 진도 현황<span class="right muted" style="font-weight:500;font-size:12px">가장 앞선 반 기준</span></h2>
-    ${progs.map(p=>`<div class="prog" style="--cc:${p.sq}"><div class="ph1"><span class="sq">${ic('book',15)}</span><span class="pn"><b>${esc(p.name)}</b><small class="mono">${esc(p.meta)}</small></span><span class="mono pc"><span class="muted">${p.done} / ${p.total}차시</span><b>${p.pct}%</b></span></div>
+    ${progs.map(p=>`<div class="prog" style="--cc:${p.sq}"><div class="ph1"><span class="sq">${sjic(p.icon,15)}</span><span class="pn"><b>${esc(p.name)}</b><small class="mono">${esc(p.meta)}</small></span><span class="mono pc"><span class="muted">${p.done} / ${p.total}차시</span><b>${p.pct}%</b></span></div>
       <div class="pbar"><i style="width:${p.pct}%"></i></div>
       <details class="cdet" open><summary>반별 보기</summary><div class="mini">${p.cls.map(c=>`<div style="--cc:${c.color}"><b>${esc(c.name)}</b><span class="tr"><i style="width:${p.total?c.d/p.total*100:0}%"></i></span><span class="mono" style="font-size:12px">${c.d}차시 ${c.gap===0?'<span class="tag ok">선두</span>':`<span class="tag ${c.gap>=2?'warn':'gray'}">-${c.gap}</span>`}</span></div>`).join('')}</div></details></div>`).join('')||'<p class="muted" style="margin:0">차시가 있는 교과가 아직 없어요. 진도표에서 차시를 만들어 보세요.</p>'}
     ${nCheck?`<button class="pendbox" id="pendbox" data-a="needrec"><span class="ic">${ic('warn',18)}</span><span><b>미완료 기록 ${nCheck}건</b><small>${pendBy.map(p=>`${esc(p.name)} ${p.nCheck}건`).join(' · ')}</small></span><span class="chv">${ic('chev',16)}</span></button>`:''}</div>`;
@@ -1958,6 +1980,7 @@ document.addEventListener('click',e=>{
    case 'ddset':openDday();break;
    case 'jump':{const el=document.getElementById(x);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});break}
    case 'clsmanage':go('set');setTimeout(()=>{const el=document.getElementById('clsCard');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},60);break
+   case 'sjicon':{$('#sjIcon').value=x;document.querySelectorAll('[data-a=sjicon]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.x===x)));break}
    case 'sjsem':{$('#sjSem').value=x;document.querySelectorAll('[data-a=sjsem]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.x===x)));break}
    case 'subjmenu':openSubject(x);break;
    case 'subjdel':{const sb=STORE.subjects.find(k=>k.id===x);if(!sb||STORE.subjects.length<2)break;const nrec=sb.db.classes.reduce((a,c)=>a+Object.values(sb.db.records[c.id]||{}).filter(r=>r.done).length,0);
@@ -2124,11 +2147,11 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if(STORE.subjects.some(k=>k.name===full&&k.id!==sid)){toast('같은 연도·학기·학년·교과의 시트가 이미 있어요.');return}
     if(sid){const sb=STORE.subjects.find(k=>k.id===sid);const moved=sb.year!==year||sb.sem!==sem;
       if(sb.year!==year){sb.db.terms=getYT(year)}
-      Object.assign(sb,{year,sem,grade,subj:nm,name:full});
+      Object.assign(sb,{year,sem,grade,subj:nm,name:full,icon:$('#sjIcon').value||'book'});
       if(moved){sb.db.term={...sb.db.terms[sem]};sb.db.trackFrom=null;if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start}
       persist();closeM();render();toast('교과 정보를 바꿨어요.')}
     else{const terms=getYT(year);const d=emptyDB(sem,terms);d.periods=clone(DB.periods);d.events=clone(DB.events);
-      const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
+      const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,icon:$('#sjIcon').value||'book',db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
   if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=$('#tdEditIn').value.trim();U.tdEdit=null;if(sb&&sb.db.todos[+ix]){if(v)sb.db.todos[+ix].t=v;else sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'종업식',date:$('#ddDate').value,init:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:TK}))}
