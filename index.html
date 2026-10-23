@@ -731,7 +731,7 @@ const HOLIDAYS=[
  {s:'2026-10-03',e:'2026-10-03',label:'개천절'},{s:'2026-10-05',e:'2026-10-05',label:'대체공휴일'},
  {s:'2026-10-09',e:'2026-10-09',label:'한글날'},{s:'2026-12-25',e:'2026-12-25',label:'성탄절'},
  {s:'2027-01-01',e:'2027-01-01',label:'신정'}];
-const REASONS=['출장','학교 행사','휴업','기타'];
+const REASONS=['교내일정','휴업','복무','기타'];
 const LESSON_FIELDS=['topic','pages','content','note'];
 
 /* ---- 날짜 ---- */
@@ -770,6 +770,7 @@ const subjName=sb=>`${sb.year} ${sb.sem}학기 ${subjMain(sb)}`;
 function ensureSub(sb,db=sb.db){
   if(!sb.subj){sb.subj=sb.name||'내 교과'}
   if(sb.grade==null)sb.grade='';
+  (db.exc||[]).forEach(e=>{if(e.reason==='학교 행사')e.reason='교내일정';else if(e.reason==='출장')e.reason='복무'});
   if(!sb.icon||!SJI[sb.icon])sb.icon='book';
   const t=db.term||OLD_TERM;
   if(!sb.year)sb.year=+t.start.slice(0,4);
@@ -890,7 +891,7 @@ const C={
     if(!s||!['plan','check','done'].includes(s.status))return false;
     if(i.type==='move'&&validateMove(db,S,s,i.toDate,i.toP))return false;
     const before=db.exc.length;
-    if(i.type==='absence')C.absence(db,[s],'학교 행사',i.why,{src:'시간표 변경',revertDone:opt.revertDone});
+    if(i.type==='absence')C.absence(db,[s],'교내일정',i.why,{src:'시간표 변경',revertDone:opt.revertDone});
     else C.move(db,s,i.toDate,i.toP,i.why,{src:'시간표 변경',reason:'시간표 변경',revertDone:opt.revertDone});
     i.state='accepted';i.excId=db.exc.length>before?db.exc[db.exc.length-1].id:null;return true},
   dismiss(db,id){db.inbox.find(x=>x.id===id).state='dismissed'},
@@ -1767,7 +1768,7 @@ function openSess(k){U.sess=k;const s=SCH.key[k];if(!s)return;const e=excOf(s),n
     ${s.status==='moved'?`<p class="note">${moveDest(s)}</p>`:''}
     ${s.movedIn&&s.status!=='moved'?`<p class="note">원래 ${mdw(s.from.date)} ${s.from.p}교시 수업을 옮겨 온 칸이에요.</p>`:''}
     <div class="acts left">${acts.join('')}</div><div class="acts"><button class="btn" data-a="close">닫기</button></div>`)}
-function openAbsence(k,pre=[],reason='출장',hint=''){U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
+function openAbsence(k,pre=[],reason='복무',hint=''){U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
 function absPreview(){const a=U.abs;const list=[...a.keys].map(x=>SCH.key[x]).filter(Boolean);
   if(!list.length)return '<span class="empty">결손 처리할 수업을 고르세요.</span>';
   const extra=list.map((s,i)=>({id:'tmp'+i,type:'absence',date:s.date,c:s.c,p:s.p,state:'active'}));
@@ -2166,7 +2167,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
   if(id==='evForm'){const v=$('#evT').value.trim(),kind=$('#evK').value,k=U.sel;if(!v)return;
     const act=(SCH.by[k]||[]).filter(s=>['plan','check','done'].includes(s.status));
     mutate(`일정 추가: ${md(k)} ${v}`,db=>C.addEvent(db,{s:k,e:k,label:v,kind,block:kind==='hol',src:'직접'}),{msg:kind==='hol'&&act.length?`휴업일로 추가해서 이날 수업 ${act.length}개를 빼고 다시 계산했어요.`:'일정을 추가했어요.'});
-    if(kind==='event'&&act.length)openAbsence(k,[],'학교 행사',`'${esc(v)}' 일정을 추가했어요. 이 일정 때문에 빠지는 수업이 있으면 골라 주세요. 고르지 않고 닫으면 수업은 그대로예요.`)}
+    if(kind==='event'&&act.length)openAbsence(k,[],'교내일정',`'${esc(v)}' 일정을 추가했어요. 이 일정 때문에 빠지는 수업이 있으면 골라 주세요. 고르지 않고 닫으면 수업은 그대로예요.`)}
   if(id==='memoForm'){const [c,n]=$('#mKey').value.split('|');const v=rec(DB,c,+n),memo=$('#mMemo').value.trim();
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
