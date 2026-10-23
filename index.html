@@ -365,7 +365,7 @@ table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;
 .tt th.today{color:var(--accent)}
 .tt td{height:54px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
 .tt td.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));outline:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
-.tt th{padding:4px 2px}.tt th .dabs{opacity:0;pointer-events:none;transition:opacity .12s}.tt th:hover .dabs,.tt th:focus-within .dabs{opacity:1;pointer-events:auto}@media (hover:none){.tt th .dabs{opacity:1;pointer-events:auto}}
+.tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}@media (hover:none){.tt th .dabs{visibility:visible}}
 .tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
 .tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
 .tt thead th .btn{opacity:0;transition:opacity .15s}.tt thead th:hover .btn{opacity:1}
@@ -940,9 +940,9 @@ function buildSched(db,opt={}){
   const {start,end}=db.term;
   for(let k=start;k<=end;k=addK(k,1)){
     const ss=rawSessions(db,k,ex);
-    S.by[k]=ss.filter(s=>!(s.st==='on'&&!(rd[s.c][k]||[]).length&&db.trackFrom&&k<db.trackFrom));
+    S.by[k]=ss;
     for(const s of S.by[k]){s.key=`${k}|${s.c}|${s.p}`;
-      if(s.st==='on'&&!(rd[s.c][k]||[]).length&&k<lastD[s.c]){s.status='skipped';S.key[s.key]=s;continue}
+      if(s.st==='on'&&!(rd[s.c][k]||[]).length&&((db.trackFrom&&k<db.trackFrom)||k<lastD[s.c])){s.status='skipped';S.key[s.key]=s;continue}
       if(s.st==='absent'){s.status='absent';if(!s.nop)S.absent[s.c]++}
       else if(s.st==='movedOut')s.status='moved';
       else{const r=rd[s.c][k]||[],u=used[s.c][k]||0;
@@ -1126,11 +1126,11 @@ function redo(){const r=REDO.pop();if(!r){toast('다시 실행할 작업이 없�
 
 /* ---- 아이콘 ---- */
 const paw=(s=16)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><ellipse cx="12" cy="16.2" rx="5.2" ry="4.4"/><ellipse cx="4.9" cy="10.2" rx="2.1" ry="2.7"/><ellipse cx="9.2" cy="6" rx="2.1" ry="2.8"/><ellipse cx="14.8" cy="6" rx="2.1" ry="2.8"/><ellipse cx="19.1" cy="10.2" rx="2.1" ry="2.7"/></svg>`;
-const SVG={plan:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',absent:'<path d="M7 7l10 10M17 7L7 17"/>',moved:'<path d="M5 12h12M13 7l5 5-5 5"/>',check:'<path d="M12 6v8M12 17.5v.5"/>'};
+const SVG={plan:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',absent:'<path d="M7 7l10 10M17 7L7 17"/>',moved:'<path d="M6 8h12M14 4l4 4-4 4M18 16H6M10 12l-4 4 4 4"/>',check:'<path d="M12 6v8M12 17.5v.5"/>'};
 const sic=(st,s=12)=>st==='done'?paw(s):`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SVG[st]}</svg>`;
 const STM={done:['완료','ok'],doing:['진행 중','warn'],plan:['예정','info'],check:['확인 필요','warn'],absent:['결손','bad'],moved:['교환됨','gray'],skipped:['기록 없음','gray']};
 const sk=s=>s.doing&&s.status==='plan'?'doing':s.status;
-SVG.doing=SVG.plan;SVG.skipped='<path d="M7 12h10"/>';
+SVG.doing='<path d="M5 12h13M13 6l6 6-6 6"/>';SVG.skipped='<path d="M7 12h10"/>';
 const stag=st=>`<span class="tag ${STM[st][1]}">${sic(st,11)}${STM[st][0]}</span>`;
 const ICON={warn:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4v.4"/>',checkc:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H19v-5M9 8h6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',chev:'<path d="M9 6l6 6-6 6"/>',users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.2A5 5 0 0 1 21 19"/>',bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',doc:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',chart:'<path d="M4 20V11M10 20V4M16 20v-7M2 20h20"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',pen:'<path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14 6l3 3"/>',home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',sheet:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/>',tt:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M13 13h3M8 16h3"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',meal:'<path d="M4 12a8 8 0 0 0 16 0z"/><path d="M2 12h20M9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'};
 const SJI={
@@ -1694,8 +1694,8 @@ function ttBody(){
     <div class="card"><h2>주간 시간표 <span class="sub">${multi?'모든 교과 · ':''}칸을 누르면 완료·결손·교환을 처리하고, 빈 칸을 누르면 수업 보강을 추가해요</span></h2>
       <div class="calbar"><button class="btn sm" data-a="ttw" data-x="-1" aria-label="이전 주" ${mon<=SR.mlo?'disabled':''}>‹</button><span class="ttl mono">${md(days[0])} ~ ${md(days[4])}</span><button class="btn sm" data-a="ttw" data-x="1" aria-label="다음 주" ${mon>=SR.mhi?'disabled':''}>›</button><button class="btn sm" data-a="ttw" data-x="0" ${mon===mondayOf(TK)||TK<SR.lo||TK>SR.hi?'disabled':''}>이번 주</button>
         <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div></div>
-      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span>${blockOf(k)?'':` <button class="btn sm mobhide dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
-      <div class="legend" style="margin:10px 0 0">${['done','doing','plan','check','absent','moved'].map(s=>`<span>${stag(s)}</span>`).join('')}<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${ttBtns.join('')}</span></div></div>
+      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><div class="dabw">${blockOf(k)?'':`<button class="btn sm mobhide dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</div><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="legend" style="margin:10px 0 0">${['done','doing','plan','check','absent','moved','skipped'].map(s=>`<span>${stag(s)}</span>`).join('')}<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${ttBtns.join('')}</span></div></div>
     <div class="card"><h2>결손 · 교환 · 보강 기록 <span class="sub">월별로 확인해요 · 취소하면 목록에서 사라져요</span></h2>
       ${excMonths}
       <div class="excl">${exsM.map(e=>e.html).join('')||'<p class="muted" style="margin:0">기록이 없어요. 시간표 칸을 눌러 결손이나 교환을, 빈 칸을 눌러 보강을 등록하세요.</p>'}</div></div>
