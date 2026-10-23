@@ -542,6 +542,21 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 #tourCard .tcbody{font-size:13.5px;line-height:1.6}#tourCard .tcbody p{margin:0 0 6px}
 #tourCard .tcft{display:flex;gap:8px;align-items:center}
 body.touring main{padding-bottom:300px}
+#notifCard .nmain{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+#notifCard small{display:block;color:var(--muted);font-size:12px;margin-top:2px;line-height:1.5}
+#notifCard .nbtns{display:flex;gap:6px}
+#notifCard .nlist{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+#notifCard .nlist.off{opacity:.55}
+#notifCard .nrow{display:flex;align-items:center;gap:12px;padding:12px 14px;flex-wrap:wrap}
+#notifCard .nrow+.nrow{border-top:1px solid var(--line)}
+#notifCard .nrow img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--line);flex:none}
+#notifCard .nt{flex:1;min-width:180px}
+#notifCard .nc{display:flex;align-items:center;gap:10px}
+#notifCard .nc input[type=time],#notifCard .nc select{width:auto;min-width:96px}
+#notifCard .nhelp{margin-top:10px;font-size:12px;color:var(--muted)}#notifCard .nhelp summary{cursor:pointer}#notifCard .nhelp div{line-height:1.7;margin-top:6px}
+.sw{position:relative;display:inline-block;width:42px;height:24px;flex:none}.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--line-2,#cbd2e0);transition:.15s}.sw i::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.15s}
+.sw input:checked+i{background:var(--accent)}.sw input:checked+i::after{transform:translateX(18px)}.sw input:disabled{cursor:default}.sw input:disabled+i{opacity:.5}
 body.tplay #tourShield{display:none}
 body.tplay *{pointer-events:none}
 body.tplay #tourCard,body.tplay #tourCard *,body.tplay .lrow .tog,body.tplay .lrow .tog *{pointer-events:auto}
@@ -1148,12 +1163,13 @@ function demoStore(){
 }
 const q1=sel=>document.querySelector(sel);
 const TOURSTEPS=[
- {t:'안녕, 진도깨야!',who:'jd',v:'home',el:()=>q1('.hero'),b:'멍! 나는 <b>진도깨</b>, 수업 진도를 챙겨 주는 길잡이야. 지금 보이는 건 <b>연습용 가짜 데이터</b>라서 끝나면 싹 사라지고, 네 데이터는 그대로야.'},
- {t:'오늘의 수업',who:'jd',v:'home',play:1,el:()=>q1('.lrow .tog:not(.on)')||q1('.lrow'),b:'오늘 수업이 시간순으로 나와. 수업을 마쳤다면 오른쪽 <b>발바닥을 직접 꾹!</b> 눌러 봐.',b2:'잘했어! 🐾 그 반의 <b>다음 차시가 완료</b>로 기록됐고, 이후 <b>예정일은 자동으로 다시 계산</b>돼. 위의 내가 발도 흔들어 줬지?',alt:'오늘은 주말이라 수업이 없어서 눌러 볼 수는 없지만, 평일엔 수업 오른쪽 <b>발바닥</b>만 누르면 다음 차시가 완료로 기록되고 예정일이 자동으로 다시 계산돼.'},
- {t:'진도표',who:'jd',v:'sheet',pre(){U.sheetMode='all'},el:()=>q1('.sheet-wrap'),b:'차시별로 <b>반마다 한 칸</b>씩 진도를 기록해. 칸을 고르고 <b>스페이스바</b>를 누르면 수업함 ↔ 아직 안 함! 수업 주제는 칸에 바로 쓰면 돼.'},
- {t:'시간표 · 캘린더',who:'jd',v:'cal',pre(){U.schedMode='tt'},el:()=>q1('.tt-wrap'),b:'수업이 빠지거나 바뀌면 시간표 칸을 눌러 <b>결손·교환·보강</b>을 처리해. 그럼 뒤 차시 예정일이 알아서 밀리고 당겨져. 모의고사·학력평가 날은 <b>자동 결손</b>이야!'},
- {t:'급식 · 알림',who:'bab',v:'meal',el:()=>q1('.speak'),b:'나는 <b>밥숑</b>! 오늘 급식을 알려주고 알레르기 성분은 빨갛게 표시해. 설정에서 알림을 켜면 점심에 급식을, <b>수업이 끝나고 3분 뒤엔 진도 체크</b>를 잊지 않게 알려줄게. 왈!'},
- {t:'이제 시작해 볼까?',who:'jd',v:'set',el:()=>q1('#main .card'),b:'먼저 <b>교과 → 학급 → 기본 시간표</b> 순서로 만들면 돼. 데이터는 이 브라우저에만 저장되니 가끔 <b>백업</b>도 받아 줘. 멍!'}];
+ {t:'안녕하세요, 진도깨예요!',who:'jd',v:'home',el:()=>q1('.hero'),b:'멍! 저는 수업 진도를 챙겨 드리는 <b>진도깨</b>예요. 지금 보이는 화면은 <b>연습용 가짜 데이터</b>라서, 끝나면 모두 사라지고 선생님의 데이터는 그대로 남아 있어요. 편하게 눌러 보세요!'},
+ {t:'오늘의 수업',who:'jd',v:'home',play:1,el:()=>q1('.lrow .tog:not(.on)')||q1('.lrow'),b:'오늘 수업이 시간순으로 나와요. 수업을 마치셨다면 오른쪽 <b>발바닥</b>을 직접 눌러 보세요!',b2:'잘하셨어요! 🐾 그 반의 <b>다음 차시가 완료</b>로 기록되고, 이후 <b>예정일은 자동으로 다시 계산</b>돼요. 제가 발도 흔들어 드렸답니다.',alt:'오늘은 주말이라 수업이 없어서 눌러 보실 수는 없어요. 평일에는 수업 오른쪽 <b>발바닥</b>만 누르시면 다음 차시가 완료로 기록되고, 예정일이 자동으로 다시 계산돼요.'},
+ {t:'진도표',who:'jd',v:'sheet',pre(){U.sheetMode='all'},el:()=>q1('.sheet-wrap'),b:'차시마다 <b>반별로 한 칸</b>씩 진도를 기록해요. 칸을 고른 뒤 <b>스페이스바</b>를 누르시면 수업함 ↔ 아직 안 함으로 바뀌고, 수업 주제는 칸에 바로 적으시면 돼요.'},
+ {t:'시간표 · 캘린더',who:'jd',v:'cal',pre(){U.schedMode='tt'},el:()=>q1('.tt-wrap'),b:'수업이 빠지거나 바뀌면 시간표 칸을 눌러 <b>결손·교환·보강</b>을 처리해 주세요. 뒤 차시 예정일이 알아서 밀리거나 당겨져요. 모의고사·학력평가 날은 <b>자동으로 결손</b> 처리해 드려요!'},
+ {t:'급식',who:'bab',v:'meal',el:()=>q1('.speak'),b:'안녕하세요, <b>밥숑</b>이에요! 오늘 급식을 알려 드리고, 알레르기 성분은 빨갛게 표시해 드려요. 설정에서 알림을 켜 주시면 정해 주신 시각에 급식을 알려 드릴게요. 왈!'},
+ {t:'진도 체크 알림',who:'jd',v:'set',el:()=>q1('#notifCard'),b:'알림을 켜 두시면 수업이 끝나고 <b>3분 뒤</b>에 제가 "진도 체크 부탁드려요" 하고 알려 드려요. 앱 창을 닫아 두셔도 괜찮아요. 알림 종류와 시간은 여기서 바꾸실 수 있어요.'},
+ {t:'이제 시작해 볼까요?',who:'jd',v:'set',el:()=>q1('#main .card'),b:'먼저 <b>교과 → 학급 → 기본 시간표</b> 순서로 만들어 보세요. 데이터는 이 브라우저에만 저장되니 가끔 <b>백업</b>도 받아 두시면 좋아요. 멍!'}];
 function startTour(){if(TOUR)return;closeM();
   const keep=Object.assign({},U);
   TOUR={i:0,save:{STORE,DB,SCH,UNDO,REDO,HIST,keep,y:window.scrollY}};
@@ -1706,8 +1722,8 @@ try{NOTIF={...NOTIF,...JSON.parse(localStorage.getItem(NOTK)||'{}')}}catch(e){}
 const saveNotif=()=>{try{localStorage.setItem(NOTK,JSON.stringify(NOTIF))}catch(e){}};
 const canNotif=()=>typeof Notification!=='undefined';
 async function showNote(title,body,tag){try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
-  const o={body,icon:'icon-192.png',badge:'icon-192.png',tag};
-  if(reg&&reg.showNotification)await reg.showNotification(title,o);else new Notification(title,o);return true}catch(e){try{new Notification(title,{body,icon:'icon-192.png',tag});return true}catch(e2){return false}}}
+  const ic=/밥숑/.test(title)?'icon-bab.png':'icon-jd.png',o={body,icon:ic,badge:'icon-192.png',tag};
+  if(reg&&reg.showNotification)await reg.showNotification(title,o);else new Notification(title,o);return true}catch(e){try{new Notification(title,{body,icon:/밥숑/.test(title)?'icon-bab.png':'icon-jd.png',tag});return true}catch(e2){return false}}}
 function mealNoteBody(){const m=MEALS[TK];if(!m)return null;if(!m.items.length)return '';const n=mainDishes(m.items.map(x=>x.name));return (Array.isArray(n)&&n.length?n:m.items.map(x=>x.name)).slice(0,4).join(', ')}
 const PUSH_URL='https://uuuygwlotpqtmggaujtc.supabase.co/functions/v1/push',PUSH_PUB='BGzlwBzqMeul6402BUl0gWE-jRL6O_4QTHwvzDFifi0GDDfv-KnCgdEgyX6WX13MCsREYwB7PI-u_Fz0Z-7lG3U';
 const b64u=v=>{const p='='.repeat((4-v.length%4)%4),r=atob((v+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))};
@@ -1716,7 +1732,7 @@ async function pushCall(o){const r=await fetch(PUSH_URL,{method:'POST',headers:{
 async function pushSub(create){const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
   if(!sub&&create)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(PUSH_PUB)});return sub}
 async function pushSync(create){if(!pushOk())return false;const sub=await pushSub(create);if(!sub)return false;
-  await pushCall({action:'subscribe',sub:sub.toJSON(),meal_time:NOTIF.meal,algs:ALGS.join(','),neis:NEIS.key&&NEIS.school?{key:NEIS.key,atpt:NEIS.school.atpt,code:NEIS.school.code,name:NEIS.school.name}:null});return true}
+  await pushCall({action:'subscribe',sub:sub.toJSON(),meal_time:NOTIF.meal,meal_on:NOTIF.mealOn!==false,algs:ALGS.join(','),neis:NEIS.key&&NEIS.school?{key:NEIS.key,atpt:NEIS.school.atpt,code:NEIS.school.code,name:NEIS.school.name}:null});return true}
 async function pushOff(){try{const sub=await pushSub(false);if(sub){const ep=sub.endpoint;await sub.unsubscribe();await pushCall({action:'unsubscribe',endpoint:ep})}}catch(e){}}
 let NTRY=0;
 var REMT=null;
@@ -1724,7 +1740,7 @@ function schedRem(now){clearTimeout(REMT);REMT=setTimeout(remSync,now?200:2500)}
 function buildReminders(){const out=[],dl=+NOTIF.delay||3,now=Date.now();
   STORE.subjects.forEach(sb=>{try{withSub(sb,()=>{for(let i=0;i<=7;i++){const k=addK(TK,i);(SCH.by[k]||[]).forEach(s=>{if(s.status!=='plan'&&s.status!=='check')return;
     const e=toMin(PT(s.p))+50+dl;if(isNaN(e))return;const at=new Date(`${k}T${pad(Math.floor(e/60))}:${pad(e%60)}:00+09:00`);if(+at<=now)return;
-    out.push({at:at.toISOString(),body:`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크해 주세요! 🐾`,tag:`end-${sb.id}-${s.key}`})})}})}catch(e){}});
+    out.push({at:at.toISOString(),body:`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크 부탁드려요! 🐾`,tag:`end-${sb.id}-${s.key}`})})}})}catch(e){}});
   out.sort((a,b)=>a.at<b.at?-1:1);return out.slice(0,150)}
 async function remSync(){if(!NOTIF.on||!NOTIF.push||TOUR)return;try{const sub=await pushSub(false);if(!sub)return;
   await pushCall({action:'reminders',endpoint:sub.endpoint,items:NOTIF.after===false?[]:buildReminders()})}catch(e){}}
@@ -1732,8 +1748,8 @@ function afterTick(){if(NOTIF.after===false)return;const d=new Date(),cur=d.getH
   Object.keys(seen).forEach(k=>{if(k.slice(0,10)<TK)delete seen[k]});
   STORE.subjects.forEach(sb=>{try{withSub(sb,()=>{(SCH.by[TK]||[]).forEach(s=>{if(s.status!=='plan'&&s.status!=='check')return;
     const e=toMin(PT(s.p))+50+dl,kk=TK+'|'+sb.id+'|'+s.key;if(isNaN(e)||cur<e||cur>e+30||seen[kk])return;
-    seen[kk]=1;saveNotif();showNote('진도깨의 진도 체크 🐾',`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크해 주세요!`,'end-'+kk)})})}catch(e){}})}
-function notifTick(){if(NOTIF.push||!NOTIF.on||!canNotif()||Notification.permission!=='granted'||TOUR)return;try{afterTick()}catch(e){}
+    seen[kk]=1;saveNotif();showNote('진도깨의 진도 체크 🐾',`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크 부탁드려요!`,'end-'+kk)})})}catch(e){}})}
+function notifTick(){if(NOTIF.push||!NOTIF.on||!canNotif()||Notification.permission!=='granted'||TOUR)return;try{afterTick()}catch(e){}if(NOTIF.mealOn===false)return;
   const hm=String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   if(NOTIF.last===TK||hm<NOTIF.meal||toMin(hm)>toMin(NOTIF.meal)+180)return;
   if([0,6].includes(D(TK).getDay())){NOTIF.last=TK;saveNotif();return}
@@ -1743,17 +1759,20 @@ function notifTick(){if(NOTIF.push||!NOTIF.on||!canNotif()||Notification.permiss
   NOTIF.last=TK;saveNotif();
   showNote('밥숑의 오늘 급식 🍚',b||'오늘 급식을 확인해 보세요, 멍!','meal-'+TK)}
 setInterval(notifTick,30000);
-function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupported';
-  return `<div class="card"><h2>알림 <span class="sub">밥숑이 급식을, 수업이 끝나면 진도 체크를 알려줘요</span><span class="right">${NOTIF.on&&perm==='granted'?'<span class="tag ok">켜짐</span>':'<span class="tag gray">꺼짐</span>'}</span></h2>
-  ${!ok?'<p class="muted" style="margin:0">이 브라우저는 알림을 지원하지 않아요.</p>':`<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-   <button class="btn ${NOTIF.on&&perm==='granted'?'':'pri'}" data-a="notiftog">${NOTIF.on&&perm==='granted'?'알림 끄기':'알림 켜기'}</button>
-   <label class="field" style="flex-direction:row;align-items:center;gap:6px;margin:0">급식 알림 시각<input type="time" id="notifTime" value="${NOTIF.meal}" style="width:120px"></label>
-   <button class="btn" data-a="notifTest">테스트 알림</button></div>
-   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px"><label class="field" style="flex-direction:row;align-items:center;gap:6px;margin:0"><input type="checkbox" id="notifAfter" ${NOTIF.after!==false?'checked':''}> 수업이 끝나면 진도 체크 알림</label>
-    <label class="field" style="flex-direction:row;align-items:center;gap:6px;margin:0"><select id="notifDelay" ${NOTIF.after===false?'disabled':''}>${[3,5,10].map(m=>`<option value="${m}" ${(+NOTIF.delay||3)===m?'selected':''}>${m}분 뒤</option>`).join('')}</select></label></div>
-   ${perm==='denied'?'<p class="warnbox" style="margin:10px 0 0">브라우저에서 알림이 차단돼 있어요. 주소창 왼쪽 자물쇠 → 알림 허용으로 바꿔 주세요.</p>':''}
-   <p class="muted" style="font-size:12px;margin:10px 0 0;line-height:1.7">${NOTIF.push?'✅ <b>백그라운드 알림</b>이 켜져 있어요. 앱 창을 닫아도 정해진 시각에 윈도우 알림으로 도착하고, 알림을 누르면 앱이 열려요.':pushOk()?'알림을 켜면 앱 창을 닫아도 알림이 와요.':'이 주소에서는 백그라운드 알림을 쓸 수 없어서, 앱이 켜져 있는 동안만 알려 줘요. (https 주소의 설치된 앱에서 사용해 주세요)'} 급식 알림은 평일에만 오고 NEIS 연결이 필요해요. 진도 체크 알림은 앞으로 7일 안의 미기록 수업에 대해 올라가고, 앱을 열 때마다 새로 맞춰져요.</p>
-   <details style="margin-top:8px;font-size:12px" class="muted"><summary style="cursor:pointer">창을 닫아도 계속 받으려면 (윈도우)</summary><div style="line-height:1.7;margin-top:6px">브라우저가 백그라운드에서 살아 있어야 해요. <b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기 / <b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기. 켜 두면 X로 닫아도 우측 하단 트레이 아이콘으로 남고, 알림이 뜨면 눌러서 앱을 열 수 있어요. 컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요.</div></details>`}</div>`}
+function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupported',on=NOTIF.on&&perm==='granted';
+  const sw=(id,v,dis)=>`<label class="sw"><input type="checkbox" id="${id}" ${v?'checked':''} ${dis?'disabled':''}><i></i></label>`;
+  return `<div class="card" id="notifCard"><h2>알림 <span class="sub">푸시 알림으로 알려 드려요</span><span class="right">${on?'<span class="tag ok">켜짐</span>':'<span class="tag gray">꺼짐</span>'}</span></h2>
+  ${!ok?'<p class="muted" style="margin:0">이 브라우저는 알림을 지원하지 않아요.</p>':`
+  <div class="nmain"><div><b>알림 받기</b><small>${NOTIF.push&&on?'앱 창을 닫아도 알림이 도착해요':pushOk()?'켜면 앱 창을 닫아도 알림이 와요':'앱이 켜져 있는 동안만 알려 드려요'}</small></div>
+   <span class="nbtns"><button class="btn sm" data-a="notifTest" ${on?'':'disabled'}>테스트</button><button class="btn sm ${on?'':'pri'}" data-a="notiftog">${on?'끄기':'켜기'}</button></span></div>
+  ${perm==='denied'?'<p class="warnbox" style="margin:10px 0 0">브라우저에서 알림이 차단돼 있어요. 주소창 왼쪽 자물쇠 → 알림 허용으로 바꿔 주세요.</p>':''}
+  <div class="nlist ${on?'':'off'}">
+   <div class="nrow"><img src="${BAB_SRC}" alt="밥숑"><div class="nt"><b>밥숑 · 급식 알림</b><small>평일 정해진 시각에 오늘 급식을 알려요 (NEIS 연결 필요)</small></div>
+    <div class="nc"><input type="time" id="notifTime" value="${NOTIF.meal}" ${on&&NOTIF.mealOn!==false?'':'disabled'}>${sw('notifMeal',NOTIF.mealOn!==false,!on)}</div></div>
+   <div class="nrow"><img src="${JD_SRC}" alt="진도깨"><div class="nt"><b>진도깨 · 진도 체크 알림</b><small>수업이 끝나면 진도 체크를 부탁드려요</small></div>
+    <div class="nc"><select id="notifDelay" ${on&&NOTIF.after!==false?'':'disabled'}>${[3,5,10].map(m=>`<option value="${m}" ${(+NOTIF.delay||3)===m?'selected':''}>${m}분 뒤</option>`).join('')}</select>${sw('notifAfter',NOTIF.after!==false,!on)}</div></div>
+  </div>
+  <details class="nhelp"><summary>알림이 안 올 때 · 창을 닫아도 받으려면</summary><div><b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기<br><b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기<br>컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요. 진도 체크 알림은 앞으로 7일 안의 미기록 수업이 대상이고, 앱을 열 때마다 새로 맞춰져요.</div></details>`}</div>`}
 function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const nrec=DB.classes.reduce((a,c)=>a+Object.values(DB.records[c.id]||{}).filter(r=>r.done).length,0);const N=U.neis;
   return topbar('설정')+`<div class="grid datalay">
   <div class="card" style="grid-column:1/-1"><h2>학교 · NEIS 연결 <span class="sub">급식과 학사일정을 불러와요</span><span class="right">${NEIS.key&&NEIS.school?'<span class="tag ok">연결 정보 저장됨</span>':'<span class="tag gray">미설정</span>'}</span></h2>
@@ -1779,8 +1798,6 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
     <div class="sect">교시 시작 시각</div><div class="inl">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}</div>
     <div class="sect">진도 기록 시작일</div><label class="field" style="max-width:220px"><input type="date" id="tTrack" value="${DB.trackFrom||''}"><span>이 날 전의 수업은 기록이 없어도 '확인 필요'로 표시하지 않아요. 지난 수업까지 모두 기록하려면 학기 시작일로 바꾸세요.</span></label>
     <div style="margin-top:10px"><button class="btn pri" data-a="saveterm">학기 · 교시 저장</button></div></div>
-  <div class="card" id="clsCard"><h2>학급 <span class="right"><button class="btn sm pri" data-a="addclass">+ 학급 추가</button></span></h2>
-    <div class="dlist">${DB.classes.map(c=>`<div class="exc" style="--cc:${ccv(c.id)}"><span class="bar"></span><span><b>${esc(c.name||'(이름 없음)')}</b><small>교과부장 ${esc(c.lead||'-')}</small></span><button class="btn sm" data-a="clsmenu" data-x="${c.id}">관리</button></div>`).join('')||'<p class="muted" style="margin:0">학급이 없어요.</p>'}</div></div>
   ${notifCard()}
   <div class="card"><h2>백업</h2><p style="margin:0 0 8px"><span class="tag ${SAVE.ok?'ok':'bad'}">${SAVE.ok?'이 브라우저에 저장됨':'저장 실패'}</span> <span class="mono muted">${esc(SAVE.t)}</span></p>
     <p class="note">기록은 지금 쓰는 브라우저 안에만 저장돼요. 다른 기기와는 동기화되지 않으니 중요한 시점마다 백업을 받아 두세요.</p>
@@ -2136,6 +2153,7 @@ document.addEventListener('change',e=>{const tg=e.target;
     mutate(`학급 ${f==='name'?'이름':'교과부장'} 수정: ${v||'(빈칸)'}`,db=>C.setClass(db,id,f,v),{norender:true});return}
   if(tg.id==='tYear'){U.setYear=+tg.value;render();return}
   if(tg.id==='notifTime'){if(tg.value){NOTIF.meal=tg.value;NOTIF.last='';saveNotif();if(NOTIF.push)pushSync(false).catch(()=>{})}return}
+  if(tg.id==='notifMeal'){NOTIF.mealOn=tg.checked;NOTIF.last='';saveNotif();if(NOTIF.push)pushSync(false).catch(()=>{});render();return}
   if(tg.id==='notifAfter'){NOTIF.after=tg.checked;saveNotif();schedRem(true);render();return}
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
   if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos[+ix].d=tg.checked;persist();render()}return}
