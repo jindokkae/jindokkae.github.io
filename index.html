@@ -246,6 +246,7 @@ table.sheet{border-collapse:separate;border-spacing:0;width:max-content;min-widt
 .sheet tbody td.n.inexam{background:color-mix(in srgb,var(--pc) 13%,var(--surface))}
 .crow.inper{box-shadow:inset 4px 0 0 var(--pc)}
 .pinfo .note{border-left:4px solid var(--pc,var(--line-2))}
+.psep{align-self:center;width:1px;height:20px;background:var(--line-2);margin:0 2px}
 .achip.rg>span{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet td.n .rbadge{width:0;min-width:100%}
 .rbadge{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;font-size:10px;font-weight:700;line-height:1.25;border-radius:4px;padding:1px 3px;margin:2px auto 0;width:max-content;max-width:100%;box-sizing:border-box;overflow:hidden;overflow-wrap:anywhere;word-break:keep-all;text-align:center;white-space:normal}
@@ -1567,12 +1568,12 @@ function vSheet(){
   const pchip=p=>{const st=rangeStat(p),dated=p.kind==='exam'||(p.kind==='task'&&!!p.date),past=dated&&(p.end||p.date)<TK,d=dated?dday(p.date):0;
     const tg=p.cls.length&&p.cls.length<DB.classes.length?p.cls.map(cn).join(', '):'';
     const rg=p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시`:(p.kind==='exam'?'':' · 차시 미지정');
-    const meta=p.kind==='exam'?`${md(p.date)}${p.end&&p.end!==p.date?'~'+md(p.end):''}${tg?' · '+esc(tg):''}`:p.kind==='task'?`${p.date?md(p.date)+' 마감':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,''):`${p.date?md(p.date)+' 까지':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,'');
+    const meta_unused=p.kind==='exam'?`${md(p.date)}${p.end&&p.end!==p.date?'~'+md(p.end):''}${tg?' · '+esc(tg):''}`:p.kind==='task'?`${p.date?md(p.date)+' 마감':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,''):`${p.date?md(p.date)+' 까지':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,'');
     const tag=p.kind==='task'?tkTag(p.no,''):dated?(past?'지남':d<=0?'진행 중':'D-'+d):KL[p.kind];
     const stTxt=q=>q.state==='ok'?'완료':q.state==='late'?(p.date<TK?`${q.late}차시가 기한을 넘겼어요`:`${q.late}차시가 ${md(p.date)}까지 못 끝나요`):q.behind>0?`선두보다 ${q.behind}차시 늦어요`:q.done?'진행 중':p.date&&p.kind!=='unit'?'예정대로':'아직 시작 전';
     const pop=`<div class="rgpop" role="tooltip"><b>${esc(p.title)}</b><small>${KL[p.kind]}${p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시 (${st.total}차시)`:''}${p.date?` · ${p.kind==='task'?'수행':'기한'} ${md(p.date)}`:''}</small>
       ${p.from&&st.per.length?st.per.map(q=>`<div class="rgp"><span class="dot" style="background:${ccv(q.c)}"></span><span class="rgn">${esc(cn(q.c))}</span><span class="rgb"><u class="${q.state}" style="width:${q.total?Math.round(q.done/q.total*100):0}%"></u></span><span class="rgc mono">${q.done}/${q.total}</span><em class="${q.state}">${stTxt(q)}</em></div>`).join(''):`<div class="muted" style="font-size:12px">${p.kind==='exam'?'이 시험 전까지 수업할 차시가 아직 없어요.':'차시 범위를 정하면 반별 진척이 보여요.'}</div>`}</div>`;
-    return `<span class="pwrap"><button class="achip rg ${p.kind} ${past?'past':''} ${st.late?'late':''}" style="--pc:${p.col}" data-a="period" data-x="${p.id}" aria-pressed="${!!cur&&cur.id===p.id}"><b>${tag}</b><span>${esc(p.title)} <span class="muted">${meta}</span></span>${st.late?'<span class="rgw" title="기한 안에 못 끝낼 반이 있어요">!</span>':''}<i class="rgbar"><u style="width:${st.pct}%"></u></i></button><button class="pedit" data-a="${p.kind==='exam'||p.kind==='task'?'avedit':'rgedit'}" data-x="${p.id}" aria-label="${esc(p.title)} 편집" title="편집">${ic('pen',11)}</button>${pop}</span>`};
+    return `<span class="pwrap"><button class="achip rg ${p.kind} ${past?'past':''} ${st.late?'late':''}" style="--pc:${p.col}" data-a="period" data-x="${p.id}" aria-pressed="${!!cur&&cur.id===p.id}"><b>${tag}</b><span>${esc(p.title)}</span>${st.late?'<span class="rgw" title="기한 안에 못 끝낼 반이 있어요">!</span>':''}<i class="rgbar"><u style="width:${st.pct}%"></u></i></button><button class="pedit" data-a="${p.kind==='exam'||p.kind==='task'?'avedit':'rgedit'}" data-x="${p.id}" aria-label="${esc(p.title)} 편집" title="편집">${ic('pen',11)}</button>${pop}</span>`};
   const pcol={};pl.forEach(q=>{if(q.kind==='exam'&&!q.empty)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if((q.kind==='unit'||q.kind==='free')&&q.from)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if(q.kind==='task'&&q.from)for(let k=q.from;k<=q.to;k++)pcol[k]={c:'var(--warn)',t:q.title,k:0,id:q.id}});
@@ -1580,7 +1581,7 @@ function vSheet(){
   /* 범위 칩을 누르면 그 범위의 차시만 보여준다. 시험 범위는 차시 색(차시별로 정한 색 > 자동 색) 기준, 나머지는 차시 번호 기준 */
   const inP=n=>{if(!cur)return true;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to);const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(les.col>0)return les.col===cur.k;return pcol[n]?.id===cur.id};
   if(cur)cur.empty=cur.kind==='exam'?!DB.lessons.some((l,i)=>inP(i+1)):(cur.from>DB.lessons.length);
-  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map(pchip).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button>
+  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button>
     ${DB.classes.length?`<span style="margin-left:auto">${DB.trackFrom?`<button class="btn sm" data-a="trk" data-x="term" title="${md(DB.trackFrom)} 이후만 계산 중이에요. 눌러서 학기 첫 수업일부터 다시 계산">${md(DB.trackFrom)} 기준 · 학기 첫 수업일로</button>`:`<button class="btn sm" data-a="trk" data-x="now" title="지난 수업을 건너뛰고 오늘부터 차시 예정일을 계산해요">현재일 기준으로 설정</button>`}</span>`:''}</div>
     ${cur&&cur.empty?`<div class="pinfo"><span class="warnbox">${cur.kind==='exam'?'이 시험 범위에 해당하는 차시가 아직 없어요. 차시 ⋯ 수업 정보에서 색을 정하거나 시간표를 확인해 보세요.':'이 범위의 차시가 없어요. 범위를 편집해서 차시를 다시 골라 주세요.'}</span></div>`:''}`;
   let body;
@@ -2036,7 +2037,7 @@ function readAssessForm(){const a=U.av;const g=id=>$('#'+id);
   if(g('avTitle'))a.title=g('avTitle').value.trim();if(g('avStart'))a.start=g('avStart').value;if(g('avEnd'))a.end=g('avEnd').value;
   if(g('avNo'))a.noClass=g('avNo').checked;
   if(g('avLesson'))a.lessonId=g('avLesson').value||null;if(g('avNote'))a.note=g('avNote').value.trim()}
-const CIRC=['','①','②','③'],tkTag=(no,t)=>no?`수행평가 ${CIRC[no]}`:(t||'수행평가');
+const CIRC=['','①','②','③'],tkTag=(no,t)=>no?`수행 ${CIRC[no]}`:(t||'수행평가');
 const RGKS=[['unit','단원'],['task','수행평가'],['free','자유 구간'],['exam','정기시험']];
 function openRange(o){U.rg=Object.assign({id:'',kind:'unit',title:'',fromId:null,toId:null,col:0,date:'',classes:'all',note:'',start:TK,end:'',noClass:true},o||{});if(U.rg.kind!=='exam'&&!U.rg.fromId&&DB.lessons.length){U.rg.fromId=DB.lessons[0].id;U.rg.toId=U.rg.toId||U.rg.fromId}drawRange()}
 function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes==='all';
