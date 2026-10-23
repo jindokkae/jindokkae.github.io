@@ -364,7 +364,8 @@ table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;
 .tt th.today{color:var(--accent)}
 .tt td{height:54px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
 .tt td.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));outline:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
-.tt th{padding:4px 2px}.tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
+.tt th{padding:4px 2px}.tt th .dabs{opacity:0;pointer-events:none;transition:opacity .12s}.tt th:hover .dabs,.tt th:focus-within .dabs{opacity:1;pointer-events:auto}@media (hover:none){.tt th .dabs{opacity:1;pointer-events:auto}}
+.tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
 .tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
 .tt thead th .btn{opacity:0;transition:opacity .15s}.tt thead th:hover .btn{opacity:1}
 .tc{display:flex;flex-direction:column;gap:1px;width:100%;text-align:left;padding:4px 7px 4px 8px;border-radius:8px;border:1px solid color-mix(in srgb,var(--cc) 38%,var(--line));border-left:5px solid var(--cc);background:color-mix(in srgb,var(--cc) 13%,var(--surface));min-width:0;line-height:1.25}
@@ -1690,7 +1691,7 @@ function ttBody(){
     <div class="card"><h2>주간 시간표 <span class="sub">${multi?'모든 교과 · ':''}칸을 누르면 완료·결손·교환을 처리하고, 빈 칸을 누르면 수업 보강을 추가해요</span></h2>
       <div class="calbar"><button class="btn sm" data-a="ttw" data-x="-1" aria-label="이전 주" ${mon<=SR.mlo?'disabled':''}>‹</button><span class="ttl mono">${md(days[0])} ~ ${md(days[4])}</span><button class="btn sm" data-a="ttw" data-x="1" aria-label="다음 주" ${mon>=SR.mhi?'disabled':''}>›</button><button class="btn sm" data-a="ttw" data-x="0" ${mon===mondayOf(TK)||TK<SR.lo||TK>SR.hi?'disabled':''}>이번 주</button>
         <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div></div>
-      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span>${blockOf(k)||multi?'':` <button class="btn sm mobhide" data-a="absday" data-x="${k}" title="이날 수업 결손 처리" style="padding:0 5px">결손</button>`}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span>${blockOf(k)?'':` <button class="btn sm mobhide dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
       <div class="legend" style="margin:10px 0 0">${['done','doing','plan','check','absent','moved'].map(s=>`<span>${stag(s)}</span>`).join('')}<span style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">${ttBtns.join('')}</span></div></div>
     <div class="card"><h2>결손 · 교환 · 보강 기록 <span class="sub">월별로 확인해요 · 취소하면 목록에서 사라져요</span></h2>
       ${excMonths}
@@ -2044,22 +2045,22 @@ function readAssessForm(){const a=U.av;const g=id=>$('#'+id);
   if(g('avLesson'))a.lessonId=g('avLesson').value||null;if(g('avNote'))a.note=g('avNote').value.trim()}
 const CIRC=['','①','②','③'],tkTag=(no,t)=>no?`수행 ${CIRC[no]}`:(t||'수행평가');
 const KL2={exam:'정기시험',unit:'단원/파트'};
-const RGKS=[['exam','정기시험'],['unit','단원/파트'],['task','수행평가']];
+const RGKS=[['unit','단원/파트'],['exam','정기시험'],['task','수행평가']];
 function openRange(o){U.rg=Object.assign({id:'',kind:DB.rgBasis||'exam',title:'',fromId:null,toId:null,col:0,date:'',classes:'all',note:'',start:TK,end:'',noClass:true},o||{});if(U.rg.kind!=='exam'&&!U.rg.fromId&&DB.lessons.length){U.rg.fromId=DB.lessons[0].id;U.rg.toId=U.rg.toId||U.rg.fromId}drawRange()}
 function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes==='all';
   const lopt=sel=>DB.lessons.map((l,i)=>`<option value="${l.id}" ${sel===l.id?'selected':''}>${i+1}차시 ${esc((l.topic||'').slice(0,16))}</option>`).join('');
   const ex=r.kind==='exam',f=lessonIdx(DB,r.fromId),to=lessonIdx(DB,r.toId)||f,cnt=f?Math.abs(to-f)+1:0;
-  const PRE={unit:['1단원','2단원','3단원'],task:[],exam:PRESET.exam}[r.kind]||[];
+  const PRE={unit:['1단원','2단원','3단원'],task:[],exam:['1차 정기시험','2차 정기시험']}[r.kind]||[];
   modal(`<h3>${isNew?'범위 추가':'범위 수정'}</h3>
   ${isNew?`<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="muted" style="font-size:11px;margin-bottom:3px">색으로 구분</div><div class="seg">${RGKS.slice(0,2).map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div></div><div><div class="muted" style="font-size:11px;margin-bottom:3px">태그로 구분</div><div class="seg">${RGKS.slice(2).map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div></div></div>`:`<p class="sub" style="margin:0">${RGKS.find(x=>x[0]===r.kind)[1]}</p>`}
   <p class="muted" style="font-size:12.5px;margin:0">${{unit:'단원·파트(예: 문학/비문학/문법, 물리/지구과학)처럼 차시를 묶어 색으로 구분해요. 진도표에서 그 범위만 모아 볼 수도 있어요.',task:'수행평가 수업도 진도표의 차시예요. 1차시짜리도, 여러 차시짜리도 시작·끝 차시만 고르면 그 차시들이 색으로 묶여요. 날짜는 막지 않아요.',exam:'<b>시작일~끝나는 날</b>은 수업이 없는 날로 보고 차시를 계산하지 않아요(아래 \'수업 없음\'을 켠 경우). 이 시험의 <b>범위</b>는 앞 시험 범위 다음 차시부터 <b>시험 시작일 직전 수업일</b>까지 진행되는 차시예요.',}[r.kind]}</p>
   ${(r.kind==='exam'||r.kind==='unit')&&r.kind!==(DB.rgBasis||'exam')?`<p class="warnbox" style="font-size:12px;margin:0">진도표 색 구분은 정기시험 또는 단원/파트 중 <b>하나</b>만 써요. 지금은 ${DB.rgBasis==='unit'?'단원/파트':'정기시험'} 기준이에요. 저장하면 ${KL2[r.kind]} 기준으로 바뀌고, 기존 ${DB.rgBasis==='unit'?'단원/파트':'정기시험'} 범위는 색 없이 칩으로만 남아요.</p>`:''}
   ${t?`<h4 style="margin:4px 0 0">수행평가 번호 <span class="muted" style="font-weight:400">(필수)</span></h4><div style="display:flex;gap:6px;flex-wrap:wrap">${[1,2,3].map(k=>`<button class="chip opt" data-a="rgno" data-x="${k}" aria-pressed="${r.no===k}">수행평가 ${CIRC[k]}</button>`).join('')}</div>`:''}
+  ${ex?`<h4 style="margin:4px 0 0">정기시험 선택 <span class="muted" style="font-weight:400">(필수)</span></h4>`:''}
   ${PRE.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${PRE.map(p=>`<button class="chip opt" data-a="rgpreset" data-x="${esc(p)}" aria-pressed="${r.title===p}">${esc(p)}</button>`).join('')}</div>`:''}
-  <label class="field">${t?'수행평가 이름':'이름'}<input id="rgTitle" class="inp" value="${esc(r.title)}" placeholder="${ex?'예: 2차 정기시험':t?'예: 독립운동가 카드뉴스 만들기':'예: 1단원 선사 문화'}"></label>
+  ${ex?`<input type="hidden" id="rgTitle" value="${esc(r.title)}">`:`<label class="field">${t?'수행평가 이름':'이름'}<input id="rgTitle" class="inp" value="${esc(r.title)}" placeholder="${t?'예: 독립운동가 카드뉴스 만들기':'예: 1단원 선사 문화'}"></label>`}
   ${ex?`<div class="inl"><label class="field">시작일<input type="date" id="rgStart" value="${r.start||''}"></label><label class="field">끝나는 날<input type="date" id="rgEnd" value="${r.end||r.start||''}"></label></div>`:`<div class="inl"><label class="field">시작 차시<select id="rgFrom" class="inp">${lopt(r.fromId)}</select></label><label class="field">끝 차시<select id="rgTo" class="inp">${lopt(r.toId||r.fromId)}</select></label></div>
-  <p class="muted" style="font-size:12px;margin:-4px 0 0">${DB.lessons.length?(cnt===1?`${f}차시 한 번에 끝나는 범위예요.`:`${Math.min(f,to)}~${Math.max(f,to)}차시, 모두 ${cnt}차시에 걸쳐요.`):'진도표에 차시가 없어요. 먼저 차시를 만들어 주세요.'}</p>
-  <div class="inl"><label class="field">${t?'마감일 (선택 · 날짜를 막지 않아요)':'기한 (선택)'}<input type="date" id="rgDate" value="${r.date||''}"></label></div>`}
+  <p class="muted" style="font-size:12px;margin:-4px 0 0">${DB.lessons.length?(cnt===1?`${f}차시 한 번에 끝나는 범위예요.`:`${Math.min(f,to)}~${Math.max(f,to)}차시, 모두 ${cnt}차시에 걸쳐요.`):'진도표에 차시가 없어요. 먼저 차시를 만들어 주세요.'}</p>`}
   ${t||ex?'':`<div class="field"><span>색</span><div class="swatches lcol col2"><div class="srow"><button type="button" class="pill" data-a="rgcol" data-x="0" aria-pressed="${!r.col}">자동</button>${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="rgcol" data-x="${k}" style="--sw:var(--p${k})" aria-pressed="${r.col===k}" aria-label="색 ${k}"></button>`).join('')}</div></div></div>`}
   <label class="field">메모 (선택)<input id="rgNote" class="inp" value="${esc(r.note||'')}" placeholder="${t?'예: 채점 기준표 배부':ex?'예: 서술형 30%':''}"></label>
   ${ex?`<label class="chk"><input type="checkbox" id="rgNo" ${r.noClass?'checked':''}><span>시험 기간에는 수업 없음 <span class="muted">(예정 진도에서 빼고 계산해요)</span></span></label>`:''}
@@ -2210,7 +2211,7 @@ document.addEventListener('click',e=>{
    case 'sess':openSess(x);break;
    case 'absence':openAbsence(SCH.key[x].date,[x]);break;
    case 'nop':{const z=SCH.key[x];if(!z)break;mutate(`${md(z.date)} ${cn(z.c)} 진도 없음`,db=>C.nop(db,[z]),{msg:`${md(z.date)} ${z.p}교시를 '진도 없음'으로 두었어요. 차시는 그대로 다음 수업으로 넘어가요.`});break}
-   case 'absday':openAbsence(x,[]);break;
+   case 'absday':openAbsence(x,(SCH.by[x]||[]).filter(z=>['plan','check','done'].includes(z.status)).map(z=>z.key));break;
    case 'absall':{const ss=(SCH.by[U.abs.date]||[]).filter(s=>['plan','check','done'].includes(s.status));const all=ss.every(s=>U.abs.keys.has(s.key));U.abs.keys=new Set(all?[]:ss.map(s=>s.key));drawAbsence();break}
    case 'absr':U.abs.reason=x;drawAbsence();break;
    case 'absgo':{const A=U.abs,list=[...A.keys].map(k=>SCH.key[k]).filter(Boolean);if(!list.length)break;
@@ -2257,7 +2258,7 @@ document.addEventListener('click',e=>{
    case 'rgcol':readRange();U.rg.col=+x;drawRange();break;
    case 'rgsel':{const ix=[...U.selRows].map(id=>lessonIdx(DB,id)).filter(Boolean).sort((a,b)=>a-b);if(!ix.length)break;const lo=ix[0],hi=ix[ix.length-1];
       openRange({kind:'unit',fromId:L(lo).id,toId:L(hi).id});if(hi-lo+1!==ix.length)toast(`선택한 차시 중 가장 앞(${lo})~뒤(${hi}) 차시를 범위로 잡았어요.`);break}
-   case 'rgsave':{readRange();const r=U.rg;if(!r.title){toast('이름을 적어 주세요.');break}
+   case 'rgsave':{readRange();const r=U.rg;if(!r.title){toast(r.kind==='exam'?'1차·2차 정기시험 중 하나를 골라 주세요.':'이름을 적어 주세요.');break}
       if(r.kind==='exam'){if(!r.start){toast('시작일을 골라 주세요.');break}if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
         let en=r.end;if(!en||en<r.start)en=r.start;const w=weekdays(r.start,en);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}
         const adj=w.start!==r.start||w.end!==en?`주말은 빼고 평일(${md(w.start)}~${md(w.end)})만 저장했어요. `:'';
@@ -2268,9 +2269,9 @@ document.addEventListener('click',e=>{
       if(!r.toId)r.toId=r.fromId;if(lessonIdx(DB,r.toId)<lessonIdx(DB,r.fromId)){const t=r.fromId;r.fromId=r.toId;r.toId=t}
       if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
       if(r.kind==='task'){
-        const A={id:r.id||undefined,type:'task',no:r.no,title:r.title,start:r.date||'',end:'',classes:r.classes,noClass:false,fromId:r.fromId,toId:r.toId,lessonId:r.fromId,note:r.note||''};
+        const A={id:r.id||undefined,type:'task',no:r.no,title:r.title,start:'',end:'',classes:r.classes,noClass:false,fromId:r.fromId,toId:r.toId,lessonId:r.fromId,note:r.note||''};
         mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>C.saveAssess(db,A),{msg:`${r.title} 수행평가를 저장했어요.`})}
-      else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{db.rgBasis='unit';C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:r.date||'',classes:r.classes,note:r.note||''})},{msg:`${r.title} 범위를 저장했어요.`});
+      else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{db.rgBasis='unit';C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:'',classes:r.classes,note:r.note||''})},{msg:`${r.title} 범위를 저장했어요.`});
       break}
    case 'rgdel':{const isT=DB.assess.some(a=>a.id===x);mutate(`범위 삭제`,db=>isT?C.removeAssess(db,x):C.removeRange(db,x),{msg:'범위를 삭제했어요.'});break}
    case 'avtype':{readAssessForm();if(x==='task'){const a=U.av;openRange({kind:'task',title:a.title,date:a.start,classes:a.classes});break}U.av.type=x;U.av.noClass=x==='exam';drawAssess();break}
