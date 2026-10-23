@@ -1742,6 +1742,7 @@ function calBody(){const SRc=srInfo();
   const det=`<div class="card"><h2>${mdw(k)} <span class="sub">${k<TK?'지난 날':k===TK?'오늘':dday(k)+'일 뒤'}</span>${actSubs.length?`<span class="right" style="display:flex;gap:6px;flex-wrap:wrap">${actSubs.map(sb=>`<button class="btn sm bad" data-sub="${sb.id}" data-a="absday" data-x="${k}">${multi?esc(subPre(sb,subs))+' ':''}이날 수업 결손 처리</button>`).join('')}</span>`:''}</h2>
     ${evs.length?`<div class="dlist" style="margin-bottom:6px">${evs.map(({e,sid})=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="ev ${e.kind}">${KIND[e.kind]}</span><span>${esc(e.label)}</span>${e.src?`<span class="muted" style="font-size:11px">${esc(e.src)}</span>`:''}${e.assessId?`<button class="btn sm" style="margin-left:auto" data-sub="${sid}" data-a="avedit" data-x="${e.assessId}">수정</button>`:e.id?`<button class="btn sm bad" style="margin-left:auto" data-sub="${sid}" data-a="evdel" data-x="${e.id}">삭제</button>`:''}</div>`).join('')}</div>`:''}
     ${blk&&blk!=='주말'?`<p class="note">${esc(blk)}라서 수업이 없어요.</p>`:''}
+    ${(()=>{const me=evs.find(({e})=>MOCK_RE.test(e.label||'')&&!e.off&&!e.gx);const cand=ss.filter(x=>x.sb.id===STORE.cur&&['plan','check','done','skipped'].includes(x.s.status));return me&&cand.length&&!blk?`<div class="alertbar w" style="margin:6px 0"><span>${esc(me.e.label)} 때문에 빠져야 할 수업이 ${cand.length}개 있어요. 자동 결손이 적용되지 않은 상태예요(이전에 결손을 취소했거나, 시간표가 바뀐 경우).</span><button class="btn sm bad" data-a="mockabs" data-x="${k}">${cand.length}개 결손 처리</button></div>`:''})()}
     <div class="sect" style="margin-top:6px">수업 <span style="font-weight:400">· 누르면 완료·결손·교환</span></div>
     <div class="dlist">${ss.length?ss.map(x=>x.row).join(''):'<p class="muted" style="margin:0">수업이 없는 날이에요.</p>'}</div>
     <div class="sect">이날 할 일 · 메모</div>
@@ -2226,6 +2227,8 @@ document.addEventListener('click',e=>{
    case 'moveopen':openMove(x);break;
    case 'mvgo':{const M=U.mv,s=SCH.key[M.key];if(mvCheck().err)break;
      mutate(`${cn(s.c)} ${when(s)} → ${md(M.toDate)} ${M.toP}교시 교환`,db=>C.move(db,s,M.toDate,M.toP,'',{revertDone:M.revert}));break}
+   case 'mockabs':{const me=(allEvents(DB).filter(e=>inRange(x,e)&&MOCK_RE.test(e.label||'')&&!e.off&&!e.gx)[0]);const lab=String((me&&me.label)||'전국연합학력평가'),list=(SCH.by[x]||[]).filter(z=>['plan','check','done','skipped'].includes(z.status));if(!list.length)break;
+     mutate(`${md(x)} ${lab} 결손 적용`,db=>{list.forEach(z=>{const old=db.exc.find(e=>e.type==='absence'&&e.date===z.date&&e.c===z.c&&e.p===z.p);if(old){old.state='active';old.reason=lab.slice(0,18);old.src='자동(학사일정)'}else db.exc.push({id:uid('a'),type:'absence',date:z.date,c:z.c,p:z.p,reason:lab.slice(0,18),note:'',src:'자동(학사일정)',state:'active',at:stamp()})})},{msg:`${list.length}개 수업을 ${lab} 결손으로 처리했어요.`});break}
    case 'excoff':{const ex=DB.exc.find(k=>k.id===x);mutate(`${cn(ex.c)} ${md(ex.date)} ${EXN[ex.type]} 취소`,db=>C.setExc(db,x,'cancelled'),{msg:`${EXN[ex.type]}을 취소했어요. 예정 진도를 다시 계산했어요.`});break}
    case 'excon':{const ex=DB.exc.find(k=>k.id===x);const d2=clone(DB);C.setExc(d2,x,'active');const S2=buildSched(d2);
      if(ex.type==='move'){const clash=(S2.by[ex.toDate]||[]).filter(s=>s.p===ex.toP&&['plan','check','done'].includes(s.status));if(clash.length>1||!S2.key[`${ex.toDate}|${ex.c}|${ex.toP}`]){toast('그 시간에 이미 다른 수업이 있어 다시 적용할 수 없어요.');break}}
