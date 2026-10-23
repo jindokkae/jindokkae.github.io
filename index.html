@@ -806,7 +806,6 @@ function autoAbs(sb){const db=sb.db;if(!db)return false;let ch=false;
       for(const t of ttFor(db,k).filter(x=>x.d===dw)){if(!clsIds(db).includes(t.c))continue;
         if(db.exc.some(e=>e.type==='absence'&&e.date===k&&e.c===t.c&&e.p===t.p))continue;
         if(db.exc.some(e=>e.type==='move'&&e.state==='active'&&e.date===k&&e.c===t.c&&e.p===t.p))continue;
-        if(Object.values(recDates(db,t.c)[k]||[]).length)continue;
         db.exc.push({id:uid('a'),type:'absence',date:k,c:t.c,p:t.p,reason:lab.length>18?lab.slice(0,18):lab,note:'',src:'자동(학사일정)',state:'active',at:stamp()});ch=true}}}
   return ch}
 function ttFor(db,k){let v=null;for(const t of db.tt)if(t.from<=k&&(!v||t.from>=v.from))v=t;return v?v.slots:[]}
@@ -1152,7 +1151,7 @@ function refreshChrome(){
   const ub=$('[data-a=undo].tb'),rb=$('[data-a=redo].tb');if(ub)ub.disabled=!UNDO.length;if(rb)rb.disabled=!REDO.length;
 }
 let RV=null;
-function render(){try{if(!TOUR&&STORE.subjects.map(autoAbs).some(Boolean))persist()}catch(e){}
+function render(){if(!TOUR){let ch=false;STORE.subjects.forEach(sb=>{try{if(autoAbs(sb))ch=true}catch(e){console.warn('autoAbs',e)}});if(ch)persist()}
 
   SCH=buildSched(DB);
   const sameV=RV===U.view,wy=window.scrollY,sw=document.querySelector('.sheet-wrap'),swt=sw?sw.scrollTop:0,swl=sw?sw.scrollLeft:0;RV=U.view;
