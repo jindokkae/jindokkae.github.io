@@ -1112,7 +1112,7 @@ const predTxt=v=>v>DB.lessons.length?`준비된 ${DB.lessons.length}차시 모�
 
 /* ---- 저장·실행 취소 ---- */
 const curSub=()=>STORE.subjects.find(x=>x.id===STORE.cur);
-function persist(){if(TOUR)return;try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}try{schedRem()}catch(e){}}
+function persist(){if(TOUR)return;try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}try{schedRem()}catch(e){}try{syncDirty()}catch(e){}}
 function persistNeis(){try{localStorage.setItem(NEISK,JSON.stringify(NEIS));localStorage.setItem(MEALK,JSON.stringify(MEALS))}catch(e){}}
 function logAdd(label,refs){LOG.push({t:stamp(),label,refs:refs||[]});if(LOG.length>300)LOG.shift()}
 function boot(){try{const u=JSON.parse(localStorage.getItem('jindokkae.ui')||'{}');if(u.tpW>=120&&u.tpW<=560)U.tpW=u.tpW}catch(e){}
@@ -1220,6 +1220,109 @@ function openRecApps(){
   modal(`<h3>${ic('bolt',18)} 추천 앱</h3><p class="sub">진도깨와 함께 쓰면 좋은 수업·학교 업무용 웹앱이에요.</p>
   <div class="dlist">${RECAPPS.map(a=>`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>${a.n}</b><small style="white-space:normal;display:block;margin-top:2px">${a.d}</small></span><a class="btn sm pri" href="${a.u}" target="_blank" rel="noopener">열기 ↗</a></div>`).join('')}</div>
   <div class="acts"><button class="btn" data-a="close">닫기</button></div>`)}
+
+/* ================= 기기 연동 (선택) — 구글 로그인한 선생님만 PC·모바일 진도를 서버로 맞춘다 =================
+   로컬(localStorage)이 기본이고 서버는 복사본이에요. 저장 시각이 서로 어긋나면 덮어쓰지 않고 물어봐요. */
+const SB_URL='https://uuuygwlotpqtmggaujtc.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dXlnd2xvdHBxdG1nZ2F1anRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTU4MDMsImV4cCI6MjEwODI3MTgwM30.c_HAsN59_KkTx33oue65yiWXBUArpKtHBW8WEz8gu-s',SYNCK='jindokkae.sync';
+let SYNC={on:false,sess:null,base:null,dirty:false,last:'',err:'',busy:false,hold:null},SYNC_APPLY=false,SYNC_T=null,SYNC_HASH,SYNC_NEEDS_FIRST=false;
+const syncSave=()=>{try{localStorage.setItem(SYNCK,JSON.stringify({on:SYNC.on,sess:SYNC.sess,base:SYNC.base,dirty:SYNC.dirty,last:SYNC.last}))}catch(e){}};
+const syncLoad=()=>{try{const j=JSON.parse(localStorage.getItem(SYNCK)||'null');if(j)Object.assign(SYNC,{on:!!j.on,sess:j.sess||null,base:j.base||null,dirty:!!j.dirty,last:j.last||''})}catch(e){}};
+const syncOn=()=>SYNC.on&&!!SYNC.sess&&!TOUR;
+const syncKey=()=>JSON.stringify({s:STORE.subjects.map(x=>x.id===STORE.cur?{...x,db:DB}:x),d:STORE.dday,y:STORE.yterms||{}});
+const syncPayload=()=>{const cs=curSub();if(cs)cs.db=DB;return {app:'jindokkae',v:5,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},subjects:STORE.subjects,alg:ALGS,log:LOG.slice(-100)}};
+const keyOf=d=>JSON.stringify({s:d.subjects,d:d.dday,y:d.yterms||{}});
+const devName=()=>{const u=navigator.userAgent;return /Android|iPhone|iPad|Mobile/i.test(u)?'모바일':'PC'};
+const jwtMail=t=>{try{const p=JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))));return p.email||''}catch(e){return ''}};
+function syncHash(){const q=new URLSearchParams(location.hash.replace(/^#/,'')),qs=new URLSearchParams(location.search);
+  if(q.get('access_token')&&q.get('refresh_token')){const at=q.get('access_token');
+    SYNC.sess={access:at,refresh:q.get('refresh_token'),exp:Date.now()+(+q.get('expires_in')||3600)*1000,email:jwtMail(at),uid:(()=>{try{return JSON.parse(atob(at.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).sub}catch(e){return ''}})()};
+    SYNC.on=true;SYNC.base=null;SYNC_NEEDS_FIRST=true;syncSave();history.replaceState(null,'',location.pathname+location.search);U.view='set';return 'ok'}
+  const err=q.get('error_description')||qs.get('error_description');if(err){history.replaceState(null,'',location.pathname);return err}return ''}
+async function syncTok(){const s=SYNC.sess;if(!s)throw new Error('login');
+  if(s.exp-60000>Date.now())return s.access;
+  const r=await fetch(SB_URL+'/auth/v1/token?grant_type=refresh_token',{method:'POST',headers:{apikey:SB_KEY,'Content-Type':'application/json'},body:JSON.stringify({refresh_token:s.refresh})});
+  if(!r.ok){SYNC.sess=null;SYNC.err='로그인이 만료됐어요. 다시 로그인해 주세요.';syncSave();throw new Error('expired')}
+  const j=await r.json();SYNC.sess={...s,access:j.access_token,refresh:j.refresh_token||s.refresh,exp:Date.now()+(j.expires_in||3600)*1000};syncSave();return SYNC.sess.access}
+async function sbApi(path,o={}){const t=await syncTok();const r=await fetch(SB_URL+path,{method:o.method||'GET',headers:{apikey:SB_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json',...(o.prefer?{Prefer:o.prefer}:{})},body:o.body?JSON.stringify(o.body):undefined});
+  if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;try{e.body=await r.text()}catch(_){}throw e}
+  const tx=await r.text();return tx?JSON.parse(tx):null}
+const rowUrl=()=>`/rest/v1/user_data?user_id=eq.${SYNC.sess.uid}`;
+const sumOf=d=>{const sb=d.subjects||[];return `교과 ${sb.length}개 · 학급 ${sb.reduce((a,x)=>a+((x.db&&x.db.classes)||[]).length,0)}개 · 차시 ${sb.reduce((a,x)=>a+((x.db&&x.db.lessons)||[]).length,0)}개`};
+const localEmpty=()=>STORE.subjects.every(x=>!(x.db.classes||[]).length&&!(x.db.lessons||[]).length);
+const fmtT=t=>{if(!t)return '';const d=new Date(t);return isNaN(d)?'':`${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const validRemote=d=>d&&Array.isArray(d.subjects)&&d.subjects.length&&d.subjects.every(x=>x&&x.id&&validDB(x.db));
+/* 서버 데이터로 이 기기 데이터를 바꾼다(바꾸기 전 이 기기 데이터는 따로 보관) */
+function syncApply(row,markDirty){const d=row.data;if(!validRemote(d)){toast('서버 데이터를 읽을 수 없어요.');return false}
+  try{localStorage.setItem('jindokkae.syncbak',JSON.stringify({t:stamp(),data:syncPayload()}))}catch(e){}
+  SYNC_APPLY=true;try{const keepCur=STORE.cur;
+    STORE={subjects:clone(d.subjects),cur:d.subjects.some(k=>k.id===keepCur)?keepCur:(d.subjects.some(k=>k.id===d.cur)?d.cur:d.subjects[0].id),dday:normDday(d.dday),yterms:d.yterms||{}};
+    STORE.subjects.forEach(x=>ensureSub(x));ddInit();HIST={};UNDO=[];REDO=[];DB=curSub().db;ALGS=d.alg||ALGS;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;U.periodSub=null;
+    persist();SYNC_HASH=syncKey()}finally{SYNC_APPLY=false}
+  SYNC.base=row.updated_at||SYNC.base;SYNC.dirty=!!markDirty;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();closeM();render();return true}
+async function syncPush(force){const body={data:syncPayload(),device:devName()};let rows;
+  if(!SYNC.base){try{rows=await sbApi('/rest/v1/user_data',{method:'POST',prefer:'return=representation',body:{user_id:SYNC.sess.uid,...body}})}catch(e){if(e.status===409)return 'conflict';throw e}}
+  else rows=await sbApi(rowUrl()+(force?'':`&updated_at=eq.${encodeURIComponent(SYNC.base)}`),{method:'PATCH',prefer:'return=representation',body});
+  if(!rows||!rows.length)return 'conflict';
+  SYNC.base=rows[0].updated_at;SYNC.dirty=false;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();return 'ok'}
+/* 한 번에 하나씩: 서버를 보고, 같으면 올리고, 서버가 더 새 것이면 가져오거나 물어본다 */
+async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;let changed=false;const sig=()=>[SYNC.err,SYNC.dirty,!!SYNC.hold,SYNC.base].join('|'),s0=sig();
+  try{const rows=await sbApi(rowUrl()+'&select=data,updated_at,device'),row=rows&&rows[0];
+    if(!row){SYNC.base=null;const r=await syncPush();changed=true;if(r==='conflict')SYNC.err='서버 상태가 바뀌었어요. 잠시 뒤 다시 시도해요.'}
+    else if(!SYNC.base){ /* 처음 연결 */
+      if(localEmpty()){syncApply(row,false);toast('연동된 진도 데이터를 불러왔어요.')}
+      else if(keyOf(row.data)===syncKey()){SYNC.base=row.updated_at;SYNC.dirty=false;SYNC.last=new Date().toISOString();syncSave();changed=true}
+      else if(SYNC.hold!==row.updated_at){SYNC.hold=row.updated_at;openSyncAsk(row,'first')}}
+    else if(row.updated_at!==SYNC.base){ /* 다른 기기가 먼저 저장함 */
+      if(keyOf(row.data)===syncKey()){SYNC.base=row.updated_at;SYNC.dirty=false;syncSave();changed=true}
+      else if(!SYNC.dirty){if(syncApply(row,false))toast(`${row.device||'다른 기기'}에서 저장한 최신 진도를 불러왔어요.`)}
+      else if(SYNC.hold!==row.updated_at){SYNC.hold=row.updated_at;openSyncAsk(row,'conflict')}}
+    else if(SYNC.dirty){const r=await syncPush();changed=true;if(r==='conflict')return syncTick('retry')}
+    else{SYNC.last=new Date().toISOString();syncSave()}
+    SYNC.err=SYNC.err&&SYNC.err.startsWith('로그인')?SYNC.err:''}
+  catch(e){if(e.message!=='expired')SYNC.err=navigator.onLine===false?'오프라인이에요. 연결되면 자동으로 맞춰요.':'서버와 연결하지 못했어요. 잠시 뒤 다시 시도해요.';
+    if(e.status===404||(e.body&&/relation .* does not exist|PGRST205/.test(e.body)))SYNC.err='서버 준비가 아직 안 됐어요. 관리자에게 알려 주세요.'}
+  finally{SYNC.busy=false;const ae=document.activeElement;if(U.view==='set'&&!$('#layer').innerHTML&&(sig()!==s0||why==='manual')&&!(ae&&ae.matches&&ae.matches('input,textarea,select')))render()}}
+/* persist()가 부르는 훅: 진짜 바뀐 게 있을 때만 '올릴 것 있음' 표시 */
+function syncDirty(){if(!SYNC.on||!SYNC.sess||SYNC_APPLY||TOUR)return;const h=syncKey();if(SYNC_HASH===undefined){SYNC_HASH=h;return}if(h===SYNC_HASH)return;SYNC_HASH=h;SYNC.dirty=true;syncSave();
+  clearTimeout(SYNC_T);if(SYNC.hold)return;SYNC_T=setTimeout(()=>syncTick('push'),2500)}
+function openSyncAsk(row,kind){const first=kind==='first';
+  modal(`<h3>${first?'연동된 데이터가 있어요':'다른 기기에서 먼저 저장했어요'}</h3>
+  <p class="sub">${first?'이 구글 계정에 이미 저장된 진도 데이터가 있어요. 어느 쪽을 쓸지 골라 주세요.':'이 기기에서 고친 내용과 다른 기기의 내용이 달라요. 어느 쪽을 쓸지 골라 주세요.'}</p>
+  <div class="pv"><div class="ln"><span><b>서버(${esc(row.device||'다른 기기')} · ${fmtT(row.updated_at)})</b><br>${sumOf(row.data)}</span></div><div class="ln"><span><b>이 기기(${devName()})</b><br>${sumOf(syncPayload())}</span></div></div>
+  <p class="note">어느 쪽을 골라도 반대쪽은 사라지지 않고 백업으로 남아요. (설정 → 기기 연동 → '이전 버전 복구'에서 되돌릴 수 있어요)</p>
+  <div class="acts" style="flex-wrap:wrap"><button class="btn" data-a="syncwait">나중에 정하기</button><button class="btn" data-a="syncmine">이 기기 것으로 덮어쓰기</button><button class="btn pri" data-a="syncgetone">서버 것 불러오기</button></div>`)
+  ;U.syncRow=row}
+async function syncMine(){const row=U.syncRow;closeM();SYNC.busy=true;try{SYNC.base=row?row.updated_at:SYNC.base;const r=await syncPush(true);if(r==='ok')toast('이 기기 데이터로 서버를 덮어썼어요.')}catch(e){SYNC.err='올리지 못했어요. 잠시 뒤 다시 시도해요.'}finally{SYNC.busy=false;render()}}
+async function openSyncHist(){let rows=[];try{rows=await sbApi(`/rest/v1/user_data_hist?user_id=eq.${SYNC.sess.uid}&select=id,saved_at,device&order=saved_at.desc&limit=5`)||[]}catch(e){toast('이전 버전을 불러오지 못했어요.');return}
+  let bak=null;try{bak=JSON.parse(localStorage.getItem('jindokkae.syncbak')||'null')}catch(e){}
+  modal(`<h3>이전 버전 복구</h3><p class="sub">서버에는 최근 저장본이 최대 5개(30분 간격) 남아 있어요. 고르면 이 기기에 불러오고, 서버에도 그 내용이 올라가요.</p>
+  <div class="dlist">${rows.map(r=>`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>${fmtT(r.saved_at)}</b> <small>${esc(r.device||'')}</small></span><button class="btn sm" data-a="synchist" data-x="${r.id}">이 버전으로</button></div>`).join('')||'<p class="muted">아직 이전 버전이 없어요.</p>'}
+  ${bak&&bak.data?`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>이 기기에서 마지막으로 바꾸기 전</b> <small>${esc(bak.t||'')} · ${sumOf(bak.data)}</small></span><button class="btn sm" data-a="synchist" data-x="bak">이 버전으로</button></div>`:''}</div>
+  <div class="acts"><button class="btn" data-a="close">닫기</button></div>`)}
+async function syncHistGo(id){try{let d;if(id==='bak'){d=JSON.parse(localStorage.getItem('jindokkae.syncbak')).data}else{const r=await sbApi(`/rest/v1/user_data_hist?id=eq.${+id}&select=data`);d=r&&r[0]&&r[0].data}
+  if(syncApply({data:d,updated_at:SYNC.base},true)){toast('이전 버전을 불러왔어요.');clearTimeout(SYNC_T);SYNC_T=setTimeout(()=>syncTick('push'),600)}}catch(e){toast('불러오지 못했어요.')}}
+function syncLogin(){location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin+location.pathname)}`}
+function syncOff(){const t=SYNC.sess&&SYNC.sess.access;if(t)fetch(SB_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t}}).catch(()=>{});
+  SYNC={on:false,sess:null,base:null,dirty:false,last:'',err:'',busy:false,hold:null};SYNC_HASH=undefined;syncSave();closeM();render()}
+async function syncWipe(){try{await sbApi(`/rest/v1/user_data_hist?user_id=eq.${SYNC.sess.uid}`,{method:'DELETE'});await sbApi(rowUrl(),{method:'DELETE'});syncOff();toast('서버의 진도 데이터를 지우고 연동을 끊었어요. 이 기기의 데이터는 그대로예요.')}catch(e){toast('서버 데이터를 지우지 못했어요.')}}
+function syncInit(){syncLoad();const r=syncHash();if(r&&r!=='ok')setTimeout(()=>toast('로그인하지 못했어요: '+r),400);
+  if(SYNC.on&&SYNC.sess){SYNC_HASH=syncKey();setTimeout(()=>syncTick('boot'),r==='ok'?200:1200);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncTick('vis')});window.addEventListener('focus',()=>syncTick('focus'));window.addEventListener('online',()=>syncTick('online'));
+    setInterval(()=>{if(document.visibilityState==='visible')syncTick('poll')},90000)}}
+/* 서버·구글 로그인 설정이 끝나면 SYNC_OPEN을 true로 바꿔 모든 선생님께 보여요. 그 전에는 주소 뒤에 ?sync=1을 붙여야 보여요 */
+const SYNC_OPEN=false;
+function syncCard(){const S=SYNC,on=S.on&&S.sess;if(!SYNC_OPEN&&!on&&!/[?&]sync=1/.test(location.search))return '';
+  const head=`<h2>기기 연동 <span class="tag gray">선택</span> <span class="sub">PC와 모바일에서 같은 진도를 쓰고 싶을 때만</span></h2>`;
+  if(!on)return `<div class="card" id="syncCard" style="grid-column:1/-1">${head}
+   <p style="margin:0 0 8px">지금은 진도 데이터가 <b>이 기기의 브라우저에만</b> 저장돼요. 로그인 없이도 진도깨의 모든 기능을 쓸 수 있어요. <b>PC와 모바일을 함께 쓰고 싶은 선생님만</b> 아래에서 연동하세요.</p>
+   <ul class="note" style="margin:0 0 10px;padding-left:18px"><li>PC와 모바일에서 <b>같은 구글 계정</b>으로 로그인하면 같은 진도를 봐요.</li><li>서버에 올라가는 것: 교과·학급·시간표·진도 기록. <b>NEIS 인증키·알림 설정·급식 정보는 올라가지 않아요.</b></li><li>다른 기기가 먼저 저장한 내용이 있으면 덮어쓰지 않고 어느 쪽을 쓸지 물어봐요.</li><li>언제든 연동을 끊고 서버 데이터를 지울 수 있어요.</li></ul>
+   ${S.err?`<p class="warnbox">${esc(S.err)}</p>`:''}
+   <div class="acts left"><button class="btn pri" data-a="synclogin">Google로 로그인하고 연동하기</button></div></div>`;
+  const st=S.err?`<span class="tag bad">${esc(S.err)}</span>`:S.busy?'<span class="tag info">맞추는 중…</span>':S.hold?'<span class="tag warn">선택이 필요해요</span>':S.dirty?'<span class="tag warn">올릴 내용이 있어요</span>':'<span class="tag ok">최신 상태</span>';
+  return `<div class="card" id="syncCard" style="grid-column:1/-1">${head}
+   <p style="margin:0 0 6px"><b>${esc(S.sess.email||'구글 계정')}</b>으로 연동 중 ${st}</p>
+   <p class="muted" style="font-size:12px;margin:0 0 10px">마지막으로 맞춘 시각 ${fmtT(S.last)||'아직 없음'} · 이 기기: ${devName()} · 다른 기기에서도 같은 구글 계정으로 로그인하면 돼요. 올라가는 것은 교과·학급·시간표·진도 기록뿐이에요.</p>
+   <div class="acts left" style="flex-wrap:wrap"><button class="btn pri" data-a="syncnow">지금 맞추기</button><button class="btn" data-a="synchistopen">이전 버전 복구</button><button class="btn" data-a="syncoff">연동 끊기</button><button class="btn bad" data-a="syncwipe">서버 데이터 지우고 끊기</button></div></div>`}
 
 /* ================= 튜토리얼 (예시 데이터로 실제 화면을 보여주고, 끝나면 모두 되돌린다) ================= */
 let TOUR=null;
@@ -1970,6 +2073,7 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
     <div class="sect">교시 시작 시각</div><div class="inl">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}</div>
     <div style="margin-top:10px"><button class="btn pri" data-a="saveterm">학기 · 교시 저장</button></div></div>
   ${notifCard()}
+  ${syncCard()}
   <div class="card"><h2>백업</h2><p style="margin:0 0 8px"><span class="tag ${SAVE.ok?'ok':'bad'}">${SAVE.ok?'이 브라우저에 저장됨':'저장 실패'}</span> <span class="mono muted">${esc(SAVE.t)}</span></p>
     <p class="note">기록은 지금 쓰는 브라우저 안에만 저장돼요. 다른 기기와는 동기화되지 않으니 중요한 시점마다 백업을 받아 두세요.</p>
     <p style="margin:10px 0;font-size:13px">학급 <b class="mono">${DB.classes.length}</b> · 차시 <b class="mono">${DB.lessons.length}</b> · 완료 기록 <b class="mono">${nrec}</b> · 결손·교환 <b class="mono">${DB.exc.length}</b> · 평가 <b class="mono">${DB.assess.length}</b></p>
@@ -2389,6 +2493,16 @@ document.addEventListener('click',e=>{
      STORE.subjects.forEach(sb=>{if(sb.year!==sy||sb===cs)return;sb.db.terms=clone(T);sb.db.term={...T[sb.sem]};if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start});
      const per={};document.querySelectorAll('[data-pt]').forEach(i=>per[i.dataset.pt]=i.value);
      mutate('학기 · 교시 저장',db=>{if(cs.year===sy){db.terms=clone(T);db.term={...T[cs.sem]};if(db.tt[0]&&db.tt[0].from>db.term.start)db.tt[0].from=db.term.start}db.periods={...db.periods,...per}});break}
+   case 'synclogin':syncLogin();break;
+   case 'syncnow':if(SYNC.busy)break;SYNC.hold=null;syncTick('manual').then(()=>{if(!SYNC.err&&!$('#layer').innerHTML)toast('최신 상태예요.')});break;
+   case 'syncoff':syncOff();toast('연동을 끊었어요. 이 기기의 데이터는 그대로예요.');break;
+   case 'syncwipe':modal(`<h3>서버 데이터 지우기</h3><p class="sub">서버에 저장된 진도 데이터와 이전 버전을 모두 지우고 연동을 끊어요. 이 기기의 데이터는 그대로 남아요. 다른 기기에서도 이 계정으로는 더 이상 불러올 수 없어요.</p><div class="acts"><button class="btn" data-a="close">취소</button><button class="btn bad" data-a="syncwipego">지우고 끊기</button></div>`);break;
+   case 'syncwipego':syncWipe();break;
+   case 'synchistopen':openSyncHist();break;
+   case 'synchist':syncHistGo(x);break;
+   case 'syncwait':closeM();render();break;
+   case 'syncmine':syncMine();break;
+   case 'syncgetone':{const row=U.syncRow;if(row&&syncApply(row,false))toast('서버의 진도 데이터를 불러왔어요.');break}
    case 'exportfile':tryDownload(`jindokkae-backup-${TK}.json`,backupText());break;
    case 'exportcopy':copyText(backupText());break;
    case 'tsv':copyText(sheetTSV());break;
@@ -2541,7 +2655,7 @@ function applyZoom(){const W=window.innerWidth,ok=v=>v===1||(W>760&&W/v>=800);le
   document.querySelectorAll('.zoomseg button').forEach(b=>{b.classList.toggle('on',+b.dataset.x===z);b.disabled=!ok(+b.dataset.x)})}
 window.addEventListener('resize',()=>{try{applyZoom()}catch(e){}})
 try{setZoom(+localStorage.getItem(ZK)||1,true)}catch(e){}
-boot();
+boot();syncInit();
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').then(()=>{if(NOTIF.push&&Notification.permission==='granted')pushSync(false).then(()=>remSync()).catch(()=>{})}).catch(()=>{})}catch(e){}
 $('#brandDog').innerHTML='<img class="brandimg" src="'+JD_SRC+'" width="54" height="54" alt="진도깨">';
 render();
