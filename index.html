@@ -1952,7 +1952,7 @@ function openCalReview(){const sb=curSub(),db=DB,gs=calGroups(db),TG={hol:'휴�
   modal(`<h3>학사일정 · 결손 확인</h3><p class="sub">${esc(subjMain(sb))} 기준이에요. 모의고사·정기시험·휴업일이 우리 학년에도 해당하는지 확인하세요. ${sb.grade?'':'<b>교과의 학년을 정해 두면 NEIS 학년 표시로 자동 구분돼요.</b>'}</p>
   <div class="rvlist">${list}</div>
   ${per.length?`<div class="rvsum"><b>이 학기 수업 가능 횟수</b> <span class="muted">(차시를 몇 개 만들지 참고하세요)</span><div>${per.map(p=>`<span class="tag" style="border-left:4px solid ${p.col}">${esc(p.n)} <b>${p.can}회</b>${p.ab?` · 결손 ${p.ab}`:''}</span>`).join('')}</div></div>`:''}
-  <div class="acts"><button class="btn" data-a="go" data-x="cal">캘린더에서 일정 추가</button><span style="flex:1"></span><button class="btn pri" data-a="revok">${DB.calOk?'닫기':'확인했어요'}</button></div>`)}
+  <div class="acts">${DB.calOk?`<button class="btn pri" data-a="close">닫기</button>`:`<button class="btn" data-a="close" title="지금은 닫고, 나중에 시작하기 박스에서 다시 열어요">다음에 하기</button><button class="btn pri" data-a="revok" title="이 단계를 완료한 것으로 표시해요">넘어가기</button>`}</div>`)}
 function openAbsence(k,pre=[],reason='교내 일정',hint=''){U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
 function absPreview(){const a=U.abs;const list=[...a.keys].map(x=>SCH.key[x]).filter(Boolean);
   if(!list.length)return '<span class="empty">결손 처리할 수업을 고르세요.</span>';
@@ -2239,7 +2239,7 @@ document.addEventListener('click',e=>{
      mutate(`${cn(ex.c)} ${md(ex.date)} ${EXN[ex.type]} 다시 적용`,db=>C.setExc(db,x,'active'));break}
    case 'excm':U.excMonth=x;render();break;
    case 'calrev':openCalReview();break;
-   case 'revok':{if(!DB.calOk)mutate('학사일정 확인 완료',db=>{db.calOk=true},{msg:'학사일정을 확인했어요. 이제 차시를 입력해 볼까요?'});closeM();break}
+   case 'revok':{if(!DB.calOk)mutate('학사일정 확인 완료',db=>{db.calOk=true},{msg:'학사일정 확인 단계를 넘어갔어요. 이제 차시를 입력해 볼까요? (언제든 캘린더에서 일정을 확인·추가할 수 있어요)'});closeM();break}
    case 'revtg':{const [t,idl]=x.split(':'),ids=idl.split(',');
       mutate('학사일정 적용 변경',db=>{ids.forEach(id=>{if(t==='exam'){const a=db.assess.find(v=>v.id===id);if(a)a.noClass=!a.noClass}else{const e=db.events.find(v=>v.id===id);if(!e)return;if(t==='hol')e.block=!e.block;else e.off=!e.off}})});
       render();openCalReview();break}
