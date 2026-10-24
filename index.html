@@ -1310,7 +1310,7 @@ function topbar(t,extra='',lead=''){return topbarC(t,lead,extra)}
 const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK).length>0||DB.tt.some(t=>t.slots.length),cal:!!DB.calOk});
 
 /* ---------- 홈 ---------- */
-function setupCard(){const r=ready();if(r.cls&&r.les&&r.tt)return '';
+function setupCard(){const r=ready();if(r.cls&&r.les&&r.tt&&r.cal)return '';
   const st=(ok,n,t,d,a,x,b,dis,hint)=>`<div class="step ${ok?'ok':''}"><span class="num">${ok?'완료':'단계 '+n}</span><b>${t}</b><span class="muted" style="font-size:12px">${d}</span>${ok?'':`<button class="btn sm pri" data-a="${a}" data-x="${x||''}" ${dis?'disabled':''} style="align-self:flex-start">${b}</button>${dis&&hint?`<small class="muted">${hint}</small>`:''}`}</div>`;
   return `<div class="card" style="margin-bottom:16px"><h2>${jd(30)} 진도깨 시작하기 <span class="sub">차례대로 입력하면 오늘 수업과 예정 진도가 자동으로 계산돼요</span></h2><div class="steps">
    ${st(r.cls,1,'학기 · 교과 · 학급','학기와 교과는 위쪽 탭에서 정하고, 2-1·2-3처럼 수업하는 반을 추가해요.','addclass','','학급 추가')}
@@ -1450,7 +1450,7 @@ function vHome(){
       <form id="todoForm" class="tdform"><input id="todoIn" class="inp" placeholder="할 일 · 메모를 적고 Enter" aria-label="할 일 · 메모 추가" autocomplete="off"><button class="btn pri">추가</button></form></div>`;
   /* 고정 배치: 왼쪽 = 오늘의 수업 · 다가오는 일정 · 다음 수업 / 오른쪽 = 교과별 진도 현황 · 오늘 할 일+급식 · 확인이 필요해요 */
   const col=[[todayCard,nextCard,upCard],[withCls.length?progCard:'',`<div class="hpair">${todoCard}${mealCard()}</div>`]].map(a=>a.filter(Boolean));
-  return top+hero+pendBar+(withCls.length?'':setupCard())+`<div class="hmain"><div class="stack">${col[0].join('')}</div><div class="stack">${col[1].join('')}</div></div>`;
+  return top+hero+pendBar+setupCard()+`<div class="hmain"><div class="stack">${col[0].join('')}</div><div class="stack">${col[1].join('')}</div></div>`;
 }
 function rowHtml(s,kind){const n=kind==='check'?SCH.nextN[s.c]:(s.n||SCH.nextN[s.c]);
   const acts={done:`<span class="stamp">${paw(16)} 완료</span><button class="btn sm" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,
