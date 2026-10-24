@@ -831,6 +831,26 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
   .tt-wrap{overflow-x:visible}
   .btn{min-height:40px}.btn.sm{min-height:36px}.nav button{font-size:11px}
 }
+
+/* ---- 모바일 2차 ---- */
+.settools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+.themesw{display:inline-flex;align-items:center;gap:8px}
+.themesw .tk{width:38px;height:22px;border-radius:99px;background:var(--line-2);position:relative;flex:none;transition:background .15s}
+.themesw .tk i{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+.themesw .tk.on{background:var(--accent)}.themesw .tk.on i{left:19px}
+#mbar{display:none}
+@media (max-width:760px){
+  .topc .meta .tb.ico{display:none}
+  .mobhide{display:none!important}
+  .nav button{flex:1 1 0;min-width:0;white-space:nowrap;font-size:10.5px}
+  .nav{gap:0;justify-content:stretch}
+  #mbar{display:block;position:fixed;top:0;left:0;right:0;z-index:35;height:calc(44px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 16px 0;line-height:44px;font-size:16px;font-weight:800;color:var(--fg);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);transform:translateY(-110%);transition:transform .18s ease;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.scrolled #mbar{transform:none}
+  .card input,.card select,.card textarea{max-width:100%;min-width:0;box-sizing:border-box}
+  input[type=date],input[type=time]{min-width:0;width:100%}
+  .inl{flex-wrap:wrap}.inl .field{min-width:0}.inl .field[style*="116px"]{flex:1 1 42%!important}
+  [data-a=undo],[data-a=redo]{display:none!important}
+}
 </style>
 </head><body>
 <div class="app">
@@ -841,6 +861,7 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
   </aside>
   <main id="main"></main>
 </div>
+<div id="mbar" aria-hidden="true"></div>
 <div id="layer"></div>
 <script>
 /* ================= CORE: 화면과 무관한 데이터·계산 ================= */
@@ -1224,14 +1245,22 @@ window.addEventListener('appinstalled',()=>{try{localStorage.setItem(INSK,'1')}c
 function openInstall(){
   const ok=location.protocol==='https:'||location.hostname==='localhost';const inst=wasInstalled();
   if(isApp()){try{localStorage.setItem(INSK,'1')}catch(e){}}
+  const ua=navigator.userAgent,plat=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?'ios':/Android/.test(ua)?'android':'pc';
+  const SEC={
+   pc:{t:'PC (윈도우·맥)',b:`<ol class="inst"><li><b>Chrome</b> 또는 <b>Edge</b>로 진도깨를 열어요.</li><li>주소창 오른쪽 끝의 <b>설치 아이콘</b>(모니터에 ↓)을 눌러요.</li><li><b>설치</b>를 누르면 끝! 바탕화면·시작 메뉴에서 열 수 있어요.</li></ol>
+    <p class="muted" style="font-size:12px;margin:0">아이콘이 안 보이면 <b>Chrome</b> ⋮ → 저장 및 공유 → 페이지를 앱으로 설치, <b>Edge</b> ⋯ → 앱 → 이 사이트를 앱으로 설치.</p>`},
+   android:{t:'안드로이드 폰·태블릿',b:`<ol class="inst"><li><b>Chrome</b>으로 진도깨를 열어요.</li><li>오른쪽 위 <b>⋮ (점 세 개)</b> 메뉴를 눌러요.</li><li><b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누르고 <b>설치</b>를 눌러요.</li><li>홈 화면에 생긴 <b>진도깨 아이콘</b>으로 열어요.</li></ol>
+    <p class="muted" style="font-size:12px;margin:0"><b>삼성 인터넷</b>은 아래쪽 ≡ 메뉴 → 현재 페이지 추가 → 홈 화면 순서예요.</p>`},
+   ios:{t:'아이폰·아이패드',b:`<ol class="inst"><li>반드시 <b>Safari</b>로 진도깨를 열어요.</li><li>화면 아래(아이패드는 위)의 <b>공유 버튼</b>(네모에서 위로 향한 화살표)을 눌러요.</li><li>메뉴를 올려 <b>홈 화면에 추가</b>를 누르고 오른쪽 위 <b>추가</b>를 눌러요.</li><li>홈 화면에 생긴 <b>진도깨 아이콘</b>으로 열어요.</li></ol>
+    <p class="muted" style="font-size:12px;margin:0">알림(진도 체크·급식)은 <b>홈 화면에 추가한 앱</b>에서만 받을 수 있어요(iOS 16.4 이상). Chrome 등 다른 브라우저는 설치 방법이 달라요.</p>`}};
+  const order=[plat,...['pc','android','ios'].filter(k=>k!==plat)];
   modal(`<h3>${ic('bolt',18)} 앱으로 설치</h3>
-  <p class="sub">바탕화면·시작 메뉴에서 바로 열고, 주소창 없는 앱 창으로 쓸 수 있어요. (PC의 Chrome · Edge)</p>
+  <p class="sub">홈 화면·바탕화면에서 바로 열고, 주소창 없는 앱 화면으로 쓸 수 있어요. 쓰는 기기에 맞는 방법을 따라 해 주세요.</p>
   ${!ok?'<p class="warnbox">설치는 배포된 https 주소에서만 할 수 있어요.</p>':''}
-  ${inst?`<p class="note">${isApp()?'지금 앱으로 실행 중이에요.':'이 컴퓨터에 설치한 적이 있어요.'}</p>`:''}
+  ${inst?`<p class="note">${isApp()?'지금 앱으로 실행 중이에요.':'이 기기에 설치한 적이 있어요.'}</p>`:''}
   ${!inst&&DEFER?`<div class="acts left"><button class="btn pri" data-a="installgo">지금 설치하기</button></div>`:''}
-  ${inst?'':`<h4>설치 방법</h4><ol class="inst"><li>주소창 오른쪽 끝의 <b>설치 아이콘</b>(모니터에 ↓)을 눌러요.</li><li><b>설치</b>를 누르면 끝!</li></ol>
-  <p class="muted" style="font-size:12px;margin:0">아이콘이 안 보이면 <b>Chrome</b> ⋮ → 저장 및 공유 → 페이지를 앱으로 설치, <b>Edge</b> ⋯ → 앱 → 이 사이트를 앱으로 설치.</p>`}
-  <div class="acts">${inst?'<button class="btn bad" data-a="uninstall" style="margin-right:auto">앱 삭제하기</button>':''}<button class="btn" data-a="close">닫기</button></div>`)}
+  ${order.map((k,i)=>`<details class="hlp" ${i===0?'open':''}><summary><b>${SEC[k].t}</b>${k===plat?' <span class="tag info">지금 쓰는 기기</span>':''}</summary>${SEC[k].b}</details>`).join('')}
+  <div class="acts">${inst?'<button class="btn bad" data-a="uninstall" style="margin-right:auto">앱 삭제하기</button>':''}<button class="btn" data-a="close">닫기</button></div>`,true)}
 /* 웹앱은 스스로 삭제할 수 없어서(브라우저·제어판 권한), 삭제 위치를 안내한다 */
 function openUninstall(){
   modal(`<h3>앱 삭제하기</h3><p class="sub">보안상 웹사이트가 앱을 직접 지울 수는 없어요. 아래 중 편한 방법으로 삭제하세요.</p>
@@ -1492,8 +1521,11 @@ function render(){if(!TOUR){let ch=false;STORE.subjects.forEach(sb=>{try{if(auto
   document.querySelectorAll('td.cell,.crow').forEach(x=>x.tabIndex=0);
   document.querySelectorAll('textarea.ie').forEach(autosize);
   U.flash=null;
+  mbarSync();
   guideSync();
 }
+function mbarSync(){const m=document.getElementById('mbar'),h=document.querySelector('#main .top h1');if(m&&h)m.textContent=h.innerText.trim()}
+(()=>{let on=false;const f=()=>{const y=window.scrollY;if(!on&&y>70){on=true;document.body.classList.add('scrolled')}else if(on&&y<30){on=false;document.body.classList.remove('scrolled')}};window.addEventListener('scroll',f,{passive:true})})();
 function autosize(t){if(CSS.supports&&CSS.supports('field-sizing','content'))return;t.style.height='auto';t.style.height=Math.max(28,t.scrollHeight+2)+'px'}
 const saveChip=()=>`<span class="savechip ${SAVE.ok?'':'bad'}" title="${SAVE.ok?'이 브라우저에 저장됨 '+esc(SAVE.t):'저장 실패'}"><i></i>${SAVE.ok?'저장됨':'저장 실패'}</span>`;
 function topbarC(t,lead,extra){return `<div class="top topc"><h1>${t}</h1>${lead}<div class="meta">${extra}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>${saveChip()}</div></div>`}
@@ -1600,7 +1632,7 @@ function vHome(){
   const top=`<div class="top"><h1 class="hday">${ic('cal',24)} ${d.getMonth()+1}월 ${d.getDate()}일 ${wd(TK)}요일</h1>
     <button class="chip ddchip ${dd.need?'need':''}" data-a="ddset" title="D-day 설정${dd.need?'':' ('+md(dd.date)+')'}">${ic('clock',14)} ${dd.need?'D-day <b>설정 필요</b>':esc(dd.label)+' <b class="mono">'+dd.txt+'</b>'}</button>
     <div class="meta">${saveChip()}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>
-    <button class="btn pri" data-a="go" data-x="sheet">+ 진도 기록</button></div></div>`;
+    <button class="btn pri mobhide" data-a="go" data-x="sheet">+ 진도 기록</button></div></div>`;
   /* 배너 */
   const stat=(cls,icn,label,num,unit,attr)=>`<button class="hstat ${cls}" ${attr}><span class="ic">${ic(icn,20)}</span><span><small>${label}</small><b class="mono">${num}<i>${unit}</i></b></span><span class="chv">${ic('chev',16)}</span></button>`;
   const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${say}</h2><p>${sayTime(nAct&&!nCheck&&!soon&&withCls.length)}</p></div></div>
@@ -2075,8 +2107,13 @@ function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupp
     <div class="nc"><select id="notifDelay" ${on&&NOTIF.after!==false?'':'disabled'}>${[3,5,10].map(m=>`<option value="${m}" ${(+NOTIF.delay||3)===m?'selected':''}>${m}분 뒤</option>`).join('')}</select><button class="btn sm" data-a="notifTest" data-x="after" ${on?'':'disabled'}>테스트</button>${sw('notifAfter',NOTIF.after!==false,!on)}</div></div>
   </div>
   <details class="nhelp"><summary>알림이 안 올 때 · 창을 닫아도 받으려면</summary><div><b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기<br><b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기<br>컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요. 진도 체크 알림은 앞으로 7일 안의 미기록 수업이 대상이고, 앱을 열 때마다 새로 맞춰져요.</div></details>`}</div>`}
+/* 설정 맨 위 도구줄: 도움말 · 앱 설치 · 라이트/다크 */
+const themeNow=()=>{const t=document.documentElement.dataset.theme;return t==='dark'||t==='light'?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')};
+function applyTheme(){try{const t=localStorage.getItem('jindokkae.theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}}
+function toggleTheme(){const n=themeNow()==='dark'?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('jindokkae.theme',n)}catch(e){}render()}
+function setTools(){const d=themeNow()==='dark';return `<div class="settools"><button class="btn" data-a="tut"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17.2v.3"/></svg> 도움말 보기</button><button class="btn" data-a="install">${ic('bolt',16)} 앱 설치</button><button class="btn themesw" data-a="theme" role="switch" aria-checked="${d}" aria-label="다크 모드"><span class="tk ${d?'on':''}"><i></i></span><span>${d?'다크':'라이트'} 모드</span></button></div>`}
 function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const nrec=DB.classes.reduce((a,c)=>a+Object.values(DB.records[c.id]||{}).filter(r=>r.done).length,0);const N=U.neis;
-  return topbar('설정',`<button class="btn sm tb ico mobhelp" data-a="tut" aria-label="도움말" title="도움말" style="font-weight:800">?</button>`)+`<div class="grid datalay">
+  return topbar('설정')+setTools()+`<div class="grid datalay">
   <div class="card" id="neisCard" style="grid-column:1/-1"><h2>학교 · NEIS 연결 <span class="sub">급식과 학사일정을 불러와요</span><span class="right">${NEIS.key&&NEIS.school?'<span class="tag ok">연결 정보 저장됨</span>':'<span class="tag gray">미설정</span>'}</span></h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
     <div class="stack" style="gap:10px">
@@ -2520,6 +2557,7 @@ document.addEventListener('click',e=>{
      STORE.subjects.forEach(sb=>{if(sb.year!==sy||sb===cs)return;sb.db.terms=clone(T);sb.db.term={...T[sb.sem]};if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start});
      const per={};document.querySelectorAll('[data-pt]').forEach(i=>per[i.dataset.pt]=i.value);
      mutate('학기 · 교시 저장',db=>{if(cs.year===sy){db.terms=clone(T);db.term={...T[cs.sem]};if(db.tt[0]&&db.tt[0].from>db.term.start)db.tt[0].from=db.term.start}db.periods={...db.periods,...per}});break}
+   case 'theme':toggleTheme();break;
    case 'synclogin':syncLogin();break;
    case 'syncnow':if(SYNC.busy)break;SYNC.hold=null;syncTick('manual').then(()=>{if(!SYNC.err&&!$('#layer').innerHTML)toast('최신 상태예요.')});break;
    case 'syncoff':syncOff();toast('연동을 끊었어요. 이 기기의 데이터는 그대로예요.');break;
@@ -2682,7 +2720,7 @@ function applyZoom(){const W=window.innerWidth,ok=v=>v===1||(W>760&&W/v>=800);le
   document.querySelectorAll('.zoomseg button').forEach(b=>{b.classList.toggle('on',+b.dataset.x===z);b.disabled=!ok(+b.dataset.x)})}
 window.addEventListener('resize',()=>{try{applyZoom()}catch(e){}})
 try{setZoom(+localStorage.getItem(ZK)||1,true)}catch(e){}
-boot();syncInit();
+applyTheme();boot();syncInit();
 try{if('serviceWorker' in navigator&&/^https?:/.test(location.protocol))navigator.serviceWorker.register('sw.js').then(()=>{if(NOTIF.push&&Notification.permission==='granted')pushSync(false).then(()=>remSync()).catch(()=>{})}).catch(()=>{})}catch(e){}
 $('#brandDog').innerHTML='<img class="brandimg" src="'+JD_SRC+'" width="54" height="54" alt="진도깨">';
 render();
