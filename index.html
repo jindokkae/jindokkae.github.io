@@ -852,6 +852,13 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
   [data-a=undo],[data-a=redo]{display:none!important}
   .savechip{display:none!important}
 }
+
+.saym{display:none}
+@media (max-width:760px){
+  .sayd{display:none}.saym{display:inline}.saym.syncgo{display:block;margin-top:12px}
+  .syncgo p{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--fg)}
+  .top.one h1{display:none}.top.one{margin-top:4px}.top.one .meta{margin-left:0}
+}
 </style>
 </head><body>
 <div class="app">
@@ -1529,7 +1536,7 @@ function mbarSync(){const m=document.getElementById('mbar'),h=document.querySele
 (()=>{let on=false;const f=()=>{const y=window.scrollY;if(!on&&y>70){on=true;document.body.classList.add('scrolled')}else if(on&&y<30){on=false;document.body.classList.remove('scrolled')}};window.addEventListener('scroll',f,{passive:true})})();
 function autosize(t){if(CSS.supports&&CSS.supports('field-sizing','content'))return;t.style.height='auto';t.style.height=Math.max(28,t.scrollHeight+2)+'px'}
 const saveChip=()=>`<span class="savechip ${SAVE.ok?'':'bad'}" title="${SAVE.ok?'이 브라우저에 저장됨 '+esc(SAVE.t):'저장 실패'}"><i></i>${SAVE.ok?'저장됨':'저장 실패'}</span>`;
-function topbarC(t,lead,extra){return `<div class="top topc"><h1>${t}</h1>${lead}<div class="meta">${extra}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>${saveChip()}</div></div>`}
+function topbarC(t,lead,extra,cls=''){return `<div class="top topc ${cls}"><h1>${t}</h1>${lead}<div class="meta">${extra}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>${saveChip()}</div></div>`}
 function topbar(t,extra='',lead=''){return topbarC(t,lead,extra)}
 const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK).length>0||DB.tt.some(t=>t.slots.length),cal:!!DB.calOk});
 
@@ -1636,7 +1643,8 @@ function vHome(){
     <button class="btn pri mobhide" data-a="go" data-x="sheet">+ 진도 기록</button></div></div>`;
   /* 배너 */
   const stat=(cls,icn,label,num,unit,attr)=>`<button class="hstat ${cls}" ${attr}><span class="ic">${ic(icn,20)}</span><span><small>${label}</small><b class="mono">${num}<i>${unit}</i></b></span><span class="chv">${ic('chev',16)}</span></button>`;
-  const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${say}</h2><p>${sayTime(nAct&&!nCheck&&!soon&&withCls.length)}</p></div></div>
+  const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${!withCls.length&&!SYNC.on?`<span class="sayd">${say}</span><span class="saym">PC에서 쓰던 진도가 있나요? <b>PC와 연동</b>해 보세요.</span>`:say}</h2><p>${sayTime(nAct&&!nCheck&&!soon&&withCls.length)}</p></div></div>
+    ${!withCls.length&&!SYNC.on?`<div class="saym syncgo"><p>구글 계정으로 로그인하면 PC와 모바일의 진도가 자동으로 맞춰져요. 로그인은 <b>구글의 보안</b>으로 처리돼서 진도깨는 비밀번호를 받지 않고, 내 데이터는 <b>내 계정으로만</b> 볼 수 있어요. 연동은 선택이에요.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="gosync">PC와 연동하기</button><button class="btn" data-a="addclass">학급 직접 추가</button></div></div>`:''}
     ${withCls.length?`<div class="hstats">${stat('blue','cal','오늘 수업',nAct,'개','data-a="day" data-x="'+TK+'"')}${stat('warn','warn','기록 필요',nCheck,'건',''+(nCheck?'data-a="needrec"':'data-a="jump" data-x="todaycard"'))}${stat('ok','checkc','완료',nDone,'개','data-a="jump" data-x="todaycard"')}</div>`:''}</div>
     <div class="mascot"><span class="cheer">화이팅!</span>${jdWave(168)}</div></div>`;
   const pendBar=nPend?`<p class="warnbox" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">시간표 변경 확인이 필요해요 (${nPend}건) <button class="btn sm" data-a="go" data-x="tt">확인하기</button></p>`:'';
@@ -1892,7 +1900,7 @@ function clampSched(){const r=schedRange(),mlo=mondayOf(r.lo),mhi=mondayOf(r.hi)
   if(ym<a||ym>b){const t=ym<a?a:b;U.month={y:Math.floor(t/12),m:t%12}}
   if(U.sel<r.lo||U.sel>r.hi)U.sel=clampK(U.sel,r)}
 function ttSubs(){const cs=curSub();const r=STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0));return r.length?r:[cs]}
-function vSched(){clampSched();return topbarC('시간표·캘린더',semBar(),schedSeg())+(U.schedMode==='tt'?ttBody():calBody())}
+function vSched(){clampSched();return topbarC('시간표·캘린더',semBar(),schedSeg(),'one')+(U.schedMode==='tt'?ttBody():calBody())}
 function ttBody(){
   const subs=ttSubs(),multi=subs.length>1;
   if(!subs.some(sb=>sb.db.classes.length))return `<div class="card"><p style="margin:0 0 10px">시간표를 만들려면 먼저 학급을 추가하세요.</p><button class="btn pri" data-a="addclass">학급 추가</button></div>`;
@@ -2558,6 +2566,7 @@ document.addEventListener('click',e=>{
      STORE.subjects.forEach(sb=>{if(sb.year!==sy||sb===cs)return;sb.db.terms=clone(T);sb.db.term={...T[sb.sem]};if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start});
      const per={};document.querySelectorAll('[data-pt]').forEach(i=>per[i.dataset.pt]=i.value);
      mutate('학기 · 교시 저장',db=>{if(cs.year===sy){db.terms=clone(T);db.term={...T[cs.sem]};if(db.tt[0]&&db.tt[0].from>db.term.start)db.tt[0].from=db.term.start}db.periods={...db.periods,...per}});break}
+   case 'gosync':go('set');setTimeout(()=>{const c=$('#syncCard');if(c){c.scrollIntoView({behavior:'smooth',block:'start'});c.classList.add('flashc');setTimeout(()=>c.classList.remove('flashc'),1800)}},60);break;
    case 'theme':toggleTheme();break;
    case 'synclogin':syncLogin();break;
    case 'syncnow':if(SYNC.busy)break;SYNC.hold=null;syncTick('manual').then(()=>{if(!SYNC.err&&!$('#layer').innerHTML)toast('최신 상태예요.')});break;
