@@ -251,6 +251,7 @@ table.sheet{border-collapse:separate;border-spacing:0;width:max-content;min-widt
 .pinfo .note{border-left:4px solid var(--pc,var(--line-2))}
 .achip.rg.off{opacity:.62}button.chip.opt[aria-pressed="false"]{opacity:1;text-decoration:none}
 .astrip .basis{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:12px}.astrip .basis .seg button{padding:3px 9px;font-size:12px}
+.flashc{box-shadow:0 0 0 3px var(--accent)!important;transition:box-shadow .3s}
 .psep{align-self:center;width:1px;height:20px;background:var(--line-2);margin:0 2px}
 .achip.rg>span{max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sheet td.n .rbw{width:0;min-width:100%;display:flex;flex-direction:column;align-items:center}.sheet td.n .rbadge{width:fit-content;max-width:100%}
@@ -1880,7 +1881,7 @@ function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupp
   <details class="nhelp"><summary>알림이 안 올 때 · 창을 닫아도 받으려면</summary><div><b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기<br><b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기<br>컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요. 진도 체크 알림은 앞으로 7일 안의 미기록 수업이 대상이고, 앱을 열 때마다 새로 맞춰져요.</div></details>`}</div>`}
 function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const nrec=DB.classes.reduce((a,c)=>a+Object.values(DB.records[c.id]||{}).filter(r=>r.done).length,0);const N=U.neis;
   return topbar('설정')+`<div class="grid datalay">
-  <div class="card" style="grid-column:1/-1"><h2>학교 · NEIS 연결 <span class="sub">급식과 학사일정을 불러와요</span><span class="right">${NEIS.key&&NEIS.school?'<span class="tag ok">연결 정보 저장됨</span>':'<span class="tag gray">미설정</span>'}</span></h2>
+  <div class="card" id="neisCard" style="grid-column:1/-1"><h2>학교 · NEIS 연결 <span class="sub">급식과 학사일정을 불러와요</span><span class="right">${NEIS.key&&NEIS.school?'<span class="tag ok">연결 정보 저장됨</span>':'<span class="tag gray">미설정</span>'}</span></h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
     <div class="stack" style="gap:10px">
       <div class="note" style="border-style:solid;line-height:1.7"><b style="color:var(--fg)">ℹ️ API KEY는 무료로 즉시 발급됩니다.</b><br>교육부 NEIS 공개 API 서비스에서 회원가입 후 바로 발급받을 수 있어요. 한 번 저장하면 이 브라우저의 데이터를 지우기 전까지 계속 쓸 수 있어요.
@@ -1947,7 +1948,7 @@ function calGroups(db){const T=db.term,inT=(a,b)=>b>=T.start&&a<=T.end,out=[];
 function openCalReview(){const sb=curSub(),db=DB,gs=calGroups(db),TG={hol:'휴업·휴일',mock:'모의고사·학평',exam:'정기시험'};
   const per=DB.classes.map(c=>{const arr=(SCH.cls[c.id]||[]);return {n:cn(c.id),col:ccv(c.id),can:arr.filter(x=>['done','plan','check'].includes(x.status)).length,ab:arr.filter(x=>x.status==='absent').length}});
   const list=gs.length?gs.map(g=>`<div class="rvrow ${g.on?'':'off'}"><div class="rvd mono">${g.s===g.e?md(g.s):md(g.s)+'~'+md(g.e)}</div><div class="rvt"><b>${esc(g.label)}</b><span class="tag gray">${TG[g.t]}</span>${g.other?`<span class="tag info">고${g.other} 일정</span>`:''}${g.gx?'<span class="tag info" title="NEIS에서 이 학년 일정이 아니라고 표시했어요">다른 학년 일정</span>':''}<small>${g.other?`고${g.other} 일정이라 이 학년 수업은 그대로예요`:g.lost?`${g.on?'이 교과 수업 <b>'+g.lost+'회</b>가 빠져요':'해당 없음으로 두어서 수업 <b>'+g.lost+'회</b>는 그대로예요'}`:'이 교과 수업과 겹치지 않아요'}</small></div>
-    ${g.other?'<span></span>':`<button class="btn sm ${g.on?'':'pri'}" data-a="revtg" data-x="${g.t}:${g.ids.join(',')}">${g.on?'우리 수업은 해당 없음':'결손 처리하기'}</button>`}</div>`).join(''):'<p class="muted" style="margin:6px 0">가져온 학사일정이 없어요. 설정에서 NEIS 학교를 연결해 학사일정을 가져오거나, 캘린더에서 직접 추가하세요.</p>';
+    ${g.other?'<span></span>':`<button class="btn sm ${g.on?'':'pri'}" data-a="revtg" data-x="${g.t}:${g.ids.join(',')}">${g.on?'우리 수업은 해당 없음':'결손 처리하기'}</button>`}</div>`).join(''):'<div class="emptyrv"><p class="muted" style="margin:6px 0">아직 가져온 학사일정이 없어요. 학교를 NEIS에 연결해 학사일정을 한 번에 가져오거나, 캘린더에서 직접 추가할 수 있어요.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="goneis">설정에서 NEIS 학교 연결하기</button><button class="btn" data-a="go" data-x="cal">캘린더에서 직접 추가</button></div></div>';
   modal(`<h3>학사일정 · 결손 확인</h3><p class="sub">${esc(subjMain(sb))} 기준이에요. 모의고사·정기시험·휴업일이 우리 학년에도 해당하는지 확인하세요. ${sb.grade?'':'<b>교과의 학년을 정해 두면 NEIS 학년 표시로 자동 구분돼요.</b>'}</p>
   <div class="rvlist">${list}</div>
   ${per.length?`<div class="rvsum"><b>이 학기 수업 가능 횟수</b> <span class="muted">(차시를 몇 개 만들지 참고하세요)</span><div>${per.map(p=>`<span class="tag" style="border-left:4px solid ${p.col}">${esc(p.n)} <b>${p.can}회</b>${p.ab?` · 결손 ${p.ab}`:''}</span>`).join('')}</div></div>`:''}
@@ -2133,6 +2134,7 @@ document.addEventListener('click',e=>{
   switch(a){
    case 'close':if(e.target===t)closeM();break;
    case 'go':go(x);break;
+   case 'goneis':go('set');setTimeout(()=>{const c=$('#neisCard');if(c){c.scrollIntoView({behavior:'smooth',block:'start'});c.classList.add('flashc');setTimeout(()=>c.classList.remove('flashc'),1800)}},60);break;
    case 'gott':go('tt');break;
    case 'gocal':U.schedMode='cal';go('cal');break;
    case 'needrec':needRec();break;
