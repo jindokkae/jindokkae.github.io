@@ -557,11 +557,18 @@ textarea.code{font-family:var(--f-mono);font-size:11px;height:110px;resize:verti
 .rt:empty::before{content:attr(data-ph);color:var(--muted);opacity:.7}
 
 #tourShield{position:fixed;inset:0;z-index:70;background:transparent}
-#tourCard{position:fixed;z-index:71;left:50%;bottom:20px;transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--accent);border-radius:16px;box-shadow:0 12px 40px rgba(20,40,100,.3);padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px}
-#tourCard .tchd{display:flex;align-items:center;gap:8px;font-size:15px}
-#tourCard .tcbody{font-size:13.5px;line-height:1.6}#tourCard .tcbody p{margin:0 0 6px}
-#tourCard .tcft{display:flex;gap:8px;align-items:center}
+#tourCard,#guideCard{position:fixed;z-index:71;left:50%;bottom:20px;transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:var(--surface);border:1px solid var(--accent);border-radius:16px;box-shadow:0 12px 40px rgba(20,40,100,.3);padding:14px 16px 12px;display:flex;flex-direction:column;gap:8px}
+:is(#tourCard,#guideCard) .tchd{display:flex;align-items:center;gap:8px;font-size:15px}
+:is(#tourCard,#guideCard) .tcbody{font-size:13.5px;line-height:1.6}#tourCard .tcbody p{margin:0 0 6px}
+:is(#tourCard,#guideCard) .tcft{display:flex;gap:8px;align-items:center}
 body.touring main{padding-bottom:300px}
+body.guiding main{padding-bottom:260px}
+body.guiding .toast{bottom:auto;top:16px}
+.hlp{border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:6px}.hlp summary{cursor:pointer;list-style:revert}.hlp[open] summary{margin-bottom:6px}
+#guideCard{z-index:60;border-width:2px}
+body.guiding:has(#layer .scrim) #guideCard{display:none}
+#guideCard .gact{display:flex;gap:8px;flex-wrap:wrap}
+#guideCard .gdots{display:flex;gap:5px;margin-left:auto}#guideCard .gdots i{width:8px;height:8px;border-radius:50%;background:var(--line)}#guideCard .gdots i.on{background:var(--accent)}#guideCard .gdots i.ok{background:var(--ok,#2ba36b)}
 .achip.rg{position:relative;overflow:hidden;padding-bottom:8px}
 .achip.unit,.achip.free{border-left:4px solid var(--pc)}.achip.unit b,.achip.free b{color:var(--pc);font-family:inherit;font-size:11.5px}
 .achip.rg[aria-pressed="true"]{border-color:var(--pc,var(--accent));background:color-mix(in srgb,var(--pc,var(--accent)) 14%,var(--surface))}
@@ -611,13 +618,13 @@ body.touring main{padding-bottom:300px}
 body.tplay #tourShield{display:none}
 body.tplay *{pointer-events:none}
 body.tplay #tourCard,body.tplay #tourCard *,body.tplay .lrow .tog,body.tplay .lrow .tog *{pointer-events:auto}
-#tourCard .tcwho{display:flex;gap:10px;align-items:flex-start;margin:8px 0 10px}
-#tourCard .tcav{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-2,#f3f5fa);border:1px solid var(--line)}
-#tourCard .tcbub{position:relative;flex:1;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:4px 14px 14px 14px;padding:8px 12px;font-size:13.5px;line-height:1.6}
-#tourCard .tcbub .nm{display:block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:1px}
+:is(#tourCard,#guideCard) .tcwho{display:flex;gap:10px;align-items:flex-start;margin:8px 0 10px}
+:is(#tourCard,#guideCard) .tcav{width:52px;height:52px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-2,#f3f5fa);border:1px solid var(--line)}
+:is(#tourCard,#guideCard) .tcbub{position:relative;flex:1;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:4px 14px 14px 14px;padding:8px 12px;font-size:13.5px;line-height:1.6}
+:is(#tourCard,#guideCard) .tcbub .nm{display:block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:1px}
 .tour-hl{outline:3px solid var(--accent)!important;outline-offset:3px;box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 22%,transparent)!important;border-radius:12px;animation:tourPulse 1.5s ease-in-out infinite}
 @keyframes tourPulse{50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--accent) 12%,transparent)}}
-@media (max-width:760px){#tourCard{bottom:72px}}
+@media (max-width:760px){#tourCard,#guideCard{bottom:72px}}
 .pinfo{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .stab.on{background:var(--surface);border-color:var(--line-2);border-bottom:2px solid var(--surface)}
 .stab.on > button{color:var(--accent)}
@@ -811,8 +818,8 @@ const OLD_PTIME={1:'08:50',2:'09:50',3:'10:50',4:'11:50',5:'13:40',6:'14:40',7:'
 const BASE_YEAR=2026;
 const DEFAULT_TERMS={1:{start:'2026-03-03',end:'2026-07-22'},2:{start:'2026-08-18',end:'2027-01-08'}};
 const OLD_TERM={start:'2026-08-17',end:'2026-12-31'}; // 예전 기본 학기 (불러올 때 새 기본값으로 바꾸는 데만 씀)
-const semNow=()=>{const m=new Date().getMonth()+1;return m>=3&&m<=7?1:2};
-const yearNow=()=>{const n=new Date();return n.getMonth()<2?n.getFullYear()-1:n.getFullYear()}; // 1~2월은 전 학년도의 2학기
+const semNow=()=>{const m=new Date().getMonth()+1;return m>=2&&m<=7?1:2}; // 2~7월 1학기, 8~1월 2학기
+const yearNow=()=>{const n=new Date();return n.getMonth()<1?n.getFullYear()-1:n.getFullYear()}; // 1월은 전 학년도의 2학기, 2월부터 새 학년도
 /* 기본 공휴일 (NEIS 학사일정을 가져오면 그 내용이 함께 쓰여요) */
 const HOLIDAYS=[
  {s:'2026-08-15',e:'2026-08-15',label:'광복절'},{s:'2026-09-24',e:'2026-09-26',label:'추석 연휴'},
@@ -1167,7 +1174,6 @@ const ttChip=(s,sb,pre,attr)=>{const nowS=s.status==='plan'&&isNow(DB,s.date,s.p
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
 function subjTabs(){const cs=curSub();return `<div class="stabs" role="tablist" aria-label="교과 시트"><div class="semwrap">${semBar()}</div>${STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0)).map(x=>`<span class="stab ${x.id===STORE.cur?'on':''}"><button role="tab" data-a="subj" data-x="${x.id}" aria-selected="${x.id===STORE.cur}" title="${esc(x.name)}"><span class="sm1">${sjic(x.icon,13)} ${esc(subjMain(x))}</span><small class="mono">${esc(subjMeta(x))}</small></button>${x.id===STORE.cur?`<button class="sm" data-a="subjmenu" data-x="${x.id}" aria-label="교과 정보 바꾸기·삭제" title="교과 정보 바꾸기·삭제">⋯</button>`:''}</span>`).join('')}<button class="stab add" data-a="subjadd">+ 교과 추가</button></div>`}
 const TUT=[
- {t:'진도깨 시작하기',go:['home','홈 열기'],b:`<p>네 단계만 차례로 입력하면 오늘 수업과 예정 진도가 자동으로 계산돼요.</p><ol><li><b>학기 · 교과 · 학급</b> — 위쪽 탭에서 학기·교과를 정하고, 2-1, 2-3처럼 수업하는 반과 교과부장을 적어요.</li><li><b>시간표 입력</b> — 요일·교시마다 어느 반 수업인지 고르면 날짜별 수업이 만들어져요.</li><li><b>학사일정 확인</b> — 모의고사·정기시험·휴업일로 빠지는 수업을 학년에 맞게 미리 확인해요.</li><li><b>차시 입력</b> — 수업 가능한 횟수를 보고 진도표에 수업 주제·내용을 적어요. 엑셀에서 복사해 붙여넣어도 돼요.</li></ol>`},
  {t:'진도표에 바로 쓰기',go:['sheet','진도표 열기'],b:`<ol><li>학급 이름·수업 주제는 <b>표 칸에 바로</b> 적어요. Enter는 아래 칸, Shift+Enter는 줄바꿈이에요.</li><li>'수업 주제 · 내용' 열의 오른쪽 경계를 끌면 열 너비를 바꿀 수 있어요. 더블클릭하면 기본 너비로 돌아가요.</li><li>엑셀에서 여러 칸을 복사해 주제 칸에 붙여넣으면 한 번에 채워져요.</li></ol>`},
  {t:'수업 내용 · 수업 정보',go:['sheet','진도표 열기'],b:`<ol><li>수업 내용은 주제 칸 아래 <b>점선 밑줄 칸</b>에 바로 적어요.</li><li>비고·교과서 쪽·준비물은 차시 번호 옆 <b>⋯</b> 버튼을 눌러 열리는 오른쪽 '수업 정보'에 적어요. 고친 내용은 바로 표에 반영돼요.</li><li>차시를 끼우거나 옮기고 지우기, 여러 반을 한꺼번에 기록하기는 '수업 정보' 위쪽의 <b>차시 관리</b> 버튼에서 해요.</li></ol>`},
  {t:'발자국으로 진도 기록하기',go:['home','홈 열기'],b:`<ol><li>반 칸의 <span class="tog" style="width:22px;height:22px;display:inline-grid;vertical-align:middle">${paw(16)}</span> <b>회색 발자국</b>을 누르면 <span class="tog on" style="width:22px;height:22px;display:inline-grid;vertical-align:middle">${paw(16)}</span> <b>초록 발자국</b>(수업 완료)으로 바뀌어요.</li><li><span class="tog doing" style="width:22px;height:22px;display:inline-grid;vertical-align:middle">${paw(16)}</span> <b>노란 발자국</b>(진행 중)은 칸을 눌러 열리는 '실제 수업 기록'에서만 지정해요. 노란 발자국을 누르면 초록으로 바뀌어요.</li><li>홈의 <b>오늘의 수업</b>에서도 발자국을 눌러 완료하거나 취소할 수 있어요.</li><li>칸을 누르면 수업 날짜, 실제 수업 내용, 반별 비고를 적고 다른 반에도 같이 기록할 수 있어요. 기호의 뜻은 진도표의 <b>범례</b> 버튼에서 볼 수 있어요.</li></ol>`},
@@ -1242,7 +1248,7 @@ const TOURSTEPS=[
  {t:'급식',who:'bab',v:'meal',el:()=>q1('.speak'),b:'안녕하세요, <b>밥숑</b>이에요! 오늘 급식을 알려 드리고, 알레르기 성분은 빨갛게 표시해 드려요. 설정에서 알림을 켜 주시면 정해 주신 시각에 급식을 알려 드릴게요. 왈!'},
  {t:'진도 체크 알림',who:'jd',v:'set',el:()=>q1('#notifCard'),b:'알림을 켜 두시면 수업이 끝나고 <b>3분 뒤</b>에 제가 "진도 체크 부탁드려요" 하고 알려 드려요. 앱 창을 닫아 두셔도 괜찮아요. 알림 종류와 시간은 여기서 바꾸실 수 있어요.'},
  {t:'이제 시작해 볼까요?',who:'jd',v:'set',el:()=>q1('#main .card'),b:'먼저 <b>교과·학급 → 시간표 → 학사일정 확인 → 차시</b> 순서로 만들어 보세요. 데이터는 이 브라우저에만 저장되니 가끔 <b>백업</b>도 받아 두시면 좋아요. 멍!'}];
-function startTour(){if(TOUR)return;closeM();
+function startTour(){if(TOUR)return;if(GUIDE)guideEnd();closeM();
   const keep=Object.assign({},U);
   TOUR={i:0,save:{STORE,DB,SCH,UNDO,REDO,HIST,keep,y:window.scrollY}};
   STORE=demoStore();HIST={};UNDO=[];REDO=[];DB=curSub().db;
@@ -1270,10 +1276,50 @@ function endTour(){if(!TOUR)return;const sv=TOUR.save;TOUR=null;
   STORE=sv.STORE;DB=sv.DB;SCH=sv.SCH;UNDO=sv.UNDO;REDO=sv.REDO;HIST=sv.HIST;
   Object.keys(U).forEach(k=>{if(!(k in sv.keep))delete U[k]});Object.assign(U,sv.keep);
   SCH=buildSched(DB);render();window.scrollTo(0,sv.y||0)}
-function openTut(i=0){i=Math.max(0,Math.min(TUT.length-1,i));const t=TUT[i];
-  modal(`<div class="tut"><div class="tuthd"><span class="tag info">${i+1} / ${TUT.length}</span><h3>${t.t}</h3></div><div class="tutbody">${t.b}</div>
-  <div class="tutdots">${TUT.map((x,k)=>`<button data-a="tut" data-x="${k}" aria-label="${k+1}단계: ${x.t}" aria-current="${k===i}"></button>`).join('')}</div>
-  <div class="acts">${t.go?`<button class="btn" data-a="tutgo" data-x="${t.go[0]}">${t.go[1]}</button>`:''}<span style="flex:1"></span>${i?`<button class="btn" data-a="tut" data-x="${i-1}">이전</button>`:'<button class="btn" data-a="close">닫기</button>'}${i<TUT.length-1?`<button class="btn pri" data-a="tut" data-x="${i+1}">다음</button>`:'<button class="btn pri" data-a="close">완료</button>'}</div></div>`)}
+/* ================= 시작하기 가이드 (실제 화면으로 이동해 누를 버튼을 가리키고, 끝내면 다음 단계로 넘어간다) ================= */
+let GUIDE=null;
+const GSTEPS=[
+ {k:'cls',t:'학급 추가',v:'sheet',sel:'[data-a=addclass]',ok:r=>r.cls,
+  b:'먼저 <b>진도표</b> 화면으로 왔어요. 반짝이는 <b>학급 추가</b> 버튼을 누르고, 수업하는 반을 <b>2-1, 2-3</b>처럼 적은 뒤 Enter로 추가해 주세요.'},
+ {k:'tt',t:'시간표 입력',v:'cal',pre(){U.schedMode='tt'},sel:'[data-a=ttedit]',ok:r=>r.tt,
+  b:'이번에는 <b>시간표</b> 탭이에요. 반짝이는 <b>기본 시간표 편집</b> 버튼을 누르고, 요일·교시 칸마다 어느 반 수업인지 골라 저장해 주세요.'},
+ {k:'cal',t:'학사일정 확인',v:'cal',pre(){U.schedMode='cal'},sel:'#guideCard [data-a=calrev]',ok:r=>r.cal,
+  b:'<b>캘린더</b> 탭이에요. 모의고사·시험·휴업일로 빠지는 수업을 확인해요. 아래 <b>학사일정 확인</b>을 누르거나, 학교를 <b>NEIS로 연동</b>해 일정을 한 번에 가져올 수 있어요.',
+  acts:'<button class="btn sm pri" data-a="calrev">학사일정 확인</button><button class="btn sm" data-a="gneis">NEIS 연동하기</button>'},
+ {k:'les',t:'차시 입력',v:'sheet',sel:'[data-a=addrows][data-x="1"]',ok:r=>r.les,
+  b:'다시 <b>진도표</b>예요. 표 맨 아래 반짝이는 <b>+ 차시 1개</b>를 눌러 칸을 만들고, 수업 주제를 적어 보세요. 엑셀에서 붙여넣어도 돼요.'}];
+const guideNext=(from)=>{const r=ready();for(let i=from;i<GSTEPS.length;i++){if(!GSTEPS[i].ok(r)&&!(GUIDE&&GUIDE.skip.has(i)))return i}return -1};
+function startGuide(i){if(TOUR)return;closeM();
+  const n=guideNext(typeof i==='number'?i:0);if(n<0){toast('시작하기 4단계를 모두 마쳤어요!');return}
+  if(!GUIDE){GUIDE={i:n,skip:new Set()};const c=document.createElement('div');c.id='guideCard';document.body.append(c);document.body.classList.add('guiding')}
+  guideGo(n)}
+function guideGo(i){if(!GUIDE)return;const st=GSTEPS[i];GUIDE.i=i;U.selCell=null;U.draft=null;U.selRow=null;U.selRows=new Set();U.period='all';U.view=st.v;if(st.pre)st.pre();
+  GUIDE.scroll=true;render();window.scrollTo(0,0)}
+function guideEnd(msg){if(!GUIDE)return;GUIDE=null;document.getElementById('guideCard')?.remove();document.body.classList.remove('guiding');
+  document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));render();if(msg)toast(msg)}
+/* render 끝에서 불러요: 방금 한 일이 끝났으면 다음 단계로 넘기고, 누를 버튼을 반짝이게 해요 */
+function guideSync(){if(!GUIDE||TOUR)return;
+  const r=ready(),cur=GSTEPS[GUIDE.i];
+  if(cur.ok(r)){const n=guideNext(GUIDE.i+1);
+    if(n<0){const left=GSTEPS.some(x=>!x.ok(r))?1:-1;GUIDE=null;document.getElementById('guideCard')?.remove();document.body.classList.remove('guiding');toast(left<0?'시작하기를 모두 마쳤어요! 🐾 이제 홈에서 오늘 수업을 확인해 보세요.':'좋아요! 건너뛴 단계는 홈의 시작하기 박스에서 이어서 할 수 있어요.');U.view='home';render();return}
+    GUIDE.fresh='좋아요, 잘하셨어요! 다음 단계예요. ';guideGo(n);return}
+  const i=GUIDE.i,st=cur,card=document.getElementById('guideCard');if(!card)return;
+  const view=U.view===st.v;
+  card.innerHTML=`<div class="tchd"><span class="tag info">시작하기 ${i+1} / ${GSTEPS.length}</span><b>${st.t}</b><span class="gdots">${GSTEPS.map((x,k)=>`<i class="${x.ok(r)?'ok':k===i?'on':''}"></i>`).join('')}</span></div>
+   <div class="tcwho"><img class="tcav" src="${JD_SRC}" alt="진도깨"><div class="tcbub"><span class="nm">진도깨</span>${GUIDE.fresh||''}${view?st.b:`${st.t} 화면이 아니에요. <b>화면 이동</b>을 눌러 주세요.`}</div></div>
+   <div class="tcft gact">${view?(st.acts||''):`<button class="btn sm pri" data-a="gback">화면 이동</button>`}<span style="flex:1"></span><button class="btn sm" data-a="gstop">나중에 하기</button><button class="btn sm" data-a="gskip">${i<GSTEPS.length-1?'이 단계 건너뛰기':'마치기'}</button></div>`;
+  document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
+  const el=q1(st.sel);if(el){el.classList.add('tour-hl');if(GUIDE.scroll){try{el.scrollIntoView({block:'center',behavior:'instant'})}catch(e){el.scrollIntoView()}}}
+  GUIDE.scroll=false;GUIDE.fresh=''}
+/* ================= 도움말 (시작 가이드 · 연습 화면 투어 · 기능 설명을 한 곳에) ================= */
+function openHelp(){const r=ready(),done=GSTEPS.filter(s=>s.ok(r)).length;
+  modal(`<div class="tut"><div class="tuthd"><h3>도움말</h3></div>
+  <div class="dlist" style="margin-bottom:10px">
+   <div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>처음이라면: 시작하기 가이드</b><small style="white-space:normal;display:block;margin-top:2px">학급 → 시간표 → 학사일정 → 차시. 화면을 옮겨 다니며 누를 버튼을 하나씩 가리켜 드려요. (${done}/4 완료)</small></span><button class="btn sm pri" data-a="guide" data-x="0">${done?'이어서 하기':'시작하기'}</button></div>
+   <div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>둘러보기: 연습 화면 투어</b><small style="white-space:normal;display:block;margin-top:2px">가짜 예시 데이터로 오늘의 수업·진도표·시간표를 눌러 볼 수 있어요. 끝나면 모두 사라져요.</small></span><button class="btn sm" data-a="tour">투어 보기</button></div></div>
+  <h4 style="margin:6px 0">기능 설명</h4>
+  ${TUT.map((t,k)=>`<details class="hlp"><summary><b>${t.t}</b></summary><div class="tutbody">${t.b}</div>${t.go?`<div class="acts left"><button class="btn sm" data-a="tutgo" data-x="${t.go[0]}">${t.go[1]}</button></div>`:''}</details>`).join('')}
+  <div class="acts"><button class="btn pri" data-a="close">닫기</button></div></div>`,true)}
 function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
   const cur=curSub()||{};const yr=sb?sb.year:(cur.year||yearNow()),sm=sb?sb.sem:(cur.sem||semNow());
   modal(`<form id="subjForm" style="display:flex;flex-direction:column;gap:12px"><h3>${sb?'교과 정보 바꾸기':'교과 추가'}</h3><p class="sub">${sb?'연도·학기를 바꾸면 이 시트의 학기 기간이 설정에 적어 둔 해당 학기 기간으로 바뀌어요.':'새 교과는 학급·차시·기록·시간표가 모두 비어 있는 새 시트로 만들어져요. 학기 기간과 학사일정은 지금 교과에서 가져와요.'}</p>
@@ -1303,6 +1349,7 @@ function render(){if(!TOUR){let ch=false;STORE.subjects.forEach(sb=>{try{if(auto
   document.querySelectorAll('td.cell,.crow').forEach(x=>x.tabIndex=0);
   document.querySelectorAll('textarea.ie').forEach(autosize);
   U.flash=null;
+  guideSync();
 }
 function autosize(t){if(CSS.supports&&CSS.supports('field-sizing','content'))return;t.style.height='auto';t.style.height=Math.max(28,t.scrollHeight+2)+'px'}
 const saveChip=()=>`<span class="savechip ${SAVE.ok?'':'bad'}" title="${SAVE.ok?'이 브라우저에 저장됨 '+esc(SAVE.t):'저장 실패'}"><i></i>${SAVE.ok?'저장됨':'저장 실패'}</span>`;
@@ -1314,10 +1361,10 @@ const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK
 function setupCard(){const r=ready();if(r.cls&&r.les&&r.tt&&r.cal)return '';
   const st=(ok,n,t,d,a,x,b,dis,hint)=>`<div class="step ${ok?'ok':''}"><span class="num">${ok?'완료':'단계 '+n}</span><b>${t}</b><span class="muted" style="font-size:12px">${d}</span>${ok?'':`<button class="btn sm pri" data-a="${a}" data-x="${x||''}" ${dis?'disabled':''} style="align-self:flex-start">${b}</button>${dis&&hint?`<small class="muted">${hint}</small>`:''}`}</div>`;
   return `<div class="card" style="margin-bottom:16px"><h2>${jd(30)} 진도깨 시작하기 <span class="sub">차례대로 입력하면 오늘 수업과 예정 진도가 자동으로 계산돼요</span></h2><div class="steps">
-   ${st(r.cls,1,'학기 · 교과 · 학급','학기와 교과는 위쪽 탭에서 정하고, 2-1·2-3처럼 수업하는 반을 추가해요.','addclass','','학급 추가')}
-   ${st(r.tt,2,'시간표 입력','요일·교시마다 어느 반 수업인지 고르면 날짜별 수업이 만들어져요.','ttedit','','시간표 입력',!r.cls,'먼저 학급을 추가하세요')}
-   ${st(r.cal,3,'학사일정 확인','모의고사·시험·휴업일 때문에 빠지는 수업을 학년에 맞게 미리 확인해요.','calrev','','학사일정 확인',!r.tt,'먼저 시간표를 입력하세요')}
-   ${st(r.les,4,'차시 입력','수업 가능한 횟수를 보고 진도표에 수업 주제·내용을 적어요. 엑셀에서 붙여넣어도 돼요.','go','sheet','진도표 열기')}</div>
+   ${st(r.cls,1,'학기 · 교과 · 학급','학기와 교과는 위쪽 탭에서 정하고, 2-1·2-3처럼 수업하는 반을 추가해요.','guide','0','학급 추가')}
+   ${st(r.tt,2,'시간표 입력','요일·교시마다 어느 반 수업인지 고르면 날짜별 수업이 만들어져요.','guide','1','시간표 입력',!r.cls,'먼저 학급을 추가하세요')}
+   ${st(r.cal,3,'학사일정 확인','모의고사·시험·휴업일 때문에 빠지는 수업을 학년에 맞게 미리 확인해요.','guide','2','학사일정 확인',!r.tt,'먼저 시간표를 입력하세요')}
+   ${st(r.les,4,'차시 입력','수업 가능한 횟수를 보고 진도표에 수업 주제·내용을 적어요. 엑셀에서 붙여넣어도 돼요.','guide','3','차시 입력하기')}</div>
    <p class="note" style="margin-top:10px">급식과 학사일정은 설정에서 NEIS 인증키를 넣으면 불러올 수 있어요.</p></div>`}
 const endT=p=>{const m=toMin(PT(p))+50;return pad(Math.floor(m/60))+':'+pad(m%60)};
 const HST={doing:['진행 중','warn'],check:['기록 필요','warn'],done:['수업 완료','ok'],plan:['예정','info'],now:['수업 중','info'],absent:['결손','bad'],moved:['교환됨','gray'],skipped:['기록 없음','gray']};
@@ -2183,7 +2230,13 @@ document.addEventListener('click',e=>{
           .then(r=>toast(r&&r.ok?`${nm} 테스트 알림을 보냈어요. 잠시 뒤 도착해요.`:'알림 서버가 전송에 실패했어요.')).catch(e=>toast('테스트 알림을 보내지 못했어요. '+(e&&e.message?e.message:'')));break}
       (kind==='after'?showNote('진도깨의 진도 체크 🐾','수업이 끝났어요. 진도 체크 부탁드려요! (테스트)','test-after-'+stamp):showNote('밥숑의 오늘 급식 🍚',mealNoteBody()||'밥숑이 알림을 잘 보내고 있어요, 왈! (테스트)','test-meal-'+stamp)).then(ok=>toast(ok?`${nm} 테스트 알림을 보냈어요.`:'알림을 표시하지 못했어요. 브라우저·윈도우 알림 설정을 확인해 주세요.'));break}
    case 'zoom':setZoom(+x);break
-   case 'tut':startTour();break;
+   case 'tut':openHelp();break;
+   case 'tour':startTour();break;
+   case 'guide':startGuide(+x||0);break;
+   case 'gstop':guideEnd('시작하기는 홈의 시작하기 박스에서 언제든 이어서 할 수 있어요.');break;
+   case 'gskip':{GUIDE.skip.add(GUIDE.i);const n=guideNext(GUIDE.i+1);if(n<0){U.view='home';guideEnd('건너뛴 단계는 홈의 시작하기 박스에서 이어서 할 수 있어요.')}else guideGo(n)}break;
+   case 'gback':guideGo(GUIDE.i);break;
+   case 'gneis':guideEnd();go('set');setTimeout(()=>{const el=document.getElementById('neisCard');if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('tour-hl');setTimeout(()=>el.classList.remove('tour-hl'),3500)}},60);break;
    case 'tourn':tourGo(TOUR.i+(+x));break;
    case 'tourx':endTour();break;
    case 'install':openInstall();break;
@@ -2434,7 +2487,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
 document.addEventListener('click',e=>{document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 document.addEventListener('keydown',e=>{const tg=e.target;
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
-  if(e.key==='Escape'){if(TOUR){endTour();return}if($('#layer').innerHTML)closeM();else if((U.selCell||U.selRow)&&U.view==='sheet'){U.selCell=null;U.draft=null;U.selRow=null;render()}return}
+  if(e.key==='Escape'){if(TOUR){endTour();return}if(GUIDE&&!$('#layer').innerHTML){guideEnd();return}if($('#layer').innerHTML)closeM();else if((U.selCell||U.selRow)&&U.view==='sheet'){U.selCell=null;U.draft=null;U.selRow=null;render()}return}
   /* 표 입력칸: Enter = 아래 칸, Shift+Enter = 줄바꿈 */
   if(tg.classList&&tg.classList.contains('ie')&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();
     if(tg.dataset.lf){const nx=document.querySelector(`.ie[data-lf="${tg.dataset.lf}"][data-n="${+tg.dataset.n+1}"]`);if(nx){nx.focus();nx.select&&nx.select()}else tg.blur()}else tg.blur();return}
