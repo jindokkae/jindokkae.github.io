@@ -1621,7 +1621,9 @@ function periodList(){const exs=DB.assess.filter(a=>a.type==='exam').slice().sor
 function rangeList(){const idx=id=>id?lessonIdx(DB,id):0;
   const out=periodList().map(q=>({id:q.a.id,kind:'exam',title:q.a.title,from:q.from,to:q.to,empty:q.empty,k:q.k,col:q.col,a:q.a,date:q.a.start,end:q.a.end||q.a.start,cls:targets(DB,q.a)}));
   let ci=out.length;
-  (DB.ranges||[]).forEach(r=>{let f=idx(r.fromId)||idx(r.toId),t=idx(r.toId)||f;if(f>t)[f,t]=[t,f];const k=r.col>0?r.col:(ci++%6)+1;
+  (DB.ranges||[]).forEach(r=>{let f=idx(r.fromId)||idx(r.toId),t=idx(r.toId)||f;if(f>t)[f,t]=[t,f];const ms=new Set();for(let n=f;n&&n<=t;n++){const l=DB.lessons[n-1];if(l&&l.col>0)ms.add(l.col)};
+    /* 차시에 직접 정한 색이 하나로 같으면 칩도 그 색(차시 색 = 칩 색). 섞여 있으면 범위 자체 색 */
+    const k=ms.size===1?[...ms][0]:r.col>0?r.col:(ci++%6)+1;
     out.push({id:r.id,kind:r.kind,title:r.title,from:f,to:t,k,col:`var(--p${k})`,r,date:r.date||'',end:r.date||'',cls:targets(DB,r)})});
   DB.assess.filter(a=>a.type==='task').sort((a,b)=>a.start<b.start?-1:1).forEach(a=>{let f=idx(a.fromId)||idx(a.lessonId),t=idx(a.toId)||f;if(f>t)[f,t]=[t,f];
     out.push({id:a.id,kind:'task',no:a.no||0,title:a.title,from:f,to:t,k:0,col:'var(--warn)',a,date:a.start,end:a.start,cls:targets(DB,a)})});
@@ -2338,7 +2340,8 @@ document.addEventListener('click',e=>{
    case 'rgpreset':readRange();U.rg.title=x;drawRange();break;
    case 'rgcol':readRange();U.rg.col=+x;drawRange();break;
    case 'rgsel':{const ix=[...U.selRows].map(id=>lessonIdx(DB,id)).filter(Boolean).sort((a,b)=>a-b);if(!ix.length)break;const lo=ix[0],hi=ix[ix.length-1];
-      openRange({kind:'unit',fromId:L(lo).id,toId:L(hi).id});if(hi-lo+1!==ix.length)toast(`선택한 차시 중 가장 앞(${lo})~뒤(${hi}) 차시를 범위로 잡았어요.`);break}
+      const ms=new Set();for(let n=lo;n<=hi;n++){const l=DB.lessons[n-1];if(l&&l.col>0)ms.add(l.col)}
+      openRange({kind:'unit',fromId:L(lo).id,toId:L(hi).id,col:ms.size===1?[...ms][0]:0});if(hi-lo+1!==ix.length)toast(`선택한 차시 중 가장 앞(${lo})~뒤(${hi}) 차시를 범위로 잡았어요.`);break}
    case 'rgsave':{readRange();const r=U.rg;if(!r.title){toast(r.kind==='exam'?'1차·2차 정기시험 중 하나를 골라 주세요.':'이름을 적어 주세요.');break}
       if(r.kind==='exam'){if(!r.start){toast('시작일을 골라 주세요.');break}if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
         let en=r.end;if(!en||en<r.start)en=r.start;const w=weekdays(r.start,en);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}
@@ -2353,7 +2356,7 @@ document.addEventListener('click',e=>{
       if(r.kind==='task'){
         const A={id:r.id||undefined,type:'task',no:r.no,title:r.title,start:'',end:'',classes:r.classes,noClass:false,fromId:r.fromId,toId:r.toId,lessonId:r.fromId,note:r.note||''};
         mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>C.saveAssess(db,A),{msg:`${r.title} 수행평가를 저장했어요.`})}
-      else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:'',classes:r.classes,note:r.note||''})},{msg:`${r.title} 범위를 저장했어요.`});
+      else mutate(`범위 ${r.id?'수정':'추가'}: ${r.title}`,db=>{if(r.col>0){const a=lessonIdx(db,r.fromId),b=lessonIdx(db,r.toId);for(let n=Math.min(a,b);n&&n<=Math.max(a,b);n++){const l=db.lessons[n-1];if(l&&l.col>0&&l.col!==r.col)delete l.col}}C.saveRange(db,{id:r.id||undefined,kind:r.kind,title:r.title,fromId:r.fromId,toId:r.toId,col:r.col||0,date:'',classes:r.classes,note:r.note||''})},{msg:`${r.title} 범위를 저장했어요.`});
       break}
    case 'rgdel':{const isT=DB.assess.some(a=>a.id===x);mutate(`범위 삭제`,db=>isT?C.removeAssess(db,x):C.removeRange(db,x),{msg:'범위를 삭제했어요.'});break}
    case 'avtype':{readAssessForm();if(x==='task'){const a=U.av;openRange({kind:'task',title:a.title,date:a.start,classes:a.classes});break}U.av.type=x;U.av.noClass=x==='exam';drawAssess();break}
