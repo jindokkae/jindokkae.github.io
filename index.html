@@ -623,6 +623,12 @@ body.tplay #tourCard,body.tplay #tourCard *,body.tplay .lrow .tog,body.tplay .lr
 :is(#tourCard,#guideCard) .tcbub{position:relative;flex:1;background:color-mix(in srgb,var(--accent) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));border-radius:4px 14px 14px 14px;padding:8px 12px;font-size:13.5px;line-height:1.6}
 :is(#tourCard,#guideCard) .tcbub .nm{display:block;font-size:11px;font-weight:700;color:var(--accent);margin-bottom:1px}
 .tour-hl{outline:3px solid var(--accent)!important;outline-offset:3px;box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 22%,transparent)!important;border-radius:12px;animation:tourPulse 1.5s ease-in-out infinite}
+body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline-offset:3px;background:#fff3e0!important;color:#7a3400!important;border-color:var(--gh)!important;position:relative;animation:gPulse 1s ease-in-out infinite}
+#guidePtr{position:fixed;z-index:80;background:#ff7a00;color:#fff;font-size:13px;font-weight:700;line-height:1;padding:7px 12px;border-radius:999px;white-space:nowrap;pointer-events:none;box-shadow:0 3px 12px rgba(255,122,0,.5);animation:gBob .8s ease-in-out infinite}
+#guidePtr::after{content:'';position:absolute;left:50%;margin-left:-6px;border:6px solid transparent}
+#guidePtr.up::after{top:100%;border-top-color:#ff7a00}#guidePtr.dn::after{bottom:100%;border-bottom-color:#ff7a00}
+@keyframes gPulse{0%,100%{box-shadow:0 0 0 6px rgba(255,122,0,.35)}50%{box-shadow:0 0 0 16px rgba(255,122,0,.08)}}
+@keyframes gBob{50%{margin-top:-5px}}
 @keyframes tourPulse{50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--accent) 12%,transparent)}}
 @media (max-width:760px){#tourCard,#guideCard{bottom:72px}}
 .pinfo{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
@@ -1295,13 +1301,19 @@ function startGuide(i){if(TOUR)return;closeM();
   guideGo(n)}
 function guideGo(i){if(!GUIDE)return;const st=GSTEPS[i];GUIDE.i=i;U.selCell=null;U.draft=null;U.selRow=null;U.selRows=new Set();U.period='all';U.view=st.v;if(st.pre)st.pre();
   GUIDE.scroll=true;render();window.scrollTo(0,0)}
-function guideEnd(msg){if(!GUIDE)return;GUIDE=null;document.getElementById('guideCard')?.remove();document.body.classList.remove('guiding');
+function guidePtr(){let p=document.getElementById('guidePtr');const el=GUIDE&&document.querySelector('.tour-hl');if(!el||document.querySelector('#layer .scrim')){p&&p.remove();return}
+  if(!p){p=document.createElement('div');p.id='guidePtr';document.body.append(p)}
+  const r=el.getBoundingClientRect(),inCard=!!el.closest('#guideCard');p.textContent=inCard?'👆 눌러 보세요':'👇 여기를 눌러요';
+  const up=!inCard&&r.top>50;p.className=up?'up':'dn';const w=p.offsetWidth,h=p.offsetHeight;
+  p.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';p.style.top=(up?r.top-h-14:r.bottom+14)+'px'}
+window.addEventListener('scroll',()=>{if(GUIDE)guidePtr()},true);window.addEventListener('resize',()=>{if(GUIDE)guidePtr()});
+function guideEnd(msg){document.getElementById('guidePtr')?.remove();if(!GUIDE)return;GUIDE=null;document.getElementById('guideCard')?.remove();document.body.classList.remove('guiding');
   document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));render();if(msg)toast(msg)}
 /* render 끝에서 불러요: 방금 한 일이 끝났으면 다음 단계로 넘기고, 누를 버튼을 반짝이게 해요 */
 function guideSync(){if(!GUIDE||TOUR)return;
   const r=ready(),cur=GSTEPS[GUIDE.i];
   if(cur.ok(r)){const n=guideNext(GUIDE.i+1);
-    if(n<0){const left=GSTEPS.some(x=>!x.ok(r))?1:-1;GUIDE=null;document.getElementById('guideCard')?.remove();document.body.classList.remove('guiding');toast(left<0?'시작하기를 모두 마쳤어요! 🐾 이제 홈에서 오늘 수업을 확인해 보세요.':'좋아요! 건너뛴 단계는 홈의 시작하기 박스에서 이어서 할 수 있어요.');U.view='home';render();return}
+    if(n<0){const left=GSTEPS.some(x=>!x.ok(r))?1:-1;GUIDE=null;document.getElementById('guideCard')?.remove();document.getElementById('guidePtr')?.remove();document.body.classList.remove('guiding');toast(left<0?'시작하기를 모두 마쳤어요! 🐾 이제 홈에서 오늘 수업을 확인해 보세요.':'좋아요! 건너뛴 단계는 홈의 시작하기 박스에서 이어서 할 수 있어요.');U.view='home';render();return}
     GUIDE.fresh='좋아요, 잘하셨어요! 다음 단계예요. ';guideGo(n);return}
   const i=GUIDE.i,st=cur,card=document.getElementById('guideCard');if(!card)return;
   const view=U.view===st.v;
@@ -1310,7 +1322,7 @@ function guideSync(){if(!GUIDE||TOUR)return;
    <div class="tcft gact">${view?(st.acts||''):`<button class="btn sm pri" data-a="gback">화면 이동</button>`}<span style="flex:1"></span><button class="btn sm" data-a="gstop">나중에 하기</button><button class="btn sm" data-a="gskip">${i<GSTEPS.length-1?'이 단계 건너뛰기':'마치기'}</button></div>`;
   document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
   const el=q1(st.sel);if(el){el.classList.add('tour-hl');if(GUIDE.scroll){try{el.scrollIntoView({block:'center',behavior:'instant'})}catch(e){el.scrollIntoView()}}}
-  GUIDE.scroll=false;GUIDE.fresh=''}
+  GUIDE.scroll=false;GUIDE.fresh='';guidePtr()}
 /* ================= 도움말 (시작 가이드 · 연습 화면 투어 · 기능 설명을 한 곳에) ================= */
 function openHelp(){const r=ready(),done=GSTEPS.filter(s=>s.ok(r)).length;
   modal(`<div class="tut"><div class="tuthd"><h3>도움말</h3></div>
