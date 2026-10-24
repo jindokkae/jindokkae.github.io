@@ -804,6 +804,33 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
 .hempty2{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:9px 12px;border:1px solid var(--warn);background:var(--warn-soft);border-radius:12px;margin-bottom:8px}
 .dlist details.more{margin-top:6px}.dlist details.more summary{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer;padding:4px 2px}
 .dlist details.more .row:first-of-type{margin-top:6px}
+/* ---- 모바일 보완 ---- */
+.card .acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.mobhelp{display:none}
+@media (max-width:1100px){.hero .mascot{display:block!important;align-self:end}.hero .mascot .mwrap{width:120px!important;height:120px!important}.hero .mascot img{width:120px;height:120px}.hero .cheer{left:-18px}}
+@media (max-width:760px){
+  .mobhelp{display:inline-flex}
+  .railbot .helpbtn[data-a=tut]{display:none}
+}
+@media (max-width:640px){
+  .hero{position:relative;display:block;padding:16px 16px 16px}
+  .hero .mascot{position:absolute;right:8px;top:8px;padding:0}
+  .hero .mascot .mwrap{width:84px!important;height:84px!important}.hero .mascot img{width:84px;height:84px}
+  .hero .cheer{display:none}
+  .hero .ht{padding-right:78px}
+  .hero .hl{padding-bottom:0}
+  .hstats{margin-top:14px;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+  .hstat{flex-direction:column;align-items:flex-start;gap:4px;padding:10px 10px!important}
+  .hstat .ic{width:30px;height:30px}.hstat .chv{display:none}.hstat small{font-size:11.5px}.hstat b{font-size:22px!important}
+  .step.ok .muted{display:none}.step.ok{padding-top:8px;padding-bottom:8px}
+  .topc h1{font-size:24px}.savechip{font-size:0;gap:0}
+  table.tt{min-width:0!important;border-spacing:2px}
+  .tt th{font-size:11px;line-height:1.2}.tt th .mono{display:block;font-size:10px;font-weight:600}
+  .tt td{padding:2px;height:38px}
+  .tc{padding:2px 3px 2px 5px;border-left-width:4px}.tc1{gap:2px}.tc1 b{font-size:13px}.tc1 small,.tc1 i,.tc2{display:none}.tc .tcs{margin-left:auto}
+  .tt-wrap{overflow-x:visible}
+  .btn{min-height:40px}.btn.sm{min-height:36px}.nav button{font-size:11px}
+}
 </style>
 </head><body>
 <div class="app">
@@ -1310,7 +1337,7 @@ function syncInit(){syncLoad();const r=syncHash();if(r&&r!=='ok')setTimeout(()=>
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncTick('vis')});window.addEventListener('focus',()=>syncTick('focus'));window.addEventListener('online',()=>syncTick('online'));
     setInterval(()=>{if(document.visibilityState==='visible')syncTick('poll')},90000)}}
 /* 서버·구글 로그인 설정이 끝나면 SYNC_OPEN을 true로 바꿔 모든 선생님께 보여요. 그 전에는 주소 뒤에 ?sync=1을 붙여야 보여요 */
-const SYNC_OPEN=false;
+const SYNC_OPEN=true;
 function syncCard(){const S=SYNC,on=S.on&&S.sess;if(!SYNC_OPEN&&!on&&!/[?&]sync=1/.test(location.search))return '';
   const head=`<h2>기기 연동 <span class="tag gray">선택</span> <span class="sub">PC와 모바일에서 같은 진도를 쓰고 싶을 때만</span></h2>`;
   if(!on)return `<div class="card" id="syncCard" style="grid-column:1/-1">${head}
@@ -2049,7 +2076,7 @@ function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupp
   </div>
   <details class="nhelp"><summary>알림이 안 올 때 · 창을 닫아도 받으려면</summary><div><b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기<br><b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기<br>컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요. 진도 체크 알림은 앞으로 7일 안의 미기록 수업이 대상이고, 앱을 열 때마다 새로 맞춰져요.</div></details>`}</div>`}
 function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const nrec=DB.classes.reduce((a,c)=>a+Object.values(DB.records[c.id]||{}).filter(r=>r.done).length,0);const N=U.neis;
-  return topbar('설정')+`<div class="grid datalay">
+  return topbar('설정',`<button class="btn sm tb ico mobhelp" data-a="tut" aria-label="도움말" title="도움말" style="font-weight:800">?</button>`)+`<div class="grid datalay">
   <div class="card" id="neisCard" style="grid-column:1/-1"><h2>학교 · NEIS 연결 <span class="sub">급식과 학사일정을 불러와요</span><span class="right">${NEIS.key&&NEIS.school?'<span class="tag ok">연결 정보 저장됨</span>':'<span class="tag gray">미설정</span>'}</span></h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
     <div class="stack" style="gap:10px">
