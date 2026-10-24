@@ -1291,7 +1291,8 @@ const GSTEPS=[
   b:'이번에는 <b>시간표</b> 탭이에요. 반짝이는 <b>기본 시간표 편집</b> 버튼을 누르고, 요일·교시 칸마다 어느 반 수업인지 골라 저장해 주세요.'},
  {k:'cal',t:'학사일정 확인',v:'cal',pre(){U.schedMode='cal'},sel:'#guideCard [data-a=calrev]',ok:r=>r.cal,
   b:'<b>캘린더</b> 탭이에요. 모의고사·시험·휴업일로 빠지는 수업을 확인해요. 아래 <b>학사일정 확인</b>을 누르거나, 학교를 <b>NEIS로 연동</b>해 일정을 한 번에 가져올 수 있어요.',
-  acts:'<button class="btn sm pri" data-a="calrev">학사일정 확인</button><button class="btn sm" data-a="gneis">NEIS 연동하기</button>'},
+  acts:'<button class="btn sm pri" data-a="calrev">학사일정 확인</button><button class="btn sm" data-a="gneis">NEIS 연동하기</button>',
+  alt:{v:'set',sel:'#neisCard',b:'<b>설정</b> 화면이에요. 여기서 학교를 검색해 연결하고 <b>학사일정 불러오기</b>를 눌러 주세요. 다 끝나면 아래 <b>캘린더로 돌아가기</b>를 눌러 일정을 확인해요.',acts:'<button class="btn sm pri" data-a="gback">캘린더로 돌아가기</button>'}},
  {k:'les',t:'차시 입력',v:'sheet',sel:'[data-a=addrows][data-x="1"]',ok:r=>r.les,
   b:'다시 <b>진도표</b>예요. 표 맨 아래 반짝이는 <b>+ 차시 1개</b>를 눌러 칸을 만들고, 수업 주제를 적어 보세요. 엑셀에서 붙여넣어도 돼요.'}];
 const guideNext=(from)=>{const r=ready();for(let i=from;i<GSTEPS.length;i++){if(!GSTEPS[i].ok(r)&&!(GUIDE&&GUIDE.skip.has(i)))return i}return -1};
@@ -1306,7 +1307,7 @@ function guidePtr(){let p=document.getElementById('guidePtr');const el=GUIDE&&do
   const r=el.getBoundingClientRect(),inCard=!!el.closest('#guideCard');p.textContent=inCard?'👆 눌러 보세요':'👇 여기를 눌러요';
   const up=!inCard&&r.top>50;p.className=up?'up':'dn';const w=p.offsetWidth,h=p.offsetHeight;
   p.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';p.style.top=(up?r.top-h-14:r.bottom+14)+'px'}
-window.addEventListener('scroll',()=>{if(GUIDE)guidePtr()},true);window.addEventListener('resize',()=>{if(GUIDE)guidePtr()});
+window.addEventListener('scroll',()=>{if(GUIDE)guidePtr()},true);new MutationObserver(()=>{if(GUIDE)guidePtr()}).observe(document.getElementById('layer'),{childList:true,subtree:true});window.addEventListener('resize',()=>{if(GUIDE)guidePtr()});
 function guideEnd(msg){document.getElementById('guidePtr')?.remove();if(!GUIDE)return;GUIDE=null;document.getElementById('guideCard')?.remove();document.body.classList.remove('guiding');
   document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));render();if(msg)toast(msg)}
 /* render 끝에서 불러요: 방금 한 일이 끝났으면 다음 단계로 넘기고, 누를 버튼을 반짝이게 해요 */
@@ -1316,12 +1317,12 @@ function guideSync(){if(!GUIDE||TOUR)return;
     if(n<0){const left=GSTEPS.some(x=>!x.ok(r))?1:-1;GUIDE=null;document.getElementById('guideCard')?.remove();document.getElementById('guidePtr')?.remove();document.body.classList.remove('guiding');toast(left<0?'시작하기를 모두 마쳤어요! 🐾 이제 홈에서 오늘 수업을 확인해 보세요.':'좋아요! 건너뛴 단계는 홈의 시작하기 박스에서 이어서 할 수 있어요.');U.view='home';render();return}
     GUIDE.fresh='좋아요, 잘하셨어요! 다음 단계예요. ';guideGo(n);return}
   const i=GUIDE.i,st=cur,card=document.getElementById('guideCard');if(!card)return;
-  const view=U.view===st.v;
+  const view=U.view===st.v,alt=!view&&st.alt&&U.view===st.alt.v?st.alt:null;if(GUIDE.lv!==U.view){GUIDE.lv=U.view;GUIDE.scroll=true}
   card.innerHTML=`<div class="tchd"><span class="tag info">시작하기 ${i+1} / ${GSTEPS.length}</span><b>${st.t}</b><span class="gdots">${GSTEPS.map((x,k)=>`<i class="${x.ok(r)?'ok':k===i?'on':''}"></i>`).join('')}</span></div>
-   <div class="tcwho"><img class="tcav" src="${JD_SRC}" alt="진도깨"><div class="tcbub"><span class="nm">진도깨</span>${GUIDE.fresh||''}${view?st.b:`${st.t} 화면이 아니에요. <b>화면 이동</b>을 눌러 주세요.`}</div></div>
-   <div class="tcft gact">${view?(st.acts||''):`<button class="btn sm pri" data-a="gback">화면 이동</button>`}<span style="flex:1"></span><button class="btn sm" data-a="gstop">나중에 하기</button><button class="btn sm" data-a="gskip">${i<GSTEPS.length-1?'이 단계 건너뛰기':'마치기'}</button></div>`;
+   <div class="tcwho"><img class="tcav" src="${JD_SRC}" alt="진도깨"><div class="tcbub"><span class="nm">진도깨</span>${GUIDE.fresh||''}${view?st.b:alt?alt.b:`${st.t} 화면이 아니에요. <b>화면 이동</b>을 눌러 주세요.`}</div></div>
+   <div class="tcft gact">${view?(st.acts||''):alt?alt.acts:`<button class="btn sm pri" data-a="gback">화면 이동</button>`}<span style="flex:1"></span><button class="btn sm" data-a="gstop">나중에 하기</button><button class="btn sm" data-a="gskip">${i<GSTEPS.length-1?'이 단계 건너뛰기':'마치기'}</button></div>`;
   document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
-  const el=q1(st.sel);if(el){el.classList.add('tour-hl');if(GUIDE.scroll){try{el.scrollIntoView({block:'center',behavior:'instant'})}catch(e){el.scrollIntoView()}}}
+  const el=q1(alt?alt.sel:view?st.sel:'#guideCard [data-a=gback]');if(el){el.classList.add('tour-hl');if(GUIDE.scroll){try{el.scrollIntoView({block:'center',behavior:'instant'})}catch(e){el.scrollIntoView()}}}
   GUIDE.scroll=false;GUIDE.fresh='';guidePtr()}
 /* ================= 도움말 (시작 가이드 · 연습 화면 투어 · 기능 설명을 한 곳에) ================= */
 function openHelp(){const r=ready(),done=GSTEPS.filter(s=>s.ok(r)).length;
