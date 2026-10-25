@@ -633,6 +633,7 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
 @keyframes gBob{50%{margin-top:-5px}}
 @keyframes tourPulse{50%{box-shadow:0 0 0 11px color-mix(in srgb,var(--accent) 12%,transparent)}}
 @media (max-width:760px){#tourCard,#guideCard{bottom:72px}}
+body.guiding #main{margin-bottom:var(--gpad,0px)}
 .pinfo{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .stab.on{background:var(--surface);border-color:var(--line-2);border-bottom:2px solid var(--surface)}
 .stab.on > button{color:var(--accent)}
@@ -1512,7 +1513,13 @@ function guideSync(){if(!GUIDE||TOUR)return;
    <div class="tcft gact">${view?(st.acts||''):alt?alt.acts:`<button class="btn sm pri" data-a="gback">화면 이동</button>`}<span style="flex:1"></span><button class="btn sm" data-a="gstop">나중에 하기</button><button class="btn sm" data-a="gskip">${i<GSTEPS.length-1?'이 단계 건너뛰기':'마치기'}</button></div>`;
   document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
   const el=q1(alt?alt.sel:view?st.sel:'#guideCard [data-a=gback]');if(el){el.classList.add('tour-hl');if(GUIDE.scroll){try{el.scrollIntoView({block:'center',behavior:'instant'})}catch(e){el.scrollIntoView()}}}
+  /* 안내 카드(화면 아래 고정)에 강조 대상이 가려지지 않게: 카드 높이만큼 아래 여백을 만들고, 대상이 카드 위 보이는 영역에 오도록 스크롤 */
+  document.body.style.setProperty('--gpad',(card.offsetHeight+16)+'px');
+  if(el&&!el.closest('#guideCard'))guideReveal(el,card);
   GUIDE.scroll=false;GUIDE.fresh='';guidePtr()}
+function guideReveal(el,card){const fix=()=>{const r=el.getBoundingClientRect(),ct=card.getBoundingClientRect().top,top=Math.min(120,innerHeight*.18);
+    if(r.bottom>ct-44||r.top<top-20){const want=Math.max(top,(ct-r.height)/2);window.scrollBy(0,r.top-want)}guidePtr()};
+  fix();setTimeout(fix,60)}
 /* ================= 도움말 (시작 가이드 · 연습 화면 투어 · 기능 설명을 한 곳에) ================= */
 function openHelp(){const r=ready(),done=GSTEPS.filter(s=>s.ok(r)).length;
   modal(`<div class="tut"><div class="tuthd"><h3>도움말</h3></div>
