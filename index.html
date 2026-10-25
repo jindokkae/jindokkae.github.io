@@ -857,7 +857,8 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
 @media (max-width:760px){
   .sayd{display:none}.saym{display:inline}.saym.syncgo{display:block;margin-top:12px}
   .syncgo p{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--fg)}
-  .top.one h1{display:none}.top.one{margin-top:4px}.top.one .meta{margin-left:0}
+  .top.one h1{flex-basis:100%}.top.one .meta{margin-left:0}
+  .day{min-height:68px}.day .ev{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;font-size:9.5px;line-height:1.25;padding:0 2px;margin-top:1px;word-break:keep-all;text-align:left;border-radius:3px}
 }
 </style>
 </head><body>
@@ -1950,7 +1951,7 @@ const kindOf=s=>s.status==='done'?'done':(s.status==='plan'||s.status==='check')
 const filtEv=k=>eventsOn(DB,k).filter(e=>e.kind==='hol'||U.flt[e.kind]!==false);
 const filtS=k=>(SCH.by[k]||[]).filter(s=>U.flt[kindOf(s)]);
 function calBody(){const SRc=srInfo();
-  const chips=[['done','완료'],['plan','예정·확인 필요'],['off','결손·교환'],['event','학교 행사'],['task','수행평가'],['exam','정기시험']].map(([k,l])=>`<button class="chip" data-a="flt" data-x="${k}" aria-pressed="${U.flt[k]}">${l}</button>`).join('');
+  const chips=[['done','완료'],['plan','예정·확인 필요'],['off','결손·교환'],['event','학교 행사'],['exam','정기시험']].map(([k,l])=>`<button class="chip" data-a="flt" data-x="${k}" aria-pressed="${U.flt[k]}">${l}</button>`).join('');
   /* 모든 교과를 한 캘린더에: 교과마다 자기 학기 기간(1학기 3~7월, 2학기 8~1월 등) 안에서만 수업이 나온다 */
   const subs=STORE.subjects,multi=subs.length>1;
   let dates,grid,title;
