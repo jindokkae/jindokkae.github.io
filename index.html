@@ -860,6 +860,11 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
   .top.one h1{flex-basis:100%}.top.one .meta{margin-left:0}
   .day{min-height:68px}.day .ev{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;font-size:9.5px;line-height:1.25;padding:0 2px;margin-top:1px;word-break:keep-all;text-align:left;border-radius:3px}
 }
+
+@media (max-width:760px){
+  .calbar .filters{order:5;flex-basis:100%}.calbar .lgd{order:4;margin-left:0}
+  .rgpop{position:fixed!important;left:12px!important;right:12px!important;min-width:0!important;max-width:none!important;top:auto!important;margin-top:6px}
+}
 </style>
 </head><body>
 <div class="app">
@@ -1587,7 +1592,7 @@ function homeSub(sb){
   /* 다가오는 일정 */
   const evs=allEvents(DB).filter(e=>(e.e||e.s)>=TK).map(e=>{const a=e.assessId?DB.assess.find(x=>x.id===e.assessId):null;
     const tg=a?(a.classes==='all'?'전체 학급':a.classes.map(cn).join(', ')):'';
-    return {s:e.s,label:e.label,kind:e.kind,meta:a?`${subjMain(sb)} · ${tg}`:(e.kind==='hol'?'공휴일':'학교 일정'),key:(a?sb.id:'')+'|'+e.s+'|'+e.label}});
+    return {s:e.s,e:e.e||e.s,label:e.label,kind:e.kind,meta:a?(STORE.subjects.length>1?`${subjMain(sb)} · ${tg}`:tg):(e.kind==='hol'?'공휴일':'학교 일정'),key:(a?sb.id:'')+'|'+e.s+'|'+e.label}});
   return {hasCls:DB.classes.length>0,rows,nAct:act.length,nDone:done.length,nCheck:checks.length,nPend:pend.length,alerts,nAlert,auto,prog,nx,evs,plan};
 }
 
@@ -1675,7 +1680,7 @@ function vHome(){
   const evs=withCls.length||parts.length?parts.flatMap(p=>p.h.evs).filter(e=>!seen.has(e.key)&&seen.add(e.key)).sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:0).slice(0,4):[];
   const EIC={exam:['doc','p'],task:['pen','w'],hol:['bell','g'],event:['cal','b']};
   const upCard=`<div class="card"><h2>${ic('cal',18)} 다가오는 일정<span class="right"><button class="hlink" data-a="gocal">전체 보기 →</button></span></h2>
-    <div class="upgrid">${evs.map(e=>{const [i,c]=EIC[e.kind]||EIC.event;return `<button class="uev" data-a="day" data-x="${e.s}"><span class="ic ${c}">${ic(i,17)}</span><span class="ut"><b>${esc(e.label)}</b><small>${mdw(e.s)} · ${esc(e.meta)}</small></span></button>`}).join('')||'<p class="muted" style="margin:0">다가오는 일정이 없어요.</p>'}</div></div>`;
+    <div class="upgrid">${evs.map(e=>{const [i,c]=EIC[e.kind]||EIC.event;return `<button class="uev" data-a="day" data-x="${e.s}"><span class="ic ${c}">${ic(i,17)}</span><span class="ut"><b>${esc(e.label)}</b><small>${mdw(e.s)}${e.e&&e.e>e.s?'~'+mdw(e.e):''}${e.meta?' · '+esc(e.meta):''}</small></span></button>`}).join('')||'<p class="muted" style="margin:0">다가오는 일정이 없어요.</p>'}</div></div>`;
   const autos=parts.flatMap(({sb,h})=>h.auto.map(a=>multi?`[${subjMain(sb)}] ${a.t}`:a.t));
   const todos=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i})).filter(t=>!t.date||t.date===TK));
   const todoCard=`<div class="card"><h2>${ic('checkc',18)} 오늘 할 일 · 메모<span class="right">${todos.length?`<span class="tag ${todos.every(t=>t.d)?'ok':'info'}">${todos.every(t=>t.d)?'모두 완료':todos.filter(t=>!t.d).length+'개 남음'}</span>`:''}</span></h2><ul class="todo">${autos.map(t=>`<li class="auto"><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
@@ -1825,7 +1830,7 @@ function vSheet(){
     const meta_unused=p.kind==='exam'?`${md(p.date)}${p.end&&p.end!==p.date?'~'+md(p.end):''}${tg?' · '+esc(tg):''}`:p.kind==='task'?`${p.date?md(p.date)+' 마감':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,''):`${p.date?md(p.date)+' 까지':''}${tg?' · '+esc(tg):''}${rg}`.replace(/^ · /,'');
     const tag=p.kind==='task'?tkTag(p.no,''):dated?(past?'지남':d<=0?'진행 중':'D-'+d):KL[p.kind];
     const stTxt=q=>q.state==='ok'?'완료':q.state==='late'?(p.date<TK?`${q.late}차시가 기한을 넘겼어요`:`${q.late}차시가 ${md(p.date)}까지 못 끝나요`):q.behind>0?`선두보다 ${q.behind}차시 늦어요`:q.done?'진행 중':p.date&&p.kind!=='unit'?'예정대로':'아직 시작 전';
-    const pop=`<div class="rgpop" role="tooltip"><b>${esc(p.title)}</b><small>${KL[p.kind]}${p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시 (${st.total}차시)`:''}${p.date?` · ${p.kind==='task'?'수행':'기한'} ${md(p.date)}`:''}</small>
+    const pop=`<div class="rgpop" role="tooltip"><b>${esc(p.title)}</b><small>${KL[p.kind]}${p.from?` · ${p.from}${p.to>p.from?'~'+p.to:''}차시 (${st.total}차시)`:''}${p.date?(p.kind==='exam'?` · 시험 ${md(p.date)}${p.end&&p.end!==p.date?'~'+md(p.end):''}`:` · ${p.kind==='task'?'수행':'기한'} ${md(p.date)}`):''}</small>
       ${p.from&&st.per.length?st.per.map(q=>`<div class="rgp"><span class="dot" style="background:${ccv(q.c)}"></span><span class="rgn">${esc(cn(q.c))}</span><span class="rgb"><u class="${q.state}" style="width:${q.total?Math.round(q.done/q.total*100):0}%"></u></span><span class="rgc mono">${q.done}/${q.total}</span><em class="${q.state}">${stTxt(q)}</em></div>`).join(''):`<div class="muted" style="font-size:12px">${p.kind==='exam'?'이 시험 전까지 수업할 차시가 아직 없어요.':'차시 범위를 정하면 반별 진척이 보여요.'}</div>`}</div>`;
     return `<span class="pwrap"><button class="achip rg ${p.kind} ${p.kind!=='task'&&p.kind!==BAS?'off':''} ${past?'past':''} ${st.late?'late':''}" style="--pc:${p.col}" data-a="period" data-x="${p.id}" aria-pressed="${!!cur&&cur.id===p.id}"><b>${tag}</b><span>${esc(p.title)}</span>${st.late?'<span class="rgw" title="기한 안에 못 끝낼 반이 있어요">!</span>':''}<i class="rgbar"><u style="width:${st.pct}%"></u></i></button><button class="pedit" data-a="${p.kind==='exam'||p.kind==='task'?'avedit':'rgedit'}" data-x="${p.id}" aria-label="${esc(p.title)} 편집" title="편집">${ic('pen',11)}</button>${pop}</span>`};
   const BAS=DB.rgBasis==='unit'?'unit':'exam',pcol={};pl.forEach(q=>{if(BAS==='exam'&&q.kind==='exam'&&!q.empty)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
