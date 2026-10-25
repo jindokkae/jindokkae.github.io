@@ -65,9 +65,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .hello{display:flex;align-items:center;gap:8px;justify-content:center;text-align:center;background:linear-gradient(120deg,var(--accent-soft),var(--surface));border:1px solid var(--line);border-radius:12px;padding:12px 10px;font-weight:700;font-size:12.5px;line-height:1.45;color:var(--accent)}
 .hello svg{flex:none}
 .hello .pals{display:inline-flex;flex:none}.hello .pals img{width:36px;height:36px;object-fit:contain;display:block}.hello .pals img+img{margin-left:-10px}
-.savechip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);padding:0 4px;white-space:nowrap}
+.savechip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);padding:2px 6px;white-space:nowrap;border:0;background:none;cursor:pointer;border-radius:99px;font-family:inherit}.savechip:hover{background:var(--surface-2)}
 .savechip i{width:6px;height:6px;border-radius:50%;background:var(--ok);display:inline-block}
 .savechip.bad{color:var(--bad);font-weight:700}.savechip.bad i{background:var(--bad)}
+.savechip.sync{color:var(--ok);font-weight:700}.savechip.warn{color:var(--warn);font-weight:700}.savechip.warn i{background:var(--warn)}.savechip.info{color:var(--accent);font-weight:700}.savechip.info i{background:var(--accent);animation:chipPulse 1s ease-in-out infinite}@keyframes chipPulse{50%{opacity:.3}}
 .jd{display:block;flex:none;object-fit:contain}
 main{padding-block:20px 48px;padding-left:max(16px,2vw);padding-right:max(16px,2vw,env(safe-area-inset-right,0px));min-width:0}
 .top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
@@ -1306,7 +1307,7 @@ function openRecApps(){
    로컬(localStorage)이 기본이고 서버는 복사본이에요. 저장 시각이 서로 어긋나면 덮어쓰지 않고 물어봐요. */
 const SB_URL='https://uuuygwlotpqtmggaujtc.supabase.co',SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dXlnd2xvdHBxdG1nZ2F1anRjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI2OTU4MDMsImV4cCI6MjEwODI3MTgwM30.c_HAsN59_KkTx33oue65yiWXBUArpKtHBW8WEz8gu-s',SYNCK='jindokkae.sync';
 let SYNC={on:false,sess:null,base:null,dirty:false,last:'',err:'',busy:false,hold:null},SYNC_APPLY=false,SYNC_T=null,SYNC_HASH,SYNC_NEEDS_FIRST=false;
-const syncSave=()=>{try{localStorage.setItem(SYNCK,JSON.stringify({on:SYNC.on,sess:SYNC.sess,base:SYNC.base,dirty:SYNC.dirty,last:SYNC.last}))}catch(e){}};
+const syncSave=()=>{try{localStorage.setItem(SYNCK,JSON.stringify({on:SYNC.on,sess:SYNC.sess,base:SYNC.base,dirty:SYNC.dirty,last:SYNC.last}))}catch(e){}try{chipSync()}catch(e){}};
 const syncLoad=()=>{try{const j=JSON.parse(localStorage.getItem(SYNCK)||'null');if(j)Object.assign(SYNC,{on:!!j.on,sess:j.sess||null,base:j.base||null,dirty:!!j.dirty,last:j.last||''})}catch(e){}};
 const syncOn=()=>SYNC.on&&!!SYNC.sess&&!TOUR;
 const syncKey=()=>JSON.stringify({s:STORE.subjects.map(x=>x.id===STORE.cur?{...x,db:DB}:x),d:STORE.dday,y:STORE.yterms||{}});
@@ -1346,7 +1347,7 @@ async function syncPush(force){const body={data:syncPayload(),device:devName()};
   if(!rows||!rows.length)return 'conflict';
   SYNC.base=rows[0].updated_at;SYNC.dirty=false;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();return 'ok'}
 /* 한 번에 하나씩: 서버를 보고, 같으면 올리고, 서버가 더 새 것이면 가져오거나 물어본다 */
-async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;let changed=false;const sig=()=>[SYNC.err,SYNC.dirty,!!SYNC.hold,SYNC.base].join('|'),s0=sig();
+async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;chipSync();let changed=false;const sig=()=>[SYNC.err,SYNC.dirty,!!SYNC.hold,SYNC.base].join('|'),s0=sig();
   try{const rows=await sbApi(rowUrl()+'&select=data,updated_at,device'),row=rows&&rows[0];
     if(!row){SYNC.base=null;const r=await syncPush();changed=true;if(r==='conflict')SYNC.err='서버 상태가 바뀌었어요. 잠시 뒤 다시 시도해요.'}
     else if(!SYNC.base){ /* 처음 연결 */
@@ -1362,7 +1363,7 @@ async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;let c
     SYNC.err=SYNC.err&&SYNC.err.startsWith('로그인')?SYNC.err:''}
   catch(e){if(e.message!=='expired')SYNC.err=navigator.onLine===false?'오프라인이에요. 연결되면 자동으로 맞춰요.':'서버와 연결하지 못했어요. 잠시 뒤 다시 시도해요.';
     if(e.status===404||(e.body&&/relation .* does not exist|PGRST205/.test(e.body)))SYNC.err='서버 준비가 아직 안 됐어요. 관리자에게 알려 주세요.'}
-  finally{SYNC.busy=false;const ae=document.activeElement;if(U.view==='set'&&!$('#layer').innerHTML&&(sig()!==s0||why==='manual')&&!(ae&&ae.matches&&ae.matches('input,textarea,select')))render()}}
+  finally{SYNC.busy=false;chipSync();const ae=document.activeElement;if(U.view==='set'&&!$('#layer').innerHTML&&(sig()!==s0||why==='manual')&&!(ae&&ae.matches&&ae.matches('input,textarea,select')))render()}}
 /* persist()가 부르는 훅: 진짜 바뀐 게 있을 때만 '올릴 것 있음' 표시 */
 function syncDirty(){if(!SYNC.on||!SYNC.sess||SYNC_APPLY||TOUR)return;const h=syncKey();if(SYNC_HASH===undefined){SYNC_HASH=h;return}if(h===SYNC_HASH)return;SYNC_HASH=h;SYNC.dirty=true;syncSave();
   clearTimeout(SYNC_T);if(SYNC.hold)return;SYNC_T=setTimeout(()=>syncTick('push'),2500)}
@@ -1532,7 +1533,7 @@ function refreshChrome(){
   const pend=DB.inbox.filter(i=>i.state==='pending').length+SCH.conflicts.length;
   $('#nav').innerHTML=VIEWS.map(([v,l])=>`<button data-a="go" data-x="${v}" ${U.view===v?'aria-current="page"':''}>${ic(v)}<span>${l}</span>${v==='cal'&&pend?`<span class="badge">${pend}</span>`:''}</button>`).join('');
   $('#hello').innerHTML=`${paw(15)}<span class="pals"><img src="${JD_SRC}" alt="진도깨" width="36" height="36"><img src="${BAB_SRC}" alt="밥숑" width="36" height="36"></span><span>오늘 수업도<br>힘내세요!</span>`;
-   document.querySelectorAll('.savechip').forEach(el=>{el.classList.toggle('bad',!SAVE.ok);el.innerHTML=`<i></i>${SAVE.ok?'저장됨':'저장 실패'}`;el.title=SAVE.ok?`이 브라우저에 저장됨 ${SAVE.t} · 다른 기기와는 동기화되지 않아요`:'저장에 실패했어요. 설정에서 백업을 받아 두세요'})
+  chipSync();
   const ub=$('[data-a=undo].tb'),rb=$('[data-a=redo].tb');if(ub)ub.disabled=!UNDO.length;if(rb)rb.disabled=!REDO.length;
 }
 let RV=null;
@@ -1552,7 +1553,19 @@ function render(){if(!TOUR){let ch=false;STORE.subjects.forEach(sb=>{try{if(auto
 function mbarSync(){const m=document.getElementById('mbar'),h=document.querySelector('#main .top h1');if(m&&h)m.textContent=h.innerText.trim()}
 (()=>{let on=false;const f=()=>{const y=window.scrollY;if(!on&&y>70){on=true;document.body.classList.add('scrolled')}else if(on&&y<30){on=false;document.body.classList.remove('scrolled')}};window.addEventListener('scroll',f,{passive:true})})();
 function autosize(t){if(CSS.supports&&CSS.supports('field-sizing','content'))return;t.style.height='auto';t.style.height=Math.max(28,t.scrollHeight+2)+'px'}
-const saveChip=()=>`<span class="savechip ${SAVE.ok?'':'bad'}" title="${SAVE.ok?'이 브라우저에 저장됨 '+esc(SAVE.t):'저장 실패'}"><i></i>${SAVE.ok?'저장됨':'저장 실패'}</span>`;
+/* 저장 표시: 이 기기 저장 + (연동 중이면) 다른 기기에도 올라갔는지 */
+function chipInfo(){
+  if(!SAVE.ok)return {c:'bad',t:'저장 실패',h:'저장에 실패했어요. 설정에서 백업을 받아 두세요'};
+  const on=SYNC.on&&SYNC.sess;
+  if(!on)return {c:'',t:'이 기기에만 저장됨',h:`이 브라우저에 저장됨 ${SAVE.t}\nPC·모바일에서 같이 쓰려면 눌러서 기기 연동을 켜세요`};
+  if(SYNC.err)return {c:'bad',t:'연동 오류 · 이 기기엔 저장됨',h:SYNC.err+'\n눌러서 설정에서 확인하세요'};
+  if(SYNC.hold)return {c:'warn',t:'어느 쪽을 쓸지 선택 필요',h:'다른 기기의 데이터와 달라요. 눌러서 확인하세요'};
+  if(SYNC.busy)return {c:'info',t:'다른 기기와 맞추는 중…',h:'서버와 동기화하고 있어요'};
+  if(SYNC.dirty)return {c:'warn',t:'저장됨 · 연동 대기 중',h:'이 기기에는 저장됐고 곧 다른 기기로 올라가요'};
+  const d=SYNC.last?new Date(SYNC.last):null,hm=d&&!isNaN(d)?`${pad(d.getHours())}:${pad(d.getMinutes())}`:'';
+  return {c:'sync',t:`모든 기기에 저장됨${hm?' · '+hm:''}`,h:`PC·모바일에 연동되어 저장됐어요${hm?' ('+hm+')':''}\n${SYNC.sess.email||''}`}}
+const saveChip=()=>{const x=chipInfo();return `<button type="button" class="savechip ${x.c}" data-a="gosync" title="${esc(x.h)}"><i></i>${esc(x.t)}</button>`};
+function chipSync(){const x=chipInfo();document.querySelectorAll('.savechip').forEach(el=>{el.className='savechip '+x.c;el.title=x.h;el.innerHTML=`<i></i>${esc(x.t)}`})}
 function topbarC(t,lead,extra,cls=''){return `<div class="top topc ${cls}"><h1>${t}</h1>${lead}<div class="meta">${extra}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>${saveChip()}</div></div>`}
 function topbar(t,extra='',lead=''){return topbarC(t,lead,extra)}
 const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK).length>0||DB.tt.some(t=>t.slots.length),cal:!!DB.calOk});
