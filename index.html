@@ -1654,6 +1654,10 @@ function sayTime(done){const h=new Date().getHours(),m=new Date().getMinutes(),t
   if(t<16*60)return P(['오후도 꼬리 붕붕! 조금만 더 힘내요, 멍멍!','진도깨는 선생님 곁에 쭉 있을게요, 멍! 오후 수업도 화이팅!','킁킁, 오후 수업도 잘 챙겨볼게요, 왈!']);
   if(t<16*60+50)return P(['헥헥! 퇴근이 얼마 안 남았어요~ 기뻐서 꼬리가 막 돌아가요, 멍!','헥-헥! 조금만 더 하면 퇴근이에요! 신나요, 왈왈!','퇴근 시간이 코앞이에요! 폴짝폴짝 뛰고 싶어요, 멍멍!']);
   return P(['오늘도 정말 고생 많았어요, 멍! 푹 쉬어요~ 쓰담쓰담','하루 끝! 집에 가서 꼬리 흔들며 쉬어요, 헥헥~','낑… 아직 안 갔어요? 같이 얼른 퇴근해요, 왈!']);}
+function sayOff(k){const P=a=>a[(+TK.slice(8)+new Date(TK+'T00:00:00').getDay())%a.length];
+  if(k==='wk')return P(['꼬리 붕붕~ 산책 가고 싶어요, 멍!','쉬는 날엔 진도깨도 쉴게요, 왈!','늦잠 자도 괜찮아요~ 쓰담쓰담 해주세요, 멍멍!']);
+  if(k==='vac'){const st=DB.term?.start;const n=st&&TK<st?dday(st):0;return n>0?`개학까지 <b>D-${n}</b>일이에요. 푹 쉬어요, 멍!`:P(['방학엔 꼬리도 느긋하게~ 푹 쉬어요, 멍!','쉬면서 재충전해요! 진도깨는 기다리고 있을게요, 왈!'])}
+  return P(['푹 쉬어요! 내일 수업은 제가 챙겨둘게요, 멍!','쉬는 날이에요~ 꼬리 붕붕! 재충전하고 와요, 왈!','오늘은 진도깨도 낮잠 잘게요, 멍멍! 푹 쉬어요.'])}
 function needRec(){let hit=null;
   for(const sb of STORE.subjects){const ks=withSub(sb,()=>Object.values(SCH.key).filter(x=>x.status==='check').map(x=>x.c+'|'+x.n));if(ks.length){hit={sb,ks};break}}
   if(!hit){toast('기록이 필요한 수업이 없어요.');return}
@@ -1675,6 +1679,12 @@ function vHome(){
   else if(soon)say=`다음은 <b>${multi?esc(soon.subj)+' ':''}${soon.p}교시 ${esc(soon.cn)}</b> ${soon.n}차시예요.`;
   else if(nAct)say='오늘 진도를 <b>모두 깨부쉈어요!</b> 수고 많았어요.';
   else say='오늘은 수업이 없어요.';
+  /* 주말·휴업일·방학: 윗줄과 아랫줄을 쉬는 날용으로 (기록할 수업이 남아 있으면 위 문구 유지) */
+  const off=withCls.length&&!nCheck&&!soon&&!nAct?dayBlock(DB,TK):null;
+  const offK=!off?'':off==='주말'?'wk':/방학/.test(off)?'vac':'hol';
+  const iga=w=>{const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c%28?'이라':'라'};
+  if(off)say=offK==='wk'?'오늘은 <b>주말</b>이에요. 푹 쉬어요!':offK==='vac'?'지금은 <b>방학</b>이에요.':`오늘은 <b>${esc(off)}</b>${iga(off)} 수업이 없어요.`;
+  const sub=off?sayOff(offK):sayTime(nAct&&!nCheck&&!soon&&withCls.length);
   const d=D(TK);
   /* 상단 */
   const dd=ddayInfo();
@@ -1684,7 +1694,7 @@ function vHome(){
     <button class="btn pri mobhide" data-a="go" data-x="sheet">+ 진도 기록</button></div></div>`;
   /* 배너 */
   const stat=(cls,icn,label,num,unit,attr)=>`<button class="hstat ${cls}" ${attr}><span class="ic">${ic(icn,20)}</span><span><small>${label}</small><b class="mono">${num}<i>${unit}</i></b></span><span class="chv">${ic('chev',16)}</span></button>`;
-  const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${!withCls.length&&!SYNC.on?`<span class="sayd">${say}</span><span class="saym">PC에서 쓰던 진도가 있나요? <b>PC와 연동</b>해 보세요.</span>`:say}</h2><p>${sayTime(nAct&&!nCheck&&!soon&&withCls.length)}</p></div></div>
+  const hero=`<div class="hero ${sayPop('home',say)}"><div class="hl"><div class="ht"><span class="sun">${ic('sun',26)}</span><div><h2 aria-live="polite">${!withCls.length&&!SYNC.on?`<span class="sayd">${say}</span><span class="saym">PC에서 쓰던 진도가 있나요? <b>PC와 연동</b>해 보세요.</span>`:say}</h2><p>${sub}</p></div></div>
     ${!withCls.length&&!SYNC.on?`<div class="saym syncgo"><p>구글 계정으로 로그인하면 PC와 모바일의 진도가 자동으로 맞춰져요. 로그인은 <b>구글의 보안</b>으로 처리돼서 진도깨는 비밀번호를 받지 않고, 내 데이터는 <b>내 계정으로만</b> 볼 수 있어요. 연동은 선택이에요.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="gosync">PC와 연동하기</button><button class="btn" data-a="addclass">학급 직접 추가</button></div></div>`:''}
     ${withCls.length?`<div class="hstats">${stat('blue','cal','오늘 수업',nAct,'개','data-a="day" data-x="'+TK+'"')}${stat('warn','warn','기록 필요',nCheck,'건',''+(nCheck?'data-a="needrec"':'data-a="jump" data-x="todaycard"'))}${stat('ok','checkc','완료',nDone,'개','data-a="jump" data-x="todaycard"')}</div>`:''}</div>
     <div class="mascot"><span class="cheer">화이팅!</span>${jdWave(168)}</div></div>`;
