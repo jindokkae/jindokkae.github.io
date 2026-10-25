@@ -1348,13 +1348,15 @@ function syncApply(row,markDirty){const d=row.data;if(!validRemote(d)){toast('�
     persist();SYNC_HASH=syncKey()}finally{SYNC_APPLY=false}
   SYNC.base=row.updated_at||SYNC.base;SYNC.dirty=!!markDirty;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();closeM();render();return true}
 async function syncPush(force){const body={data:syncPayload(),device:devName()};let rows;
-  if(!SYNC.base){try{rows=await sbApi('/rest/v1/user_data',{method:'POST',prefer:'return=representation',body:{user_id:SYNC.sess.uid,...body}})}catch(e){if(e.status===409)return 'conflict';throw e}}
-  else rows=await sbApi(rowUrl()+(force?'':`&updated_at=eq.${encodeURIComponent(SYNC.base)}`),{method:'PATCH',prefer:'return=representation',body});
+  if(!SYNC.base){try{rows=await sbApi('/rest/v1/user_data?select=updated_at',{method:'POST',prefer:'return=representation',body:{user_id:SYNC.sess.uid,...body}})}catch(e){if(e.status===409)return 'conflict';throw e}}
+  else rows=await sbApi(rowUrl()+'&select=updated_at'+(force?'':`&updated_at=eq.${encodeURIComponent(SYNC.base)}`),{method:'PATCH',prefer:'return=representation',body});
   if(!rows||!rows.length)return 'conflict';
   SYNC.base=rows[0].updated_at;SYNC.dirty=false;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();return 'ok'}
 /* 한 번에 하나씩: 서버를 보고, 같으면 올리고, 서버가 더 새 것이면 가져오거나 물어본다 */
 async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;chipSync();let changed=false;const sig=()=>[SYNC.err,SYNC.dirty,!!SYNC.hold,SYNC.base].join('|'),s0=sig();
-  try{const rows=await sbApi(rowUrl()+'&select=data,updated_at,device'),row=rows&&rows[0];
+  try{/* 전송량 절약: 먼저 저장 시각만 확인하고, 처음 연결이거나 바뀌었을 때만 데이터 전체를 받는다 */
+    const rows=await sbApi(rowUrl()+'&select=updated_at,device');let row=rows&&rows[0];
+    if(row&&(!SYNC.base||row.updated_at!==SYNC.base)){const full=await sbApi(rowUrl()+'&select=data,updated_at,device');row=full&&full[0]}
     if(!row){SYNC.base=null;const r=await syncPush();changed=true;if(r==='conflict')SYNC.err='서버 상태가 바뀌었어요. 잠시 뒤 다시 시도해요.'}
     else if(!SYNC.base){ /* 처음 연결 */
       if(localEmpty()){syncApply(row,false);toast('연동된 진도 데이터를 불러왔어요.')}
