@@ -1114,7 +1114,7 @@ const C={
     const keep={};db.events.filter(e=>e.src==='NEIS'&&(e.off||e.gx)).forEach(e=>keep[e.s+'|'+e.label]=e);
     db.events=db.events.filter(e=>e.src!=='NEIS');evs.forEach(e=>{const o={...e,id:uid('n'),src:'NEIS'};delete o.g;
       if(miss(e.g)){o.gx=1;if(o.block)o.block=false;else o.off=true}db.events.push(o)});
-    db.assess=db.assess.filter(a=>a.src!=='NEIS');exams.forEach(a=>{const o={...a,id:uid('v'),src:'NEIS'};delete o.g;if(miss(a.g)){o.noClass=false;o.gx=1}db.assess.push(o)})},
+    db.assess=db.assess.filter(a=>a.src!=='NEIS');exams.forEach(a=>{const o={...a,id:uid('v'),src:'NEIS'};delete o.g;if(o.orig){o.note=o.note||o.orig;delete o.orig}if(miss(a.g)){o.noClass=false;o.gx=1}db.assess.push(o)})},
 };
 function validateMove(db,S,s,toDate,toP){
   if(!toDate)return '옮길 날짜를 고르세요.';
@@ -1143,7 +1143,7 @@ function parseSchedule(rows){const ymd=y=>`${y.slice(0,4)}-${y.slice(4,6)}-${y.s
     const sub=String(r.SBTR_DD_SC_NM||'');const isHol=sub==='휴업일'||sub==='공휴일'||/휴업|방학|공휴일/.test(nm)&&!/개학|식$/.test(nm);
     if(/지필|고사|정기\s*시험|중간\s*평가|기말/.test(nm)&&!/모의|대비/.test(nm)){(examDays[nm]=examDays[nm]||[]).push(k);examG[nm]=[...new Set([...(examG[nm]||''),...gOf(r)])].sort().join('');return}
     evs.push({s:k,e:k,label:nm,kind:isHol?'hol':'event',block:isHol,g:gOf(r)})});
-  const exams=Object.entries(examDays).map(([nm,ds])=>{ds.sort();return {type:'exam',title:nm,start:ds[0],end:ds[ds.length-1],classes:'all',noClass:true,fromId:null,toId:null,note:'',g:examG[nm]||''}});
+  const exams=Object.entries(examDays).map(([nm,ds])=>{ds.sort();return {nm,ds}}).sort((a,b)=>a.ds[0]<b.ds[0]?-1:1).slice(0,2).map(({nm,ds},i)=>{return {type:'exam',title:EXAMNM[i],orig:nm,start:ds[0],end:ds[ds.length-1],classes:'all',noClass:true,fromId:null,toId:null,note:'',g:examG[nm]||''}});
   return {evs,exams}}
 
 /* ================= UI ================= */
@@ -2311,6 +2311,9 @@ function openPasteAsk(){modal(`<form id="pasteForm" style="display:flex;flex-dir
   <textarea id="pasteTa" class="inp code" style="height:180px" autofocus placeholder="대단원1 오리엔테이션&#9;&#9;&#9;프린트 수거&#10;1. 일제의 식민 통치 (정치)&#9;14, 16, 56&#9;1910년대 판서"></textarea>
   <div class="acts"><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">차시 만들기</button></div></form>`)}
 /* 평가 일정 */
+const EXAMNM=['1차 정기시험','2차 정기시험'];
+/* 정기시험은 1차·2차 딱 두 개까지: 이름이 둘 중 하나여야 하고, 같은 이름이 이미 있으면 안 돼요 */
+const examGuard=(title,id)=>!EXAMNM.includes(title)?'정기시험은 1차·2차 중에서 골라 주세요.':DB.assess.some(a=>a.type==='exam'&&a.id!==id&&a.title===title)?`${title}은 이미 등록돼 있어요. 정기시험은 1차·2차 두 개까지만 만들 수 있어요.`:'';
 const PRESET={exam:['1차 정기시험','2차 정기시험'],task:['수행평가 ①','수행평가 ②','수행평가 ③','포트폴리오','발표 평가']};
 function openAssess(a){U.av=a?clone(a):{type:'exam',title:'',start:TK,end:'',classes:'all',noClass:true,fromId:null,toId:null,lessonId:null,note:''};drawAssess()}
 function drawAssess(){const a=U.av,isEx=a.type==='exam',isNew=!DB.assess.some(x=>x.id===a.id);
@@ -2345,7 +2348,7 @@ function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes===
   ${(r.kind==='unit'||r.kind==='exam')&&(DB.rgBasis||'exam')!==r.kind?`<div class="basisline"><span>지금 진도표 색은 <b>${r.kind==='unit'?'정기시험':'단원/파트'}</b> 기준이에요.${r.kind==='exam'?' 시험 날짜만 등록돼요.':''}</span><button type="button" class="btn sm" data-a="rgbasisgo" data-x="${r.kind}">${r.kind==='unit'?'단원/파트로':'정기시험으로'} 바꾸기</button></div>`:''}
   ${t?`<h4 style="margin:4px 0 0">수행평가 번호 <span class="muted" style="font-weight:400">(필수)</span></h4><div style="display:flex;gap:6px;flex-wrap:wrap">${[1,2,3].map(k=>`<button class="chip opt" data-a="rgno" data-x="${k}" aria-pressed="${r.no===k}">수행평가 ${CIRC[k]}</button>`).join('')}</div>`:''}
   ${ex?`<h4 style="margin:4px 0 0">정기시험 선택 <span class="muted" style="font-weight:400">(필수)</span></h4>`:''}
-  ${PRE.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${PRE.map(p=>`<button class="chip opt" data-a="rgpreset" data-x="${esc(p)}" aria-pressed="${r.title===p}">${esc(p)}</button>`).join('')}</div>`:''}
+  ${PRE.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${PRE.map(p=>{const dup=r.kind==='exam'&&DB.assess.some(a=>a.type==='exam'&&a.id!==r.id&&a.title===p);return `<button class="chip opt" data-a="rgpreset" data-x="${esc(p)}" aria-pressed="${r.title===p}" ${dup?'disabled title="이미 등록됨" style="opacity:.4"':''}>${esc(p)}${dup?' (등록됨)':''}</button>`}).join('')}</div>`:''}
   ${ex?`<input type="hidden" id="rgTitle" value="${esc(r.title)}">`:`<label class="field">${t?'수행평가 이름':'이름'}<input id="rgTitle" class="inp" value="${esc(r.title)}" placeholder="${t?'예: 독립운동가 카드뉴스 만들기':'예: 1단원 선사 문화'}"></label>`}
   ${ex?`<div class="inl"><label class="field">시작일<input type="date" id="rgStart" value="${r.start||''}"></label><label class="field">끝나는 날<input type="date" id="rgEnd" value="${r.end||r.start||''}"></label></div>`:`<div class="inl"><label class="field">시작 차시<select id="rgFrom" class="inp">${lopt(r.fromId)}</select></label><label class="field">끝 차시<select id="rgTo" class="inp">${lopt(r.toId||r.fromId)}</select></label></div>
   <p class="muted" style="font-size:12px;margin:-4px 0 0">${DB.lessons.length?(cnt===1?`${f}차시 한 번에 끝나는 범위예요.`:`${Math.min(f,to)}~${Math.max(f,to)}차시, 모두 ${cnt}차시에 걸쳐요.`):'진도표에 차시가 없어요. 먼저 차시를 만들어 주세요.'}</p>`}
@@ -2362,7 +2365,7 @@ function drawNeisImport(){const {p,exams}=U.ni;const hol=p.evs.filter(e=>e.block
   modal(`<h3>학사일정 가져오기 · ${esc(NEIS.school.name)}</h3><p class="sub">${mdw(DB.term.start)} ~ ${mdw(DB.term.end)}</p>
   <div class="pv"><div class="ln"><span>휴업일 <b>${hol.length}</b>일 (수업 없음) · 학교 행사 <b>${oth.length}</b>건${prevN?` · 이전에 가져온 NEIS 일정 ${prevN}건은 새 내용으로 바뀌어요`:''}</span></div></div>
   ${hol.length?`<div class="note" style="max-height:110px;overflow:auto">${hol.map(e=>`${mdw(e.s)} ${esc(e.label)}`).join(' · ')}</div>`:''}
-  ${p.exams.length?`<h4>정기시험으로 보이는 일정</h4><div class="others">${p.exams.map((x,i)=>`<label><input type="checkbox" data-nie="${i}" ${exams.has(i)?'checked':''}>${esc(x.title)}<span class="cur mono">${md(x.start)}~${md(x.end)}</span></label>`).join('')}</div><p class="muted" style="font-size:12px;margin:0">체크한 시험은 평가 일정(시험 기간 수업 없음)으로 추가돼요. 시험 범위는 나중에 평가 일정에서 정하세요.</p>`:''}
+  ${p.exams.length?`<h4>정기시험으로 보이는 일정</h4><div class="others">${p.exams.map((x,i)=>`<label><input type="checkbox" data-nie="${i}" ${exams.has(i)?'checked':''}>${esc(x.title)}${x.orig?` <span class="muted">(${esc(x.orig)})</span>`:''}<span class="cur mono">${md(x.start)}~${md(x.end)}</span></label>`).join('')}</div><p class="muted" style="font-size:12px;margin:0">체크한 시험은 평가 일정(시험 기간 수업 없음)으로 추가돼요. 시험 범위는 나중에 평가 일정에서 정하세요.</p>`:''}
   <p class="${lost?'warnbox':'note'}">${lost?`앞으로 예정된 수업 <b>${lost}개</b>가 휴업일·시험 기간이라 빠지고, 예정 차시가 다시 계산돼요.`:'앞으로 예정된 수업에는 영향이 없어요.'} 완료 기록은 바뀌지 않아요.</p>
   <div class="acts"><button class="btn" data-a="close">취소</button><button class="btn pri" data-a="nigo">가져오기</button></div>`)}
 function openImport(text){let j=null;try{j=JSON.parse(text)}catch(e){toast('백업 내용을 읽을 수 없어요. 진도깨에서 만든 백업인지 확인하세요.');return}
@@ -2559,7 +2562,7 @@ document.addEventListener('click',e=>{
       const ms=new Set();for(let n=lo;n<=hi;n++){const l=DB.lessons[n-1];if(l&&l.col>0)ms.add(l.col)}
       openRange({kind:'unit',fromId:L(lo).id,toId:L(hi).id,col:ms.size===1?[...ms][0]:0});if(hi-lo+1!==ix.length)toast(`선택한 차시 중 가장 앞(${lo})~뒤(${hi}) 차시를 범위로 잡았어요.`);break}
    case 'rgsave':{readRange();const r=U.rg;if(!r.title){toast(r.kind==='exam'?'1차·2차 정기시험 중 하나를 골라 주세요.':'이름을 적어 주세요.');break}
-      if(r.kind==='exam'){if(!r.start){toast('시작일을 골라 주세요.');break}if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
+      if(r.kind==='exam'){{const m=examGuard(r.title,r.id);if(m){toast(m);break}}if(!r.start){toast('시작일을 골라 주세요.');break}if(r.classes!=='all'&&!r.classes.length){toast('대상 학급을 하나 이상 골라 주세요.');break}
         let en=r.end;if(!en||en<r.start)en=r.start;const w=weekdays(r.start,en);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}
         const adj=w.start!==r.start||w.end!==en?`주말은 빼고 평일(${md(w.start)}~${md(w.end)})만 저장했어요. `:'';
         const A={...(r._a||{}),id:r.id||undefined,type:'exam',title:r.title,start:w.start,end:w.end,classes:r.classes,noClass:!!r.noClass,fromId:null,toId:null,lessonId:null,note:r.note||''};
@@ -2579,7 +2582,7 @@ document.addEventListener('click',e=>{
    case 'avtype':{readAssessForm();if(x==='task'){const a=U.av;openRange({kind:'task',title:a.title,date:a.start,classes:a.classes});break}U.av.type=x;U.av.noClass=x==='exam';drawAssess();break}
    case 'avpreset':readAssessForm();U.av.title=x;drawAssess();break;
    case 'avsave':{readAssessForm();const A=U.av;let adj='';if(!A.title){toast('평가 이름을 적어 주세요.');break}if(!A.start){toast('날짜를 골라 주세요.');break}
-     if(A.type==='exam'){if(!A.end||A.end<A.start)A.end=A.start;const w=weekdays(A.start,A.end);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}if(w.start!==A.start||w.end!==A.end){adj=`주말은 빼고 평일(${md(w.start)}~${md(w.end)})만 저장했어요. `;A.start=w.start;A.end=w.end}}else{A.end='';A.noClass=false}A.fromId=A.toId=null
+     if(A.type==='exam'){const m=examGuard(A.title,A.id);if(m){toast(m);break}if(!A.end||A.end<A.start)A.end=A.start;const w=weekdays(A.start,A.end);if(!w){toast('주말만 고르셨어요. 평일로 날짜를 정해 주세요.');break}if(w.start!==A.start||w.end!==A.end){adj=`주말은 빼고 평일(${md(w.start)}~${md(w.end)})만 저장했어요. `;A.start=w.start;A.end=w.end}}else{A.end='';A.noClass=false}A.fromId=A.toId=null
      mutate(`평가 일정 ${DB.assess.some(k=>k.id===A.id)?'수정':'추가'}: ${A.title}`,db=>C.saveAssess(db,A),{msg:adj+(A.type==='exam'&&A.noClass?`${A.title} 기간을 수업 없음으로 두고 예정 진도를 다시 계산했어요.`:`${A.title} 일정을 저장했어요.`)});break}
    case 'avdel':{const A=DB.assess.find(k=>k.id===x);mutate(`평가 일정 삭제: ${A.title}`,db=>C.removeAssess(db,x));break}
    case 'alg':{const i=ALGS.indexOf(x);i<0?ALGS.push(x):ALGS.splice(i,1);persist();render();break}
