@@ -874,6 +874,8 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
 .tc .tc2{padding:0 0 3px 8px}
 .tc.moved b,.tc.absent b{opacity:.85}
 @media (max-width:640px){.tc{padding:0 3px 0 0;border-left-width:1px}.tc .tc1{gap:3px}.tc .tc1 b{padding:3px 5px}.tc .tc2{padding:0 0 2px 5px}}
+
+.basisline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:7px 10px}
 </style>
 </head><body>
 <div class="app">
@@ -2323,7 +2325,7 @@ function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes===
   modal(`<h3>${isNew?'범위 추가':'범위 수정'}</h3>
   ${isNew?`<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="muted" style="font-size:11px;margin-bottom:3px">색으로 구분</div><div class="seg">${RGKS.slice(0,2).map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div></div><div><div class="muted" style="font-size:11px;margin-bottom:3px">태그로 구분</div><div class="seg">${RGKS.slice(2).map(([k,l])=>`<button data-a="rgkind" data-x="${k}" aria-pressed="${r.kind===k}">${l}</button>`).join('')}</div></div></div>`:`<p class="sub" style="margin:0">${RGKS.find(x=>x[0]===r.kind)[1]}</p>`}
   <p class="muted" style="font-size:12.5px;margin:0">${{unit:'단원·파트(예: 문학/비문학/문법, 물리/지구과학)처럼 차시를 묶어 색으로 구분해요. 진도표에서 그 범위만 모아 볼 수도 있어요.',task:'수행평가 수업도 진도표의 차시예요. 1차시짜리도, 여러 차시짜리도 시작·끝 차시만 고르면 그 차시들이 색으로 묶여요. 날짜는 막지 않아요.',exam:'<b>시작일~끝나는 날</b>은 수업이 없는 날로 보고 차시를 계산하지 않아요(아래 \'수업 없음\'을 켠 경우). 이 시험의 <b>범위</b>는 앞 시험 범위 다음 차시부터 <b>시험 시작일 직전 수업일</b>까지 진행되는 차시예요.',}[r.kind]}</p>
-  ${r.kind==='unit'&&(DB.rgBasis||'exam')!=='unit'?`<div class="warnbox" style="font-size:12.5px">지금 진도표 색은 <b>정기시험</b> 기준이에요. 색 구분은 정기시험 또는 단원/파트 중 하나만 쓸 수 있어요. 단원/파트를 쓰려면 기준을 바꿔 주세요. <button type="button" class="btn sm" data-a="rgbasisgo" data-x="unit" style="margin-top:6px">단원/파트 기준으로 바꾸기</button></div>`:r.kind==='exam'&&(DB.rgBasis||'exam')==='unit'?`<p class="muted" style="font-size:12px;margin:0">지금 진도표 색은 단원/파트 기준이라, 정기시험은 <b>시험 날짜(수업 없음)만</b> 등록돼요. 시험 범위로 색을 나누려면 진도표 위 '색 기준'을 정기시험으로 바꾸세요.</p>`:''}
+  ${(r.kind==='unit'||r.kind==='exam')&&(DB.rgBasis||'exam')!==r.kind?`<div class="basisline"><span>지금 진도표 색은 <b>${r.kind==='unit'?'정기시험':'단원/파트'}</b> 기준이에요.${r.kind==='exam'?' 시험 날짜만 등록돼요.':''}</span><button type="button" class="btn sm" data-a="rgbasisgo" data-x="${r.kind}">${r.kind==='unit'?'단원/파트로':'정기시험으로'} 바꾸기</button></div>`:''}
   ${t?`<h4 style="margin:4px 0 0">수행평가 번호 <span class="muted" style="font-weight:400">(필수)</span></h4><div style="display:flex;gap:6px;flex-wrap:wrap">${[1,2,3].map(k=>`<button class="chip opt" data-a="rgno" data-x="${k}" aria-pressed="${r.no===k}">수행평가 ${CIRC[k]}</button>`).join('')}</div>`:''}
   ${ex?`<h4 style="margin:4px 0 0">정기시험 선택 <span class="muted" style="font-weight:400">(필수)</span></h4>`:''}
   ${PRE.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${PRE.map(p=>`<button class="chip opt" data-a="rgpreset" data-x="${esc(p)}" aria-pressed="${r.title===p}">${esc(p)}</button>`).join('')}</div>`:''}
@@ -2531,7 +2533,7 @@ document.addEventListener('click',e=>{
    case 'rgnew':openRange(null);break;
    case 'rgedit':{const r=(DB.ranges||[]).find(k=>k.id===x);if(r)openRange({...r,classes:r.classes==null?'all':clone(r.classes)});break}
    case 'rgkind':readRange();U.rg.kind=x;drawRange();break;
-   case 'rgbasisgo':{readRange();const sv=U.rg;mutate('색 기준 변경: 단원/파트',db=>{db.rgBasis='unit'},{silent:true,norender:false});openRange(sv);break}
+   case 'rgbasisgo':{readRange();const sv=U.rg,to=x==='exam'?'exam':'unit';mutate('색 기준 변경: '+(to==='unit'?'단원/파트':'정기시험'),db=>{db.rgBasis=to},{silent:true,norender:false});openRange(sv);break}
    case 'rgbasis':{if((DB.rgBasis||'exam')===x)break;mutate(`색 기준 변경: ${x==='unit'?'단원/파트':'정기시험'}`,db=>{db.rgBasis=x},{msg:`진도표 색 구분을 ${x==='unit'?'단원/파트':'정기시험'} 기준으로 바꿨어요. 다른 쪽 범위는 지우지 않고 칩으로만 남아요.`});break}
    case 'rgno':readRange();U.rg.no=+x;drawRange();break;
    case 'rgpreset':readRange();U.rg.title=x;drawRange();break;
