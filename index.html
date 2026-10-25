@@ -2170,7 +2170,7 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
       <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn pri" data-a="savekey">인증키 저장</button>${NEIS.key?'<button class="btn bad" data-a="delkey">인증키 지우기</button>':''}</div>
       <p class="muted" style="font-size:12px;margin:0">인증키는 이 브라우저에만 저장되고, 백업 파일에는 들어가지 않아요.</p></div>
     <div class="stack" style="gap:10px">
-      <label class="field">우리 학교 찾기<span style="display:flex;gap:6px"><input id="schQ" class="inp" placeholder="예: 평택고등학교" ${NEIS.key?'':'disabled'}><button class="btn" data-a="schsearch" ${NEIS.key?'':'disabled'}>${N.busy?'찾는 중…':'검색'}</button></span></label>
+      <label class="field">우리 학교 찾기<span style="display:flex;gap:6px"><input id="schQ" class="inp" placeholder="예: 한백고등학교" ${NEIS.key?'':'disabled'}><button class="btn" data-a="schsearch" ${NEIS.key?'':'disabled'}>${N.busy?'찾는 중…':'검색'}</button></span></label>
       ${NEIS.school?`<div class="exc" style="--cc:var(--accent)"><span class="bar"></span><span><b>${esc(NEIS.school.name)}</b><small>${esc(NEIS.school.office||'')} ${esc(NEIS.school.addr||'')}</small></span><span class="tag ok">선택됨</span></div>`:''}
       ${N.results.length?`<div class="dlist" style="max-height:220px;overflow:auto">${N.results.map((s,i)=>`<button class="exc" style="--cc:var(--line-2);text-align:left;background:var(--surface);cursor:pointer" data-a="schpick" data-x="${i}"><span class="bar"></span><span><b>${esc(s.name)}</b><small>${esc(s.kind||'')} · ${esc(s.office||'')} · ${esc(s.addr)}</small></span><span class="btn sm">선택</span></button>`).join('')}</div>`:''}
       ${N.msg&&U.view==='set'?`<p class="${N.err?'warnbox':'note'}">${esc(N.msg)}</p>`:''}
