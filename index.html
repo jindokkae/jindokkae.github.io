@@ -2103,7 +2103,7 @@ try{NOTIF={...NOTIF,...JSON.parse(localStorage.getItem(NOTK)||'{}')}}catch(e){}
 const saveNotif=()=>{try{localStorage.setItem(NOTK,JSON.stringify(NOTIF))}catch(e){}};
 const canNotif=()=>typeof Notification!=='undefined';
 async function showNote(title,body,tag){try{const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();
-  const ic=/밥숑/.test(title)?'icon-bab.png':'icon-jd.png',o={body,icon:ic,badge:'icon-192.png',tag};
+  const ic=/밥숑/.test(title)?'icon-bab.png':'icon-jd.png',o={body,icon:ic,badge:/밥숑/.test(title)?'badge-bab.png':'icon-192.png',tag};
   if(reg&&reg.showNotification)await reg.showNotification(title,o);else new Notification(title,o);return true}catch(e){try{new Notification(title,{body,icon:/밥숑/.test(title)?'icon-bab.png':'icon-jd.png',tag});return true}catch(e2){return false}}}
 function mealNoteBody(){const m=MEALS[TK];if(!m)return null;if(!m.items.length)return '';const n=mainDishes(m.items.map(x=>x.name));return (Array.isArray(n)&&n.length?n:m.items.map(x=>x.name)).slice(0,4).join(', ')}
 const PUSH_URL='https://uuuygwlotpqtmggaujtc.supabase.co/functions/v1/push',PUSH_PUB='BGzlwBzqMeul6402BUl0gWE-jRL6O_4QTHwvzDFifi0GDDfv-KnCgdEgyX6WX13MCsREYwB7PI-u_Fz0Z-7lG3U';
