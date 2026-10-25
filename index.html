@@ -865,6 +865,15 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
   .calbar .filters{order:5;flex-basis:100%}.calbar .lgd{order:4;margin-left:0}
   .rgpop{position:fixed!important;left:12px!important;right:12px!important;min-width:0!important;max-width:none!important;top:auto!important;margin-top:6px}
 }
+
+/* 시간표 수업 칩: 반 이름 부분을 반 색으로 채우고, 오른쪽(차시·상태)은 기존 상자 */
+.tc{padding:0 7px 0 0;border-left-width:1px;overflow:hidden}
+.tc .tc1{align-items:stretch;gap:6px}
+.tc .tc1 b{display:flex;align-items:center;background:var(--cc);color:#1A2440;padding:4px 9px 4px 8px;border-radius:0}
+.tc .tc1 small,.tc .tc1 i,.tc .tc1 .tcp,.tc .tc1 .tcs{align-self:center}
+.tc .tc2{padding:0 0 3px 8px}
+.tc.moved b,.tc.absent b{opacity:.85}
+@media (max-width:640px){.tc{padding:0 3px 0 0;border-left-width:1px}.tc .tc1{gap:3px}.tc .tc1 b{padding:3px 5px}.tc .tc2{padding:0 0 2px 5px}}
 </style>
 </head><body>
 <div class="app">
