@@ -1762,7 +1762,7 @@ function rowHtml(s,kind){const n=kind==='check'?SCH.nextN[s.c]:(s.n||SCH.nextN[s
   return `<div class="row ${kind} ${U.flash===s.c+'|'+s.n?'justdone':''}" style="--cc:${ccv(s.c)}"><span class="pp mono">${kind==='check'?md(s.date)+' ':''}${s.p}교시<small>${PT(s.p)}</small></span><span class="bar"></span>
   <span class="ls"><b>${esc(cn(s.c))}${kind==='absent'||kind==='moved'?'':` · ${n}차시`}</b><small>${sub}</small></span><span class="acts">${acts}</span></div>`}
 const excOf=s=>DB.exc.find(e=>e.id===(s.excId||s.movedIn));
-function moveDest(s){const e=excOf(s);return e?`${mdw(e.toDate)} ${e.toP}교시로 교환 · ${esc(e.note||e.reason)}`:''}
+function moveDest(s){const e=excOf(s);if(!e)return '';const x=(e.note||e.reason||'').trim();return `${mdw(e.toDate)} ${e.toP}교시로 교환${x&&x!=='수업 교환'?` · ${esc(x)}`:''}`}
 function achip(a){const d=dday(a.start),past=(a.end||a.start)<TK;const tg=a.classes==='all'?'':a.classes.map(cn).join(', ');
   const rng=a.type==='exam'&&(a.fromId||a.toId)?` · 범위 ${lessonIdx(DB,a.fromId)||'?'}~${lessonIdx(DB,a.toId)||'?'}차시`:a.lessonId?` · ${lessonIdx(DB,a.lessonId)}차시`:'';
   return `<button class="achip ${a.type} ${past?'past':''}" data-a="avedit" data-x="${a.id}"><b>${past?'지남':d<=0?'진행 중':'D-'+d}</b><span>${esc(a.title)} <span class="muted">${md(a.start)}${a.end&&a.end!==a.start?'~'+md(a.end):''}${tg?' · '+esc(tg):''}${rng}</span></span></button>`}
