@@ -857,11 +857,11 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
   .savechip{display:none!important}
 }
 
-.saym{display:none}
-@media (max-width:760px){
+.saym{display:none}.mobonly{display:none}.brk{display:none}
+@media (max-width:760px){.mobonly{display:inline-flex}.pconly{display:none!important}
+  .top.one h1{flex:1 1 0;min-width:0;order:1}.top.one .meta{order:2;margin-left:auto}.top.one .brk{display:block;order:3;flex-basis:100%;height:0}.top.one>:not(h1):not(.meta):not(.brk){order:4}
   .sayd{display:none}.saym{display:inline}.saym.syncgo{display:block;margin-top:12px}
   .syncgo p{margin:0 0 10px;font-size:13px;line-height:1.6;color:var(--fg)}
-  .top.one h1{flex-basis:100%}.top.one .meta{margin-left:0}
   .day{min-height:68px}.day .ev{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;font-size:9.5px;line-height:1.25;padding:0 2px;margin-top:1px;word-break:keep-all;text-align:left;border-radius:3px}
 }
 
@@ -1577,7 +1577,7 @@ function chipInfo(){
   return {c:'sync',t:`모든 기기에 저장됨${hm?' · '+hm:''}`,h:`PC·모바일에 연동되어 저장됐어요${hm?' ('+hm+')':''}\n${SYNC.sess.email||''}`}}
 const saveChip=()=>{const x=chipInfo();return `<button type="button" class="savechip ${x.c}" data-a="gosync" title="${esc(x.h)}"><i></i>${esc(x.t)}</button>`};
 function chipSync(){const x=chipInfo();document.querySelectorAll('.savechip').forEach(el=>{el.className='savechip '+x.c;el.title=x.h;el.innerHTML=`<i></i>${esc(x.t)}`})}
-function topbarC(t,lead,extra,cls=''){return `<div class="top topc ${cls}"><h1>${t}</h1>${lead}<div class="meta">${extra}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>${saveChip()}</div></div>`}
+function topbarC(t,lead,extra,cls=''){return `<div class="top topc ${cls}"><h1>${t}</h1>${cls.includes('one')?'<i class="brk"></i>':''}${lead}<div class="meta">${extra}<button class="btn sm tb ico" data-a="undo" ${UNDO.length?'':'disabled'} title="되돌리기" aria-label="되돌리기">↶</button><button class="btn sm tb ico" data-a="redo" ${REDO.length?'':'disabled'} title="다시 실행" aria-label="다시 실행">↷</button>${saveChip()}</div></div>`}
 function topbar(t,extra='',lead=''){return topbarC(t,lead,extra)}
 const ready=()=>({cls:DB.classes.length>0,les:DB.lessons.length>0,tt:ttFor(DB,TK).length>0||DB.tt.some(t=>t.slots.length),cal:!!DB.calOk});
 
@@ -2178,9 +2178,10 @@ function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupp
 const themeNow=()=>{const t=document.documentElement.dataset.theme;return t==='dark'||t==='light'?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')};
 function applyTheme(){try{const t=localStorage.getItem('jindokkae.theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}}
 function toggleTheme(){const n=themeNow()==='dark'?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('jindokkae.theme',n)}catch(e){}render()}
-function setTools(){const d=themeNow()==='dark';return `<div class="settools"><button class="btn" data-a="tut"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17.2v.3"/></svg> 도움말 보기</button><button class="btn" data-a="install">${ic('bolt',16)} 앱 설치</button><button class="btn themesw" data-a="theme" role="switch" aria-checked="${d}" aria-label="다크 모드"><span class="tk ${d?'on':''}"><i></i></span><span>${d?'다크':'라이트'} 모드</span></button></div>`}
+function setTools(){const d=themeNow()==='dark';return `<div class="settools"><button class="btn" data-a="tut"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17.2v.3"/></svg> 도움말 보기</button><button class="btn" data-a="install">${ic('bolt',16)} 앱 설치</button><button class="btn themesw pconly" data-a="theme" role="switch" aria-checked="${d}" aria-label="다크 모드"><span class="tk ${d?'on':''}"><i></i></span><span>${d?'다크':'라이트'} 모드</span></button><button class="btn mobonly" data-a="recapps"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z"/></svg> 추천 앱</button></div>`}
+const themeTop=()=>{const d=themeNow()==='dark';return `<button class="btn sm themesw mobonly" data-a="theme" role="switch" aria-checked="${d}" aria-label="다크 모드"><span class="tk ${d?'on':''}"><i></i></span><span>${d?'다크':'라이트'}</span></button>`}
 function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const nrec=DB.classes.reduce((a,c)=>a+Object.values(DB.records[c.id]||{}).filter(r=>r.done).length,0);const N=U.neis;
-  return topbar('설정')+setTools()+`<div class="grid datalay">
+  return topbar('설정',themeTop())+setTools()+`<div class="grid datalay">
   <div class="card" id="neisCard" style="grid-column:1/-1"><h2>학교 · NEIS 연결 <span class="sub">급식과 학사일정을 불러와요</span><span class="right">${NEIS.key&&NEIS.school?'<span class="tag ok">연결 정보 저장됨</span>':'<span class="tag gray">미설정</span>'}</span></h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
     <div class="stack" style="gap:10px">
