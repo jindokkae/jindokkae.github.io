@@ -755,6 +755,7 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 .lrow .tx .tp{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lrow .rt{min-height:0;border:0;background:none;padding:2px 8px 2px 4px;display:flex;align-items:center;gap:4px}
 .lrow .tog{width:30px;height:30px}
+.lrow .rt{justify-content:flex-end}.lrow .rt .tag.lg{min-width:74px;justify-content:center;box-sizing:border-box}.lrow .rt .tag.lg:last-child{margin-right:34px}
 .scs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
 .sc{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px 6px}
 .sc svg{color:var(--accent);margin-bottom:2px}
@@ -891,8 +892,8 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
   .lrow .tx .l1{gap:2px 6px}.lrow .tx .l1 b{font-size:14px}
   .lrow .tx .tp{font-size:13px;line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
   .lrow .tx .l1 .tag{font-size:10.5px;padding:1px 6px}
-  .lrow .rt{flex-direction:column;justify-content:center;gap:4px;padding:4px 8px 4px 2px}
-  .lrow .rt .tag.lg{font-size:11px;padding:2px 8px;white-space:nowrap}
+  .lrow .rt{flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:4px 8px 4px 2px;width:78px;box-sizing:border-box}
+  .lrow .rt .tag.lg,.lrow .rt .tag.lg:last-child{font-size:11px;padding:2px 8px;white-space:nowrap;min-width:0;margin-right:0}
 }
 </style>
 </head><body>
