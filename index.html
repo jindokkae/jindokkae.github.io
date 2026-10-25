@@ -1306,6 +1306,7 @@ const RECAPPS=[
 function openRecApps(){
   modal(`<h3>${ic('bolt',18)} 추천 앱</h3><p class="sub">진도깨와 함께 쓰면 좋은 수업·학교 업무용 웹앱이에요.</p>
   <div class="dlist">${RECAPPS.map(a=>`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>${a.n}</b><small style="white-space:normal;display:block;margin-top:2px">${a.d}</small></span><a class="btn sm pri" href="${a.u}" target="_blank" rel="noopener">열기 ↗</a></div>`).join('')}</div>
+  <p class="muted" style="margin:14px 0 0;font-size:12px;text-align:right">제작 : 이태형T(한백고)</p>
   <div class="acts"><button class="btn" data-a="close">닫기</button></div>`)}
 
 /* ================= 기기 연동 (선택) — 구글 로그인한 선생님만 PC·모바일 진도를 서버로 맞춘다 =================
