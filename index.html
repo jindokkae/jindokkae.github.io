@@ -377,6 +377,7 @@ table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;
 .tc1{display:flex;align-items:center;gap:5px;min-width:0}.tc1 b{font-size:14px}.tc1 small{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}.tc1 i{font-style:normal;font-size:10px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:0 4px}
 .tc .tci{display:inline-grid;color:var(--muted)}.tc .tcs{margin-left:auto;display:inline-grid}
 .tc .tcp{font-style:normal;font-size:10px;font-weight:700;color:var(--muted)}
+.tc1 .tcr{flex:1 1 0;min-width:0;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tc.absent .tcr{color:var(--bad)}.tc .tcs{flex:none}
 .tc2{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px}.tc2 em{font-style:normal;font-weight:700}
 .tc.done .tcs{color:var(--ok)}.tc.plan{background:color-mix(in srgb,var(--cc) 7%,var(--surface))}.tc.plan .tcs{color:var(--accent)}
 .tc.now{box-shadow:0 0 0 2px var(--accent)}
@@ -828,7 +829,7 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
   table.tt{min-width:0!important;border-spacing:2px}
   .tt th{font-size:11px;line-height:1.2}.tt th .mono{display:block;font-size:10px;font-weight:600}
   .tt td{padding:2px;height:38px}
-  .tc{padding:2px 3px 2px 5px;border-left-width:4px}.tc1{gap:2px}.tc1 b{font-size:13px}.tc1 small,.tc1 i,.tc2{display:none}.tc .tcs{margin-left:auto}
+  .tc{padding:2px 3px 2px 5px;border-left-width:4px}.tc1{gap:2px}.tc1 b{font-size:13px}.tc1 small,.tc1 i,.tc2,.tc1 .tcr{display:none}.tc .tcs{margin-left:auto}
   .tt-wrap{overflow-x:visible}
   .btn{min-height:40px}.btn.sm{min-height:36px}.nav button{font-size:11px}
 }
@@ -871,7 +872,7 @@ body.guiding .tour-hl{--gh:#ff7a00;outline:4px solid var(--gh)!important;outline
 .tc{padding:0 7px 0 0;border-left-width:1px;overflow:hidden}
 .tc .tc1{align-items:stretch;gap:6px}
 .tc .tc1 b{display:flex;align-items:center;background:var(--cc);color:#1A2440;padding:4px 9px 4px 8px;border-radius:0}
-.tc .tc1 small,.tc .tc1 i,.tc .tc1 .tcp,.tc .tc1 .tcs{align-self:center}
+.tc .tc1 small,.tc .tc1 i,.tc .tc1 .tcp,.tc .tc1 .tcs,.tc .tc1 .tcr{align-self:center}
 .tc .tc2{padding:0 0 3px 8px}
 .tc.moved b,.tc.absent b{opacity:.85}
 @media (max-width:640px){.tc{padding:0 3px 0 0;border-left-width:1px}.tc .tc1{gap:3px}.tc .tc1 b{padding:3px 5px}.tc .tc2{padding:0 0 2px 5px}}
@@ -1248,7 +1249,7 @@ const EXN={absence:'결손',move:'교환',extra:'보강'};
 const ttChip=(s,sb,pre,attr)=>{const nowS=s.status==='plan'&&isNow(DB,s.date,s.p);const dead=s.status==='absent'||s.status==='moved';
   const sub=s.status==='skipped'?'기록 없음':s.status==='absent'?(excOf(s)?.reason||'결손'):s.status==='moved'?'교환됨':'';
   return `<button class="tc ${sk(s)} ${s.nop?'nop':''} ${nowS?'now':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'진도 없음':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}${!dead&&s.n?' · '+esc(lname(s.n)):''}">
-    <span class="tc1">${pre?`<em class="tcp">${esc(pre)}</em>`:''}<b>${esc(cn(s.c))}</b>${s.extra?'<i>보강</i>':''}${!dead&&s.n&&s.status!=='check'&&s.status!=='skipped'?`<small>${s.n}차시</small>`:''}<span class="tcs">${sic(sk(s),13)}</span></span>${sub?`<span class="tc2">${esc(sub)}</span>`:''}</button>`};
+    <span class="tc1">${pre?`<em class="tcp">${esc(pre)}</em>`:''}<b>${esc(cn(s.c))}</b>${s.extra?'<i>보강</i>':''}${!dead&&s.n&&s.status!=='check'&&s.status!=='skipped'?`<small>${s.n}차시</small>`:''}${sub?`<span class="tcr">${esc(sub)}</span>`:''}<span class="tcs">${sic(sk(s),13)}</span></span></button>`};
 
 /* ---- 렌더 ---- */
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
