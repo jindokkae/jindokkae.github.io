@@ -1367,7 +1367,7 @@ async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;chipS
       else if(!SYNC.dirty){if(syncApply(row,false))toast(`${row.device||'다른 기기'}에서 저장한 최신 진도를 불러왔어요.`)}
       else if(SYNC.hold!==row.updated_at){SYNC.hold=row.updated_at;openSyncAsk(row,'conflict')}}
     else if(SYNC.dirty){const r=await syncPush();changed=true;if(r==='conflict')return syncTick('retry')}
-    else{SYNC.last=new Date().toISOString();syncSave()}
+    else{/* 바뀐 게 없으면 시각을 갱신하지 않는다: '저장 시각'은 실제로 올리거나 받은 때만 */}
     SYNC.err=SYNC.err&&SYNC.err.startsWith('로그인')?SYNC.err:''}
   catch(e){if(e.message!=='expired')SYNC.err=navigator.onLine===false?'오프라인이에요. 연결되면 자동으로 맞춰요.':'서버와 연결하지 못했어요. 잠시 뒤 다시 시도해요.';
     if(e.status===404||(e.body&&/relation .* does not exist|PGRST205/.test(e.body)))SYNC.err='서버 준비가 아직 안 됐어요. 관리자에게 알려 주세요.'}
