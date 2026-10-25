@@ -880,6 +880,20 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 @media (max-width:640px){.tc{padding:0 3px 0 0;border-left-width:1px}.tc .tc1{gap:3px}.tc .tc1 b{padding:3px 5px}.tc .tc2{padding:0 0 2px 5px}}
 
 .basisline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:10px;padding:7px 10px}
+/* 모바일: 홈 '오늘의 수업' 줄 — 시간·상태가 넘치지 않게 */
+@media (max-width:760px){
+  .lrow{grid-template-columns:auto minmax(0,1fr) auto}
+  .lrow .tm{padding:4px 6px 4px 9px;min-width:62px;align-items:flex-start}
+  .lrow .tm b{font-size:13px;white-space:nowrap}
+  .lrow .tm .mono{font-size:10.5px;letter-spacing:-.2px;white-space:nowrap}
+  .lrow .bd{padding:6px 6px;gap:6px}
+  .lrow .sq{display:none}
+  .lrow .tx .l1{gap:2px 6px}.lrow .tx .l1 b{font-size:14px}
+  .lrow .tx .tp{font-size:13px;line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
+  .lrow .tx .l1 .tag{font-size:10.5px;padding:1px 6px}
+  .lrow .rt{flex-direction:column;justify-content:center;gap:4px;padding:4px 8px 4px 2px}
+  .lrow .rt .tag.lg{font-size:11px;padding:2px 8px;white-space:nowrap}
+}
 </style>
 </head><body>
 <div class="app">
