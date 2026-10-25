@@ -18,7 +18,7 @@
   --fg:#1A2440; --muted:#5D6984; --accent:#2D66E0; --accent-ink:#FFFFFF; --accent-soft:#E1EAFC;
   --fur:#D98E3E; --ok:#1C9466; --ok-soft:#DDF3EA; --warn:#B86E0C; --warn-soft:#FCEFD9; --bad:#CF4339; --bad-soft:#FBE3E1;
   --c1:#8DA4EA; --c2:#F08A4B; --c3:#F2C230; --c4:#7ED1B8; --c5:#C59BE8; --c6:#F28CA8; --c7:#9BC96A; --c8:#A6ADBA; --c9:#5FC4E0; --c10:#C9A27A;
-  --p1:#4C7DF0; --p2:#E8833A; --p3:#2FA874; --p4:#9B6BE0; --p5:#E2588F; --p6:#1FA2B8;
+  --p1:#4C7DF0; --p2:#E8833A; --p3:#2FA874; --p4:#9B6BE0; --p5:#E2588F; --p6:#1FA2B8; --p7:#C9A21F; --p8:#8A6A4F;
    --sheet:#FFF8DC; --zebra:#F7F9FD; --hover:#EEF3FF; --exam:#2D66E0;
   --f-body:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   --f-display:var(--f-body);
@@ -1774,7 +1774,7 @@ const lessonInfo=n=>{const les=L(n);return `<div class="psec common"><h4>수업 
      <div class="field"><span>차시 색 <span class="lgd"><button type="button" class="lgi tipb" aria-label="차시 색 설명">?</button><div class="lgbox tipbox" role="tooltip" style="left:0;right:auto;font-weight:400">차시에 정한 색은 진도표 위쪽 <b>범위</b> 칩과 연동돼요.<br>같은 색의 차시만 모아 볼 수 있고, <b>자동</b>은 정기시험 범위의 색을 따라가요.</div></span> <small>(진도표 차시 번호 칸에 표시돼요)</small></span><div class="swatches lcol col2">
        <div class="srow"><button type="button" class="pill" data-a="lcol" data-x="${n}|a" aria-pressed="${les.col==null}" title="범위(정기시험) 색을 따라가요">자동</button>
        <button type="button" class="pill" data-a="lcol" data-x="${n}|0" aria-pressed="${les.col===0}" title="색을 표시하지 않아요">없음</button></div>
-       <div class="srow">${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="lcol" data-x="${n}|${k}" style="--sw:var(--p${k})" aria-pressed="${les.col===k}" aria-label="색 ${k}"></button>`).join('')}</div></div></div></div>`};
+       <div class="srow">${colBas().map(k=>`<button type="button" data-a="lcol" data-x="${n}|${k}" style="--sw:var(--p${k})" aria-pressed="${les.col===k}" aria-label="색 ${k}" title="${k===1?'1차 정기시험 색':k===2?'2차 정기시험 색':'단원/파트 색'}"></button>`).join('')}</div></div></div></div>`};
 function panelHtml(){
   if(!U.selCell&&U.selRow&&L(U.selRow)){const n=U.selRow;return `<aside class="card panel" aria-label="수업 정보"><div class="ph"><div><h3>${n}차시 수업 정보</h3></div><div class="phb"><button class="btn sm" data-a="rowmenu" data-x="${n}" title="이 차시 위·아래에 추가, 위치 이동, 삭제, 여러 반 함께 기록">차시 관리</button><button class="btn sm x" data-a="closep">닫기</button></div></div>${lessonInfo(n)}<div class="psec"><p class="muted" style="margin:0;font-size:12px">반별 완료·날짜·메모는 표에서 반 칸을 눌러 기록해요.</p></div></aside>`}
   if(!U.selCell)return '';
@@ -1812,22 +1812,26 @@ function clsDays(id){const at=TK<DB.term.start?DB.term.start:TK;let sl=ttFor(DB,
 /* ---- 범위별 보기: 정기시험을 기준으로 차시를 나눈다 ----
    끝 차시 = 시험 시작일 전에 수업이 예정·완료된 가장 뒤 차시(대상 학급 중 최대), 시작 차시 = 앞 시험의 끝 다음 차시
    (시험 범위는 직접 입력하지 않아요. 자동 색은 이 계산을, 차시별로 정한 색은 그 색을 따라가요) */
+/* 색 팔레트: 1(파랑)=1차 정기시험, 2(주황)=2차 정기시험 고정, 3~8=단원/파트 */
+const EXC=[1,2],UNC=[3,4,5,6,7,8];
+const colBas=()=>DB.rgBasis==='unit'?UNC:EXC;
+const colOkB=c=>c>0&&colBas().includes(c);
 function periodList(){const exs=DB.assess.filter(a=>a.type==='exam').slice().sort((a,b)=>a.start<b.start?-1:a.start>b.start?1:0);
   const N=DB.lessons.length;let prev=0;
   return exs.map(a=>{let to=0;const ids=targets(DB,a);
     ids.forEach(c=>{for(const x of (SCH.cls[c]||[])){if(x.n&&x.date<a.start&&x.n>to)to=x.n}})
     to=Math.min(to,N);const from=prev+1;
     if(to>prev)prev=to;
-    return {a,from,to,empty:to<from}}).map((x,i)=>({...x,k:i%6+1,col:`var(--p${i%6+1})`}))}
+    return {a,from,to,empty:to<from}}).map((x,i)=>({...x,k:i%2+1,col:`var(--p${i%2+1})`}))}
 function rangeList(){const idx=id=>id?lessonIdx(DB,id):0;
   const out=periodList().map(q=>({id:q.a.id,kind:'exam',title:q.a.title,from:q.from,to:q.to,empty:q.empty,k:q.k,col:q.col,a:q.a,date:q.a.start,end:q.a.end||q.a.start,cls:targets(DB,q.a)}));
   let ci=out.length;const RG=(DB.ranges||[]).map(r=>{let f=idx(r.fromId)||idx(r.toId),t=idx(r.toId)||f;if(f>t)[f,t]=[t,f];
-    const ms=new Set();for(let n=f;n&&n<=t;n++){const l=DB.lessons[n-1];if(l&&l.col>0)ms.add(l.col)};
+    const ms=new Set();for(let n=f;n&&n<=t;n++){const l=DB.lessons[n-1];if(l&&UNC.includes(l.col))ms.add(l.col)};
     /* 차시에 직접 정한 색이 하나로 같으면 칩도 그 색(차시 색 = 칩 색). 섞여 있으면 범위 자체 색 */
-    return {r,f,t,want:ms.size===1?[...ms][0]:r.col>0?r.col:0,k:0}});
+    return {r,f,t,want:ms.size===1?[...ms][0]:UNC.includes(r.col)?r.col:0,k:0}});
   /* 단원/파트끼리는 색이 겹치지 않게: 원하는 색을 앞에서부터 배정하고, 겹치거나 자동이면 비어 있는 색을 쓴다 */
   const uu=new Set();RG.filter(x=>x.r.kind==='unit').forEach(x=>{if(x.want&&!uu.has(x.want)){x.k=x.want;uu.add(x.want)}});
-  RG.filter(x=>x.r.kind==='unit'&&!x.k).forEach((x,i)=>{let k=[1,2,3,4,5,6].find(c=>!uu.has(c));if(!k)k=i%6+1;x.k=k;uu.add(k)});
+  RG.filter(x=>x.r.kind==='unit'&&!x.k).forEach((x,i)=>{let k=UNC.find(c=>!uu.has(c));if(!k)k=UNC[i%6];x.k=k;uu.add(k)});
   RG.forEach(({r,f,t,want,k})=>{if(r.kind!=='unit')k=want||(ci++%6)+1;
     out.push({id:r.id,kind:r.kind,title:r.title,from:f,to:t,k,col:`var(--p${k})`,r,date:r.date||'',end:r.date||'',cls:targets(DB,r)})});
   DB.assess.filter(a=>a.type==='task').sort((a,b)=>a.start<b.start?-1:1).forEach(a=>{let f=idx(a.fromId)||idx(a.lessonId),t=idx(a.toId)||f;if(f>t)[f,t]=[t,f];
@@ -1860,9 +1864,9 @@ function vSheet(){
   const BAS=DB.rgBasis==='unit'?'unit':'exam',pcol={};pl.forEach(q=>{if(BAS==='exam'&&q.kind==='exam'&&!q.empty)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if(BAS==='unit'&&q.kind==='unit'&&q.from)for(let k=q.from;k<=q.to;k++)if(!pcol[k])pcol[k]={c:q.col,t:q.title,k:q.k,id:q.id}});
   pl.forEach(q=>{if(q.kind==='task'&&q.from)for(let k=q.from;k<=q.to;k++)pcol[k]={c:'var(--warn)',t:q.title,k:0,id:q.id}});
-  const colOf=(les,n)=>les.col===0?null:les.col>0?{c:`var(--p${les.col})`,t:'',k:les.col}:(pcol[n]||null);
+  const colOf=(les,n)=>les.col===0?null:colOkB(les.col)?{c:`var(--p${les.col})`,t:'',k:les.col}:(pcol[n]||null);
   /* 범위 칩을 누르면 그 범위의 차시만 보여준다. 시험 범위는 차시 색(차시별로 정한 색 > 자동 색) 기준, 나머지는 차시 번호 기준 */
-  const inP=n=>{if(!cur)return true;if(cur.kind==='exam'&&BAS!=='exam')return !cur.empty0&&cur.from&&n>=cur.from&&n<=cur.to;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to);const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(les.col>0)return les.col===cur.k;return pcol[n]?.id===cur.id};
+  const inP=n=>{if(!cur)return true;if(cur.kind==='exam'&&BAS!=='exam')return !cur.empty0&&cur.from&&n>=cur.from&&n<=cur.to;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to);const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(colOkB(les.col))return les.col===cur.k;return pcol[n]?.id===cur.id};
   if(cur)cur.empty=cur.kind==='exam'&&BAS==='exam'?!DB.lessons.some((l,i)=>inP(i+1)):(!cur.from||cur.from>DB.lessons.length);
   const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button><span class="basis" title="진도표 차시 색은 정기시험 또는 단원/파트 중 하나만 기준으로 써요"><span class="muted">색 기준</span><span class="seg" role="group" aria-label="색 기준"><button data-a="rgbasis" data-x="unit" aria-pressed="${BAS==='unit'}">단원/파트</button><button data-a="rgbasis" data-x="exam" aria-pressed="${BAS==='exam'}">정기시험</button></span></span></div>
     ${cur&&cur.empty?`<div class="pinfo"><span class="warnbox">${cur.kind==='exam'?'이 시험 범위에 해당하는 차시가 아직 없어요. 차시 ⋯ 수업 정보에서 색을 정하거나 시간표를 확인해 보세요.':'이 범위의 차시가 없어요. 범위를 편집해서 차시를 다시 골라 주세요.'}</span></div>`:''}`;
@@ -1885,7 +1889,7 @@ function vSheet(){
   const legendH=`<span class="lgd"><button type="button" class="btn sm lgb" aria-label="범례 보기"><span class="lgi">?</span> 범례</button><div class="lgbox" role="tooltip"><span><span class="tog" style="width:22px;height:22px">${paw(16)}</span>아직 안 함 (누르면 완료)</span><span><span class="tog doing" style="width:22px;height:22px">${paw(16)}</span>진행 중 (오른쪽 '실제 수업 기록'에서 지정)</span><span><span class="tog on" style="width:22px;height:22px">${paw(16)}</span>수업함 (날짜·요일)</span><span><span class="nx mono">10/23</span>파란 글씨 = 다음 차시 예정일</span><span><span class="pl mono">10/27</span>시간표로 계산한 예정일</span><span><span style="flex:none;width:5px;height:18px;border-radius:3px;background:linear-gradient(var(--p1) 33%,var(--p2) 33% 66%,var(--p3) 66%)"></span>범위(시험)별 색 = 차시에 정한 색</span><span style="color:var(--bad)">${sic('check',11)} 일정 충돌</span></div></span>`;
   const tools=legendH;
   U.selRows.forEach(id=>{if(!DB.lessons.some(l=>l.id===id))U.selRows.delete(id)});
-  const bulk=U.selRows.size&&U.sheetMode==='all'?`<div class="bulkbar"><b>${U.selRows.size}개 차시 선택됨</b><span class="muted">색</span><span class="swatches lcol"><button type="button" class="pill" data-a="bcol" data-x="a">자동</button><button type="button" class="pill" data-a="bcol" data-x="0">없음</button>${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="bcol" data-x="${k}" style="--sw:var(--p${k})" aria-label="색 ${k}로 변경"></button>`).join('')}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm pri" data-a="rgsel" title="선택한 차시를 하나의 범위(단원·수행평가 등)로 묶어요">범위로 만들기</button><button class="btn sm bad" data-a="bdelask">삭제</button><button class="btn sm" data-a="bclear">선택 해제</button></span></div>`:'';
+  const bulk=U.selRows.size&&U.sheetMode==='all'?`<div class="bulkbar"><b>${U.selRows.size}개 차시 선택됨</b><span class="muted">색</span><span class="swatches lcol"><button type="button" class="pill" data-a="bcol" data-x="a">자동</button><button type="button" class="pill" data-a="bcol" data-x="0">없음</button>${colBas().map(k=>`<button type="button" data-a="bcol" data-x="${k}" style="--sw:var(--p${k})" aria-label="색 ${k}로 변경"></button>`).join('')}</span><span style="margin-left:auto;display:flex;gap:6px"><button class="btn sm pri" data-a="rgsel" title="선택한 차시를 하나의 범위(단원·수행평가 등)로 묶어요">범위로 만들기</button><button class="btn sm bad" data-a="bdelask">삭제</button><button class="btn sm" data-a="bclear">선택 해제</button></span></div>`:'';
   return topbar('진도표',mode+tools)+subjTabs()+strip+bulk+`
   <div class="sheetlay ${PH?'withp':''}"><div style="min-width:0">${body}</div>${PH}</div>`;
 }
@@ -2345,7 +2349,7 @@ function drawRange(){const r=U.rg,isNew=!r.id,t=r.kind==='task',all=r.classes===
   ${ex?`<input type="hidden" id="rgTitle" value="${esc(r.title)}">`:`<label class="field">${t?'수행평가 이름':'이름'}<input id="rgTitle" class="inp" value="${esc(r.title)}" placeholder="${t?'예: 독립운동가 카드뉴스 만들기':'예: 1단원 선사 문화'}"></label>`}
   ${ex?`<div class="inl"><label class="field">시작일<input type="date" id="rgStart" value="${r.start||''}"></label><label class="field">끝나는 날<input type="date" id="rgEnd" value="${r.end||r.start||''}"></label></div>`:`<div class="inl"><label class="field">시작 차시<select id="rgFrom" class="inp">${lopt(r.fromId)}</select></label><label class="field">끝 차시<select id="rgTo" class="inp">${lopt(r.toId||r.fromId)}</select></label></div>
   <p class="muted" style="font-size:12px;margin:-4px 0 0">${DB.lessons.length?(cnt===1?`${f}차시 한 번에 끝나는 범위예요.`:`${Math.min(f,to)}~${Math.max(f,to)}차시, 모두 ${cnt}차시에 걸쳐요.`):'진도표에 차시가 없어요. 먼저 차시를 만들어 주세요.'}</p>`}
-  ${t||ex?'':`<div class="field"><span>색 <span class="muted" style="font-weight:400">(다른 단원/파트가 쓰는 색은 고를 수 없어요)</span></span><div class="swatches lcol col2"><div class="srow"><button type="button" class="pill" data-a="rgcol" data-x="0" aria-pressed="${!r.col}">자동</button>${[1,2,3,4,5,6].map(k=>`<button type="button" data-a="rgcol" data-x="${k}" style="--sw:var(--p${k});${usedC.has(k)?'opacity:.25;cursor:not-allowed':''}" aria-pressed="${r.col===k}" aria-label="색 ${k}${usedC.has(k)?' (사용 중)':''}" ${usedC.has(k)?'disabled':''}></button>`).join('')}</div></div></div>`}
+  ${t||ex?'':`<div class="field"><span>색 <span class="muted" style="font-weight:400">(다른 단원/파트가 쓰는 색은 고를 수 없어요)</span></span><div class="swatches lcol col2"><div class="srow"><button type="button" class="pill" data-a="rgcol" data-x="0" aria-pressed="${!r.col}">자동</button>${UNC.map(k=>`<button type="button" data-a="rgcol" data-x="${k}" style="--sw:var(--p${k});${usedC.has(k)?'opacity:.25;cursor:not-allowed':''}" aria-pressed="${r.col===k}" aria-label="색 ${k}${usedC.has(k)?' (사용 중)':''}" ${usedC.has(k)?'disabled':''}></button>`).join('')}</div></div></div>`}
   <label class="field">메모 (선택)<input id="rgNote" class="inp" value="${esc(r.note||'')}" placeholder="${t?'예: 채점 기준표 배부':ex?'예: 서술형 30%':''}"></label>
   ${ex?`<label class="chk"><input type="checkbox" id="rgNo" ${r.noClass?'checked':''}><span>시험 기간에는 수업 없음 <span class="muted">(예정 진도에서 빼고 계산해요)</span></span></label>`:''}
   <div class="acts">${isNew?'':`<button class="btn bad" data-a="rgdel" data-x="${r.id}" style="margin-right:auto">삭제</button>`}<button class="btn" data-a="close">취소</button><button class="btn pri" data-a="rgsave">${isNew?'추가':'저장'}</button></div>`)}
