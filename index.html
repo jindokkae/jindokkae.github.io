@@ -437,7 +437,7 @@ table.mtt{border-spacing:3px;min-width:240px}
 .day.today .dn{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;align-self:flex-start}
 .day.hol .dn{color:var(--bad)}
 .ev{font-size:10.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:4px;padding:0 4px;max-width:100%}
-.ev.hol{color:var(--bad)} .ev.exam{background:var(--accent);color:var(--accent-ink);font-weight:700} .ev.task{background:var(--warn-soft);color:var(--warn);font-weight:700} .ev.event{background:var(--ok-soft);color:var(--ok)}
+.ev.hol{color:var(--bad)} .ev.exam{background:var(--accent);color:var(--accent-ink);font-weight:700} .ev.task{background:var(--warn-soft);color:var(--warn);font-weight:700} .ev.event{background:var(--ok-soft);color:var(--ok)}.ev.etc{background:var(--surface-2);color:var(--muted);font-weight:600}
 .pips{display:flex;flex-wrap:wrap;gap:2px}
 .pip{font-size:10px;font-weight:700;border-radius:4px;padding:0 4px;line-height:15px;background:var(--cc);color:#1A2440;border:1px solid var(--cc)}
 .pip.plan{background:transparent;border:1px dashed var(--cc);color:var(--fg)}
@@ -2056,7 +2056,7 @@ function calBody(){const SRc=srInfo();
   const k=U.sel,evs=DD[k].evs,ss=DD[k].ss.sort((a,b)=>a.s.p-b.s.p),tds=DB.todos.map((t,i)=>({...t,i})).filter(t=>t.date===k);
   const actSubs=[...new Map(ss.filter(x=>['plan','check','done'].includes(x.s.status)).map(x=>[x.sb.id,x.sb])).values()];
   const blk=subs.length&&subs.every(sb=>dayBlock(sb.db,k))?dayBlock(subs[0].db,k):null;
-  const KIND={hol:'휴업·휴일',exam:'정기시험',task:'수행평가',event:'학교 행사'};
+  const KIND={hol:'휴업·휴일',exam:'정기시험',task:'수행평가',event:'학교 행사',etc:'기타'};
   const det=`<div class="card"><h2>${mdw(k)} <span class="sub">${k<TK?'지난 날':k===TK?'오늘':dday(k)+'일 뒤'}</span>${actSubs.length?`<span class="right" style="display:flex;gap:6px;flex-wrap:wrap">${actSubs.map(sb=>`<button class="btn sm bad" data-sub="${sb.id}" data-a="absday" data-x="${k}">${multi?esc(subPre(sb,subs))+' ':''}이날 수업 결손 처리</button>`).join('')}</span>`:''}</h2>
     ${evs.length?`<div class="dlist" style="margin-bottom:6px">${evs.map(({e,sid})=>`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="ev ${e.kind}">${KIND[e.kind]}</span><span>${esc(e.label)}</span>${e.src?`<span class="muted" style="font-size:11px">${esc(e.src)}</span>`:''}${e.assessId?`<button class="btn sm" style="margin-left:auto" data-sub="${sid}" data-a="avedit" data-x="${e.assessId}">수정</button>`:e.id?`<button class="btn sm bad" style="margin-left:auto" data-sub="${sid}" data-a="evdel" data-x="${e.id}">삭제</button>`:''}</div>`).join('')}</div>`:''}
     ${blk&&blk!=='주말'?`<p class="note">${esc(blk)}라서 수업이 없어요.</p>`:''}
@@ -2067,9 +2067,9 @@ function calBody(){const SRc=srInfo();
     <ul class="todo">${tds.map(t=>todoLi(STORE.cur,t.i,t,'ctd')).join('')||'<li class="tdempty">이날 할 일이 없어요</li>'}</ul>
     <form id="calTodo" class="tdform"><input id="ctIn" class="inp" placeholder="할 일 · 메모를 적고 Enter" aria-label="이날 할 일 · 메모 추가" autocomplete="off"><button class="btn pri">추가</button></form>
     <div class="sect">일정 추가</div>
-    <form id="evForm" class="evf"><div class="inl"><label class="field" style="flex:0 0 130px">종류<select id="evK"><option value="event">학교 행사</option><option value="hol">휴업일 (수업 없음)</option><option value="task">수행평가</option><option value="exam">정기시험</option></select></label><label class="field">제목<input id="evT" placeholder="예: 체육대회"></label></div>
-      <div class="inl"><label class="field">시작일<input type="date" id="evS" value="${k}"></label><label class="field">끝나는 날 <span class="muted">(선택)</span><input type="date" id="evE" value="" min="${k}"></label><button class="btn sm pri" style="align-self:flex-end">추가</button></div>
-      <p class="muted" style="font-size:12px;margin:2px 0 0">수행평가·정기시험은 다음 화면에서 대상 학급과 세부 내용을 정해요.</p></form></div></div>`;
+    <form id="evForm" class="evf"><div class="inl"><label class="field" style="flex:0 0 130px">종류<select id="evK"><option value="event">학교 행사</option><option value="hol">휴업일 (수업 없음)</option><option value="exam">정기시험</option><option value="etc">기타</option></select></label><label class="field">제목<input id="evT" placeholder="예: 체육대회"></label></div>
+      <div class="inl"><label class="field">시작일<input type="date" id="evS" value="${k}"></label><label class="field"><span>끝나는 날 <span class="muted">(선택)</span></span><input type="date" id="evE" value="" min="${k}"></label><button class="btn sm pri" style="align-self:flex-end">추가</button></div>
+      <p class="muted" style="font-size:12px;margin:2px 0 0">정기시험은 다음 화면에서 대상 학급과 세부 내용을 정해요.</p></form></div></div>`;
   return `<div class="grid callay"><div class="card">
    <div class="calbar"><span class="seg" role="group" aria-label="보기"><button data-a="calm" data-x="month" aria-pressed="${U.calMode==='month'}">월간</button><button data-a="calm" data-x="week" aria-pressed="${U.calMode==='week'}">주간</button></span>
    <button class="btn sm" data-a="mon" data-x="-1" aria-label="이전" ${(U.calMode==='month'?(+U.month.y*12+U.month.m<=SRc.a):(U.week<=SRc.mlo))?'disabled':''}>‹</button><span class="ttl mono">${title}</span><button class="btn sm" data-a="mon" data-x="1" aria-label="다음" ${(U.calMode==='month'?(+U.month.y*12+U.month.m>=SRc.b):(U.week>=SRc.mhi))?'disabled':''}>›</button><button class="btn sm" data-a="today" ${TK<SRc.lo||TK>SRc.hi?'disabled':''}>오늘</button><button class="btn sm" data-a="calrev" title="모의고사·시험·휴업일로 빠지는 수업 확인">학사일정 확인</button>
@@ -2773,8 +2773,8 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if(!v){toast('제목을 적어 주세요.');$('#evT').focus();return}
     const multi=en>st,act=[];for(let d=st;d<=en;d=addK(d,1))(SCH.by[d]||[]).forEach(x=>{if(['plan','check','done'].includes(x.status))act.push(x)});
     mutate(`일정 추가: ${multi?md(st)+'~'+md(en):md(st)} ${v}`,db=>C.addEvent(db,{s:st,e:en,label:v,kind,block:kind==='hol',src:'직접'}),{msg:kind==='hol'&&act.length?`휴업일로 추가해서 수업 ${act.length}개를 빼고 다시 계산했어요.`:'일정을 추가했어요.'});
-    if(kind==='event'&&act.length&&!multi)openAbsence(st,[],'교내 일정',`'${esc(v)}' 일정을 추가했어요. 이 일정 때문에 빠지는 수업이 있으면 골라 주세요. 고르지 않고 닫으면 수업은 그대로예요.`)
-    else if(kind==='event'&&multi)toast('여러 날 일정이에요. 빠지는 수업은 시간표나 날짜별 "이날 수업 결손 처리"로 정해 주세요.')}
+    if((kind==='event'||kind==='etc')&&act.length&&!multi)openAbsence(st,[],'교내 일정',`'${esc(v)}' 일정을 추가했어요. 이 일정 때문에 빠지는 수업이 있으면 골라 주세요. 고르지 않고 닫으면 수업은 그대로예요.`)
+    else if((kind==='event'||kind==='etc')&&multi)toast('여러 날 일정이에요. 빠지는 수업은 시간표나 날짜별 "이날 수업 결손 처리"로 정해 주세요.')}
   if(id==='memoForm'){const [c,n]=$('#mKey').value.split('|');const v=rec(DB,c,+n),memo=$('#mMemo').value.trim();
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
