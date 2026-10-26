@@ -293,6 +293,8 @@ textarea.ie{min-height:28px}
 .cell .mm{display:block;font-size:11px;color:var(--warn);line-height:1.3;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px}
 .cell .cf{position:absolute;top:3px;right:14px;color:var(--bad)}
 .cell .fold{position:absolute;top:0;right:0;width:15px;height:15px;background:linear-gradient(225deg,var(--warn) 50%,transparent 50%);cursor:help}
+.prtchk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fg);padding:7px 10px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--surface)}.prtchk input{width:17px;height:17px;margin:0;accent-color:var(--accent);flex:none}.prtchk:has(input:checked){border-color:color-mix(in srgb,var(--accent) 45%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.cell .prt{position:absolute;left:3px;bottom:2px;color:var(--accent);line-height:0;opacity:.85}
 .cell .fold::after{content:attr(data-tip);display:none;position:absolute;top:15px;right:0;z-index:30;width:max-content;max-width:220px;padding:6px 9px;border-radius:8px;background:var(--fg);color:var(--surface);font-size:12px;font-weight:500;line-height:1.4;white-space:pre-wrap;text-align:left;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .cell .fold:hover::after{display:block}
 .cell.sel{box-shadow:inset 0 0 0 2px var(--accent);background:var(--accent-soft)!important}
@@ -1080,8 +1082,8 @@ function examReach(db,S,a,c){const to=a.toId?lessonIdx(db,a.toId):0;if(!to)retur
 
 /* ---- 변경 동작 (db를 직접 바꾼다. 화면 쪽에서 실행 취소용 스냅숏을 남긴다) ---- */
 const C={
-  complete(db,c,n,date){const r=rec(db,c,n)||{};setRec(db,c,n,{done:true,date,memo:r.memo||'',actual:r.actual||''})},
-  uncomplete(db,c,n){const r=rec(db,c,n);if(!r)return;if(r.memo||r.actual)setRec(db,c,n,{...r,done:false,date:''});else setRec(db,c,n,null)},
+  complete(db,c,n,date){const r=rec(db,c,n)||{};setRec(db,c,n,{done:true,date,memo:r.memo||'',actual:r.actual||'',...(r.print?{print:true}:{})})},
+  uncomplete(db,c,n){const r=rec(db,c,n);if(!r)return;if(r.memo||r.actual||r.print)setRec(db,c,n,{...r,done:false,date:''});else setRec(db,c,n,null)},
   setRecord(db,c,n,val){setRec(db,c,n,val)},
   absence(db,list,reason,note,opt={}){
     list.forEach(s=>{if(opt.revertDone&&s.status==='done')C.uncomplete(db,s.c,s.n);
@@ -1447,7 +1449,7 @@ function demoStore(){
   const cnt={[c1]:0,[c2]:0},lim={[c1]:5,[c2]:4};
   for(let k=db.term.start;k<TK;k=addK(k,1)){if(dayBlock(db,k))continue;const dw=D(k).getDay();
     slots.filter(x=>x.d===dw).sort((a,b)=>a.p-b.p).forEach(x=>{if(cnt[x.c]<lim[x.c]){cnt[x.c]++;C.complete(db,x.c,cnt[x.c],k)}})}
-  const r=db.records[c1][db.lessons[3].id];if(r)r.memo='프린트 3장 부족 · 다음 시간에 배부';
+  const r=db.records[c1][db.lessons[3].id];if(r){r.print=true;r.memo='3장 부족 · 다음 시간에 마저 배부'}
   const w=weekdays(addK(TK,14),addK(TK,16));
   if(w)C.saveAssess(db,{type:'exam',title:'1차 정기시험',start:w.start,end:w.end,classes:'all',noClass:true,fromId:null,toId:null,lessonId:null,note:''});
   const sb={id:'demo',name:`${yr} ${sem}학기 2학년 한국사`,subj:'한국사',year:yr,sem,grade:'2',db};ensureSub(sb);
@@ -1775,14 +1777,14 @@ const mealList=m=>!m.items.length?'<p class="muted" style="margin:0">급식이 �
 /* ---------- 진도표 ---------- */
 const suggestDate=(c,n)=>suggestDateDb(DB,c,n);
 function fillDraft(c,n,others=[],keep=false){const v=rec(DB,c,n);const old=keep&&U.draft;U.selCell={c,n};U.selRow=null;
-  U.draft={done:!!v?.done,doing:!!v?.doing&&!v?.done,date:v?.done?v.date:(old?.date||suggestDate(c,n)),memo:v?.memo||'',actual:v?.actual||'',others:new Set(others)}}
+  U.draft={done:!!v?.done,doing:!!v?.doing&&!v?.done,date:v?.done?v.date:(old?.date||suggestDate(c,n)),memo:v?.memo||'',actual:v?.actual||'',print:!!v?.print,others:new Set(others)}}
 function refreshDraft(){if(U.selCell&&U.draft){if(!DB.classes.some(c=>c.id===U.selCell.c)||!L(U.selCell.n)){U.selCell=null;U.draft=null;return}fillDraft(U.selCell.c,U.selCell.n,[...U.draft.others],true)}}
 const stTxt=v=>v?.done?`완료 ${mdw(v.date)}`:v?.doing?'진행 중':'미진행';
 function draftItems(){const {c,n}=U.selCell,d=U.draft,out=[];
   [c,...d.others].forEach(id=>{const cur=rec(DB,id,n)||null;const main=id===c;
-    const memo=main?d.memo.trim():(cur?.memo||''),actual=main?d.actual.trim():(cur?.actual||'');
-    const val=d.done?{done:true,date:d.date,memo,actual}:((d.doing||memo||actual)?{done:false,doing:!!d.doing,date:'',memo,actual}:null);
-    const norm=v=>v?JSON.stringify([!!v.done,!v.done&&!!v.doing,v.done?v.date:'',v.memo||'',v.actual||'']):'null';
+    const memo=main?d.memo.trim():(cur?.memo||''),actual=main?d.actual.trim():(cur?.actual||''),print=main?!!d.print:!!cur?.print,pr=print?{print:true}:{};
+    const val=d.done?{done:true,date:d.date,memo,actual,...pr}:((d.doing||memo||actual||print)?{done:false,doing:!!d.doing,date:'',memo,actual,...pr}:null);
+    const norm=v=>v?JSON.stringify([!!v.done,!v.done&&!!v.doing,v.done?v.date:'',v.memo||'',v.actual||'',!!v.print]):'null';
     if(norm(cur)!==norm(val))out.push({c:id,n,val,cur})});return out}
 let _ct=null;
 function schedCommit(){clearTimeout(_ct);_ct=setTimeout(()=>commitDraft(true),500)}
@@ -1792,7 +1794,7 @@ function commitDraft(text){clearTimeout(_ct);_ct=null;if(!U.selCell||!U.draft)re
     text?{refs:it.map(i=>lref(i.c,i.n)),silent:true,norender:true,co:'rec|'+mc+'|'+mn}:{refs:it.map(i=>lref(i.c,i.n)),paw:U.draft.done,flash:mc+'|'+mn});
   if(text)refreshCells(mn)}
 function pvHtml(){const it=draftItems();if(!it.length)return '<span class="empty">바뀌는 내용이 없어요.</span>';
-  return it.map(x=>{const extra=[];if(x.c===U.selCell.c){if((x.cur?.memo||'')!==(x.val?.memo||''))extra.push('비고');if((x.cur?.actual||'')!==(x.val?.actual||''))extra.push('실제 내용')}
+  return it.map(x=>{const extra=[];if(x.c===U.selCell.c){if((x.cur?.memo||'')!==(x.val?.memo||''))extra.push('비고');if((x.cur?.actual||'')!==(x.val?.actual||''))extra.push('실제 내용');if(!!x.cur?.print!==!!x.val?.print)extra.push('프린트')}
     return `<div><b>${esc(cn(x.c))}</b><span class="b">${stTxt(x.cur)}</span><span>→</span><span class="a">${stTxt(x.val)}${extra.length?' · '+extra.join(', ')+' 수정':''}</span></div>`}).join('')}
 function histFor(ref){const h=LOG.filter(l=>l.refs&&l.refs.includes(ref)).slice(-5).reverse();
   return h.length?`<div class="hist">${h.map(l=>`<div><time>${esc(l.t)}</time><span>${esc(l.label)}</span></div>`).join('')}</div>`:'<span class="muted" style="font-size:12px">아직 수정 이력이 없어요.</span>'}
@@ -1826,7 +1828,8 @@ function panelHtml(){
      <div class="seg seg3" role="group" aria-label="수업 여부"><button data-a="dd" data-x="0" aria-pressed="${!d.done&&!d.doing}"><span class="pw off">${paw(13)}</span> 아직 안 함</button><button data-a="dd" data-x="2" aria-pressed="${d.doing}"><span class="pw dg">${paw(13)}</span> 진행 중</button><button data-a="dd" data-x="1" aria-pressed="${d.done}"><span class="pw ok">${paw(13)}</span> 수업함</button></div>
      <label class="field">수업 날짜<input type="date" id="pDate" value="${d.date}" min="${DB.term.start}" max="${DB.term.end}" ${d.done?'':'disabled'}></label>
      <label class="field">실제 수업 내용 (계획과 다를 때)<input id="pActual" value="${esc(d.actual)}" placeholder="예: 판서만 하고 영상은 다음 시간"></label>
-     <label class="field">반별 비고 (${esc(cn(c))}만)<textarea id="pMemo" rows="2" placeholder="예: 프린트 배부 OK, 미응시 학생">${esc(d.memo)}</textarea></label></div>
+     <label class="prtchk"><input type="checkbox" id="pPrint" ${d.print?'checked':''}><span>프린트 배부함</span></label>
+     <label class="field">반별 비고 (${esc(cn(c))}만)<textarea id="pMemo" rows="2" placeholder="예: 미응시 학생, 북간도부터 안 함">${esc(d.memo)}</textarea></label></div>
    ${DB.classes.length>1?`<div class="psec"><h4>다른 반에도 같이 기록 <span style="font-weight:400">· 체크한 반에 같은 상태·날짜가 바로 기록돼요</span></h4>
      <div class="others">${DB.classes.filter(x=>x.id!==c).map(x=>`<label><input type="checkbox" data-oth="${x.id}" ${d.others.has(x.id)?'checked':''}><span class="dot" style="background:${ccv(x.id)}"></span>${esc(cn(x.id))}<span class="cur mono">${stTxt(rec(DB,x.id,n))}</span></label>`).join('')}</div></div>`:''}
    ${lessonInfo(n)}
@@ -1840,7 +1843,7 @@ function cellHtml(c,n){const v=rec(DB,c.id,n),nxt=SCH.nextN[c.id]===n,pl=SCH.pla
   const cf=v?.done&&SCH.conflicts.some(x=>x.c===c.id&&x.n===n);
   const doing=!v?.done&&!!v?.doing;
   const right=doing?`<span class="dg mono">진행 중<small>${pl?`${md(pl.date)} (${wd(pl.date)})`:'&nbsp;'}</small></span>`:v?.done?`<span class="dt mono">${md(v.date)}<small>(${wd(v.date)})</small></span>`:pl?`<span class="${nxt?'nx':'pl'} mono">${md(pl.date)}<small>(${wd(pl.date)}) ${pl.p}교시</small></span>`:nxt?'<span class="nx">다음</span>':'';
-  return `<td class="cell ${v?.done?'done':doing?'doing':nxt?'next':''} ${sel?'sel':also?'also':''} ${U.flash===c.id+'|'+n?'justdone':''}" style="--cc:${ccv(c.id)}" data-a="sel" data-x="${c.id}|${n}">${cf?`<span class="cf" title="일정 충돌">${sic('check',12)}</span>`:''}<div class="in"><button class="tog" data-a="tog" data-x="${c.id}|${n}" aria-label="${esc(c.name)} ${n}차시 ${v?.done?'완료 취소':doing?'진행 중 → 완료로 표시':'완료로 표시'}">${paw(20)}</button>${right}</div>${v?.memo?`<span class="fold" data-tip="${esc(v.memo)}"></span>`:''}</td>`}
+  return `<td class="cell ${v?.done?'done':doing?'doing':nxt?'next':''} ${sel?'sel':also?'also':''} ${U.flash===c.id+'|'+n?'justdone':''}" style="--cc:${ccv(c.id)}" data-a="sel" data-x="${c.id}|${n}">${cf?`<span class="cf" title="일정 충돌">${sic('check',12)}</span>`:''}<div class="in"><button class="tog" data-a="tog" data-x="${c.id}|${n}" aria-label="${esc(c.name)} ${n}차시 ${v?.done?'완료 취소':doing?'진행 중 → 완료로 표시':'완료로 표시'}">${paw(20)}</button>${right}</div>${v?.print?'<span class="prt" title="프린트 배부함" aria-label="프린트 배부함"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>':''}${v?.memo?`<span class="fold" data-tip="${esc(v.memo)}"></span>`:''}</td>`}
 function clsHead(c,lead){const d=SCH.nextN[c.id]-1;const ex=nextExam(DB,c.id);const r=ex?examReach(DB,SCH,ex,c.id):null;
   return `<th class="cls" style="--cc:${ccv(c.id)}"><div class="hd"><input class="ie" data-cf="name" data-c="${c.id}" value="${esc(c.name)}" placeholder="0-0" aria-label="학급 이름" size="5"><button class="rm" data-a="clsmenu" data-x="${c.id}" aria-label="${esc(c.name)} 관리" title="학급 관리">⋯</button></div>
   <div class="dtags">${clsDays(c.id)}</div>
@@ -2132,8 +2135,8 @@ async function importSchedule(){if(!NEIS.school)return;U.neis.busy=true;neisMsg(
 
 /* ---------- 설정 ---------- */
 function backupText(){const cs=curSub();if(cs)cs.db=DB;return JSON.stringify({app:'jindokkae',v:5,exported:stamp(),cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},subjects:STORE.subjects,log:LOG.slice(-300)})}
-function sheetTSV(){const h=['차시','수업 주제','교과서','수업 내용','비고',...DB.classes.flatMap(c=>[c.name+' 수업여부',c.name+' 수업날짜',c.name+' 비고'])];
-  const rows=DB.lessons.map((l,i)=>[(i+1)+'차시',l.topic,l.pages,l.content,l.note,...DB.classes.flatMap(c=>{const r=rec(DB,c.id,i+1);return [r?.done?'O':r?.doing?'진행중':'',r?.done?mdw(r.date):'',r?.memo||'']})]);
+function sheetTSV(){const h=['차시','수업 주제','교과서','수업 내용','비고',...DB.classes.flatMap(c=>[c.name+' 수업여부',c.name+' 수업날짜',c.name+' 프린트',c.name+' 비고'])];
+  const rows=DB.lessons.map((l,i)=>[(i+1)+'차시',l.topic,l.pages,l.content,l.note,...DB.classes.flatMap(c=>{const r=rec(DB,c.id,i+1);return [r?.done?'O':r?.doing?'진행중':'',r?.done?mdw(r.date):'',r?.print?'O':'',r?.memo||'']})]);
   return [h,...rows].map(r=>r.map(v=>String(v??'').replace(/[\t\n]/g,' ')).join('\t')).join('\n')}
 function sheetCSV(){return '﻿'+sheetTSV().split('\n').map(r=>r.split('\t').map(v=>/[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v).join(',')).join('\r\n')}
 const NOTK='jindokkae.notif';let NOTIF={on:false,meal:'12:00',last:'',after:true,delay:3,seen:{}};
@@ -2319,7 +2322,7 @@ function drawMove(){const m=U.mv,s=SCH.key[m.key];
   <div class="acts"><button class="btn" data-a="close">취소</button><button class="btn pri" data-a="mvgo" id="mvGo" ${mvCheck().err?'disabled':''}>교환하기</button></div>`)}
 function openMemo(c,n){const v=rec(DB,c,n);
   modal(`<form id="memoForm" style="display:flex;flex-direction:column;gap:12px"><h3>${esc(cn(c))} · ${n}차시 메모</h3><p class="sub">${esc(lname(n))}</p>
-  <label class="field">반별 비고 (${esc(cn(c))}만 저장돼요)<textarea id="mMemo" rows="3" autofocus placeholder="예: 프린트 배부 OK, 북간도부터 안 함">${esc(v?.memo||'')}</textarea></label><input type="hidden" id="mKey" value="${c}|${n}">
+  <label class="field">반별 비고 (${esc(cn(c))}만 저장돼요)<textarea id="mMemo" rows="3" autofocus placeholder="예: 미응시 학생, 북간도부터 안 함">${esc(v?.memo||'')}</textarea></label><input type="hidden" id="mKey" value="${c}|${n}">
   <div class="acts"><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`)}
 function openTTEdit(){if(!DB.classes.length){openAddClass();return}U.ttEdit={from:DB.term.start,slots:clone(ttFor(DB,TK<DB.term.start?DB.term.start:TK))};drawTTEdit()}
 function ttEditDiff(){const t=U.ttEdit;const d2=clone(DB);C.setTT(d2,t.from,t.slots);const a=buildSched(d2);let n=0,k0=TK<DB.term.start?DB.term.start:TK;
@@ -2677,6 +2680,7 @@ document.addEventListener('change',e=>{const tg=e.target;
     else tg.checked?U.selRows.add(id):U.selRows.delete(id);
     keepScroll(render);return}
   if(U.draft&&tg.id==='pDate'){if(tg.value){U.draft.date=tg.value;commitDraft(false)}return}
+  if(U.draft&&tg.id==='pPrint'){U.draft.print=tg.checked;commitDraft(true);return}
   if(U.draft&&(tg.id==='pMemo'||tg.id==='pActual')){commitDraft(true);return}
   if(tg.dataset.lf){const n=+tg.dataset.n,f=tg.dataset.lf,v=tg.value.trim();if(!L(n)||(L(n)[f]||'')===v)return;
     mutate(`${n}차시 ${FIELD_LABEL[f]} 수정`,db=>C.setLesson(db,n,f,v),{norender:true,refs:DB.classes.map(c=>lref(c.id,n))});return}
