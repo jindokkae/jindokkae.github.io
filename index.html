@@ -370,7 +370,7 @@ table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;
 .tt th.today{color:var(--accent)}
 .tt td{height:40px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
 .tt td.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));outline:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
-.tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}@media (hover:none){.tt th .dabs{visibility:visible}}
+.tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}@media (hover:none){.tt th .dabs{visibility:visible}}@media (max-width:760px){.tt thead th .btn.dabs{visibility:visible;opacity:1;font-size:10.5px;height:20px;min-height:0;padding:0 4px!important;line-height:1}}
 .tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
 .tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
 .tt thead th .btn{opacity:0;transition:opacity .15s}.tt thead th:hover .btn{opacity:1}
@@ -1087,7 +1087,9 @@ const C={
   setRecord(db,c,n,val){setRec(db,c,n,val)},
   absence(db,list,reason,note,opt={}){
     list.forEach(s=>{if(opt.revertDone&&s.status==='done')C.uncomplete(db,s.c,s.n);
-      db.exc.push({id:uid('a'),type:'absence',date:s.date,c:s.c,p:s.p,reason,note:note||'',src:opt.src||'직접',state:'active',at:stamp()})})},
+      const old=db.exc.find(e=>e.type==='absence'&&!e.nop&&e.state!=='active'&&e.date===s.date&&e.c===s.c&&e.p===s.p);
+      if(old)Object.assign(old,{reason,note:note||'',src:opt.src||'직접',state:'active',at:stamp()});
+      else db.exc.push({id:uid('a'),type:'absence',date:s.date,c:s.c,p:s.p,reason,note:note||'',src:opt.src||'직접',state:'active',at:stamp()})})},
   nop(db,list,note){list.forEach(s=>db.exc.push({id:uid('a'),type:'absence',nop:true,date:s.date,c:s.c,p:s.p,reason:'진도 없음',note:note||'',src:'직접',state:'active',at:stamp()}))},
   move(db,s,toDate,toP,note,opt={}){let od=s.date,op=s.p;
     if(s.movedIn){const prev=db.exc.find(e=>e.id===s.movedIn);od=prev.date;op=prev.p;prev.state='cancelled'}
@@ -2016,7 +2018,7 @@ function ttBody(){
     <div class="card"><h2>주간 시간표 <span class="sub">${multi?'모든 교과 · ':''}칸을 누르면 완료·결손·교환을 처리하고, 빈 칸을 누르면 수업 보강을 추가해요</span></h2>
       <div class="calbar"><button class="btn sm" data-a="ttw" data-x="-1" aria-label="이전 주" ${mon<=SR.mlo?'disabled':''}>‹</button><span class="ttl mono">${md(days[0])} ~ ${md(days[4])}</span><button class="btn sm" data-a="ttw" data-x="1" aria-label="다음 주" ${mon>=SR.mhi?'disabled':''}>›</button><button class="btn sm" data-a="ttw" data-x="0" ${mon===mondayOf(TK)||TK<SR.lo||TK>SR.hi?'disabled':''}>이번 주</button>
         <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div><span class="lgd"><button type="button" class="btn sm lgb" aria-label="범례 보기"><span class="lgi">?</span> 범례</button><div class="lgbox" role="tooltip">${['done','doing','plan','check','absent','moved','skipped'].map(x=>`<span>${stag(x)}</span>`).join('')}</div></span></div>
-      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><div class="dabw">${blockOf(k)?'':`<button class="btn sm mobhide dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</div><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><div class="dabw">${blockOf(k)?'':`<button class="btn sm dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</div><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
       <div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-top:10px">${ttBtns.join('')}</div></div>
     <div class="card"><h2>결손 · 교환 · 보강 기록 <span class="sub">월별로 확인해요 · 취소하면 목록에서 사라져요</span></h2>
       ${excMonths}
@@ -2247,6 +2249,7 @@ function openSess(k){U.sess=k;const s=SCH.key[k];if(!s)return;const e=excOf(s),n
   if(s.status==='check')acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업했어요 (${n}차시)</button>`,`<button class="btn" data-a="nop" data-x="${s.key}" title="수업은 했지만 진도는 안 나간 날(자습·활동 등)">진도 없음 (자습·활동)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손이었어요</button>`);if(s.status==='check'&&!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);
   if(s.status==='skipped')acts.push(`<button class="btn" data-a="nop" data-x="${s.key}">진도 없음 (자습·활동)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 처리</button>`);
   if(s.status==='done')acts.push(`<button class="btn" data-a="cell" data-x="${s.c}|${s.n}">진도표에서 보기</button>`,`<button class="btn" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손으로 바꾸기</button>`);
+  if(['plan','check','done','skipped'].includes(s.status)&&!s.extra){const al=autoAbsLab(s);if(al)acts.push(`<button class="btn bad" data-a="autoabs" data-x="${s.key}">'${esc(al)}' 결손 다시 적용</button>`)}
   if(s.status==='absent')acts.push(`<button class="btn pri" data-a="excoff" data-x="${s.excId}">${s.nop?'진도 없음 취소':'결손 취소 (수업 복구)'}</button>`);
   if(s.status==='moved')acts.push(`<button class="btn pri" data-a="excoff" data-x="${s.excId}">교환 취소 (원래 자리로)</button>`);
   if(s.movedIn&&s.status!=='moved')acts.push(`<button class="btn" data-a="excoff" data-x="${s.movedIn}">교환 취소 (원래 ${md(s.from.date)} ${s.from.p}교시로)</button>`);
@@ -2276,7 +2279,12 @@ function openCalReview(){const sb=curSub(),db=DB,gs=calGroups(db),TG={hol:'휴�
   <div class="rvlist">${list}</div>
   ${per.length?`<div class="rvsum"><b>이 학기 수업 가능 횟수</b> <span class="muted">(차시를 몇 개 만들지 참고하세요)</span><div>${per.map(p=>`<span class="tag" style="border-left:4px solid ${p.col}">${esc(p.n)} <b>${p.can}회</b>${p.ab?` · 결손 ${p.ab}`:''}</span>`).join('')}</div></div>`:''}
   <div class="acts">${DB.calOk?`<button class="btn pri" data-a="close">닫기</button>`:`<button class="btn" data-a="close" title="지금은 닫고, 나중에 시작하기 박스에서 다시 열어요">다음에 하기</button><button class="btn pri" data-a="revok" title="이 단계를 완료한 것으로 표시해요">넘어가기</button>`}</div>`)}
-function openAbsence(k,pre=[],reason='교내 일정',hint=''){U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
+/* 그날의 학사일정 이름(결손 사유로 쓸 수 있는 것) */
+function dayEvLabels(k){const out=[];allEvents(DB).forEach(e=>{if(!inRange(k,e)||e.kind==='hol'||e.block||e.off||e.gx)return;const l=String(e.label||'').trim().slice(0,18);if(l&&!out.includes(l)&&!REASONS.includes(l))out.push(l)});return out.slice(0,3)}
+/* 이 수업 칸을 다시 학사일정 결손으로 돌릴 수 있는지: 취소해 둔 자동 결손이 있거나, 그날 학력평가 일정이 있으면 */
+function autoAbsLab(s){const old=DB.exc.find(e=>e.type==='absence'&&!e.nop&&e.state!=='active'&&e.src==='자동(학사일정)'&&e.date===s.date&&e.c===s.c&&e.p===s.p);if(old)return old.reason;
+  const me=allEvents(DB).find(e=>inRange(s.date,e)&&MOCK_RE.test(e.label||'')&&!e.off&&!e.gx);return me?String(me.label).slice(0,18):''}
+function openAbsence(k,pre=[],reason='',hint=''){if(!reason)reason=dayEvLabels(k)[0]||'교내 일정';U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
 function absPreview(){const a=U.abs;const list=[...a.keys].map(x=>SCH.key[x]).filter(Boolean);
   if(!list.length)return '<span class="empty">결손 처리할 수업을 고르세요.</span>';
   const extra=list.map((s,i)=>({id:'tmp'+i,type:'absence',date:s.date,c:s.c,p:s.p,state:'active'}));
@@ -2288,7 +2296,7 @@ function drawAbsence(){const a=U.abs;const ss=(SCH.by[a.date]||[]).filter(s=>['p
   modal(`<h3>${mdw(a.date)} 결손 처리</h3>${a.hint?`<p class="note">${a.hint}</p>`:''}
   <div style="display:flex;justify-content:space-between;align-items:center"><h4>빠지는 수업</h4>${ss.length>1?`<button class="btn sm" data-a="absall">${ss.every(s=>a.keys.has(s.key))?'전체 해제':'전체 선택'}</button>`:''}</div>
   <div class="others">${ss.map(s=>`<label><input type="checkbox" data-abs="${s.key}" ${a.keys.has(s.key)?'checked':''}><span class="dot" style="background:${ccv(s.c)}"></span>${s.p}교시 ${esc(cn(s.c))}<span class="cur">${STM[s.status][0]}${s.n?` · ${s.n}차시`:''}</span></label>`).join('')||'<p class="muted">이날 처리할 수업이 없어요.</p>'}</div>
-  <h4>사유</h4><div class="seg">${REASONS.map(r=>`<button data-a="absr" data-x="${r}" aria-pressed="${a.reason===r}">${r}</button>`).join('')}</div>
+  <h4>사유</h4><div class="seg" style="flex-wrap:wrap">${[...dayEvLabels(a.date),...REASONS].map(r=>`<button data-a="absr" data-x="${r}" aria-pressed="${a.reason===r}">${r}</button>`).join('')}</div>
   <label class="field">메모 (선택)<input id="absNote" value="${esc(a.note)}" placeholder="예: 교과 연수 출장"></label>
   ${hasDone?`<label class="chk"><input type="checkbox" id="absRev" ${a.revert?'checked':''}><span>이미 완료로 기록된 수업은 기록도 미완료로 되돌리기 <span class="muted">(체크하지 않으면 완료 기록은 그대로 둬요)</span></span></label>`:''}
   <h4>미리보기</h4><div class="pv" id="absPv">${absPreview()}</div>
@@ -2559,12 +2567,14 @@ document.addEventListener('click',e=>{
    case 'absall':{const ss=(SCH.by[U.abs.date]||[]).filter(s=>['plan','check','done'].includes(s.status));const all=ss.every(s=>U.abs.keys.has(s.key));U.abs.keys=new Set(all?[]:ss.map(s=>s.key));drawAbsence();break}
    case 'absr':U.abs.reason=x;drawAbsence();break;
    case 'absgo':{const A=U.abs,list=[...A.keys].map(k=>SCH.key[k]).filter(Boolean);if(!list.length)break;
-     mutate(`${md(A.date)} ${list.map(s=>cn(s.c)).join(', ')} 결손 (${A.reason})`,db=>C.absence(db,list,A.reason,A.note,{revertDone:A.revert}),{refs:list.filter(s=>s.n).map(s=>lref(s.c,s.n)),msg:`${list.length}개 수업을 결손 처리했어요. 이후 차시를 다시 계산했어요.`});break}
+     mutate(`${md(A.date)} ${list.map(s=>cn(s.c)).join(', ')} 결손 (${A.reason})`,db=>C.absence(db,list,A.reason,A.note,{revertDone:A.revert,src:dayEvLabels(A.date).includes(A.reason)?'학사일정':'직접'}),{refs:list.filter(s=>s.n).map(s=>lref(s.c,s.n)),msg:`${list.length}개 수업을 결손 처리했어요. 이후 차시를 다시 계산했어요.`});break}
    case 'moveopen':openMove(x);break;
    case 'mvgo':{const M=U.mv,s=SCH.key[M.key];if(mvCheck().err)break;
      mutate(`${cn(s.c)} ${when(s)} → ${md(M.toDate)} ${M.toP}교시 교환`,db=>C.move(db,s,M.toDate,M.toP,'',{revertDone:M.revert}));break}
    case 'mockabs':{const me=(allEvents(DB).filter(e=>inRange(x,e)&&MOCK_RE.test(e.label||'')&&!e.off&&!e.gx)[0]);const lab=String((me&&me.label)||'전국연합학력평가'),list=(SCH.by[x]||[]).filter(z=>['plan','check','done','skipped'].includes(z.status));if(!list.length)break;
      mutate(`${md(x)} ${lab} 결손 적용`,db=>{list.forEach(z=>{const old=db.exc.find(e=>e.type==='absence'&&e.date===z.date&&e.c===z.c&&e.p===z.p);if(old){old.state='active';old.reason=lab.slice(0,18);old.src='자동(학사일정)'}else db.exc.push({id:uid('a'),type:'absence',date:z.date,c:z.c,p:z.p,reason:lab.slice(0,18),note:'',src:'자동(학사일정)',state:'active',at:stamp()})})},{msg:`${list.length}개 수업을 ${lab} 결손으로 처리했어요.`});break}
+   case 'autoabs':{const z=SCH.key[x];if(!z)break;const lab=autoAbsLab(z);if(!lab)break;
+     mutate(`${cn(z.c)} ${md(z.date)} ${z.p}교시 ${lab} 결손 다시 적용`,db=>C.absence(db,[z],lab,'',{src:'자동(학사일정)'}),{refs:z.n?[lref(z.c,z.n)]:[],msg:`${lab} 결손으로 다시 처리했어요. 이후 차시를 다시 계산했어요.`});closeM();break}
    case 'excoff':{const ex=DB.exc.find(k=>k.id===x);mutate(`${cn(ex.c)} ${md(ex.date)} ${EXN[ex.type]} 취소`,db=>C.setExc(db,x,'cancelled'),{msg:`${EXN[ex.type]}을 취소했어요. 예정 진도를 다시 계산했어요.`});break}
    case 'excon':{const ex=DB.exc.find(k=>k.id===x);const d2=clone(DB);C.setExc(d2,x,'active');const S2=buildSched(d2);
      if(ex.type==='move'){const clash=(S2.by[ex.toDate]||[]).filter(s=>s.p===ex.toP&&['plan','check','done'].includes(s.status));if(clash.length>1||!S2.key[`${ex.toDate}|${ex.c}|${ex.toP}`]){toast('그 시간에 이미 다른 수업이 있어 다시 적용할 수 없어요.');break}}
