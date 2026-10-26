@@ -370,7 +370,7 @@ table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;
 .tt th.today{color:var(--accent)}
 .tt td{height:40px;border-radius:9px;background:var(--surface-2);vertical-align:middle;padding:3px}
 .tt td.today{background:color-mix(in srgb,var(--accent) 7%,var(--surface-2));outline:1px solid color-mix(in srgb,var(--accent) 25%,transparent)}
-.tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}@media (hover:none){.tt th .dabs{visibility:visible}}@media (max-width:760px){.tt thead th .btn.dabs{visibility:visible;opacity:1;font-size:10.5px;height:20px;min-height:0;padding:0 4px!important;line-height:1}}
+.tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}.tt thead th.arm .btn.dabs{visibility:visible;opacity:1}.tt thead th[data-a=dabshow]{cursor:pointer}@media (max-width:760px){.tt thead th .btn.dabs{font-size:10.5px;height:20px;min-height:0;padding:0 4px!important;line-height:1}}
 .tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
 .tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
 .tt thead th .btn{opacity:0;transition:opacity .15s}.tt thead th:hover .btn{opacity:1}
@@ -2018,7 +2018,7 @@ function ttBody(){
     <div class="card"><h2>주간 시간표 <span class="sub">${multi?'모든 교과 · ':''}칸을 누르면 완료·결손·교환을 처리하고, 빈 칸을 누르면 수업 보강을 추가해요</span></h2>
       <div class="calbar"><button class="btn sm" data-a="ttw" data-x="-1" aria-label="이전 주" ${mon<=SR.mlo?'disabled':''}>‹</button><span class="ttl mono">${md(days[0])} ~ ${md(days[4])}</span><button class="btn sm" data-a="ttw" data-x="1" aria-label="다음 주" ${mon>=SR.mhi?'disabled':''}>›</button><button class="btn sm" data-a="ttw" data-x="0" ${mon===mondayOf(TK)||TK<SR.lo||TK>SR.hi?'disabled':''}>이번 주</button>
         <div class="filters"><button class="chip ttf" data-a="ttc" data-x="all" aria-pressed="${U.ttClass==='all'}">전체</button>${filt.map(f=>f.html.replace(/@@([^"]*)/,(m,id)=>String(U.ttClass===id))).join('')}</div><span class="lgd"><button type="button" class="btn sm lgb" aria-label="범례 보기"><span class="lgi">?</span> 범례</button><div class="lgbox" role="tooltip">${['done','doing','plan','check','absent','moved','skipped'].map(x=>`<span>${stag(x)}</span>`).join('')}</div></span></div>
-      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}"><div class="dabw">${blockOf(k)?'':`<button class="btn sm dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</div><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="tt-wrap"><table class="tt"><thead><tr><th style="width:44px"></th>${days.map(k=>`<th class="${k===TK?'today':''}" ${blockOf(k)?'':`data-a="dabshow" data-x="${k}"`}><div class="dabw">${blockOf(k)?'':`<button class="btn sm dabs" data-a="absday" data-x="${k}" title="${multi?esc(curSub().subj||curSub().name)+' 교과의 ':''}이날 수업 전부 결손 처리" style="padding:0 5px">결손</button>`}</div><span class="dn">${wd(k)}</span> <span class="mono dtx">${md(k)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
       <div style="display:flex;justify-content:flex-end;gap:6px;flex-wrap:wrap;margin-top:10px">${ttBtns.join('')}</div></div>
     <div class="card"><h2>결손 · 교환 · 보강 기록 <span class="sub">월별로 확인해요 · 취소하면 목록에서 사라져요</span></h2>
       ${excMonths}
@@ -2588,6 +2588,7 @@ document.addEventListener('click',e=>{
       render();openCalReview();break}
    case 'ttw':U.ttWeek=x==='0'?mondayOf(TK):addK(U.ttWeek,7*+x);render();break;
    case 'ttc':U.ttClass=x;render();break;
+   case 'dabshow':{const th=e.target.closest('th');const on=!th.classList.contains('arm');document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));if(on)th.classList.add('arm');break}
    case 'bogang':{const [k,p]=x.split('|');openExtra(k,+p);break}
    case 'exgo':{const E=U.ex;if(!E)break;const [sid,cid]=E.sel.split('|');const note=($('#exNote')?.value||'').trim();
      if(sid!==STORE.cur)useSub(sid);const dbn=DB;if(classBlock(dbn,E.date,cid)){toast('그 날은 수업을 넣을 수 없어요.');break}
@@ -2789,7 +2790,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
-document.addEventListener('click',e=>{document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
+document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 document.addEventListener('keydown',e=>{const tg=e.target;
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
   if(e.key==='Escape'){if(TOUR){endTour();return}if(GUIDE&&!$('#layer').innerHTML){guideEnd();return}if($('#layer').innerHTML)closeM();else if((U.selCell||U.selRow)&&U.view==='sheet'){U.selCell=null;U.draft=null;U.selRow=null;render()}return}
