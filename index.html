@@ -788,6 +788,14 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 .nxcard .nxt{display:flex;flex-direction:column;gap:1px;min-width:0;font-size:13px}
 .nxcard .nxt b{font-size:15px}
 .nxcard .nxi{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.lnks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.lnk{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--surface));border-radius:99px;font-size:12px;line-height:1;max-width:100%}
+.lnk a{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;color:var(--accent);font-weight:600;text-decoration:none;min-width:0}
+.lnk a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.lnk a:hover span{text-decoration:underline}
+.lnk .x{border:0;background:none;color:var(--muted);font-size:15px;line-height:1;padding:3px 8px 3px 0;cursor:pointer}
+.lnk .x:hover{color:var(--bad)}
+.lnkadd{display:flex;gap:6px}.lnkadd .inp{flex:1;min-width:0}
 .nxcard .chv{align-self:center}
 .upgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.upgrid .uev{border:1px solid var(--line);border-radius:12px;padding:10px}.upgrid .uev:first-of-type{padding-top:10px;border-top:1px solid var(--line)}.upgrid .uev .ut{overflow:hidden}.upgrid .uev .ut b,.upgrid .uev .ut small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:640px){.upgrid{grid-template-columns:minmax(0,1fr)}}
@@ -1247,7 +1255,7 @@ const STM={done:['완료','ok'],doing:['진행 중','warn'],plan:['예정','info
 const sk=s=>s.doing&&s.status==='plan'?'doing':s.status;
 SVG.doing='<path d="M5 12h13M13 6l6 6-6 6"/>';SVG.skipped='<path d="M7 12h10"/>';
 const stag=st=>`<span class="tag ${STM[st][1]}">${sic(st,11)}${STM[st][0]}</span>`;
-const ICON={warn:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4v.4"/>',checkc:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H19v-5M9 8h6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',chev:'<path d="M9 6l6 6-6 6"/>',users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.2A5 5 0 0 1 21 19"/>',bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',doc:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',chart:'<path d="M4 20V11M10 20V4M16 20v-7M2 20h20"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',pen:'<path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14 6l3 3"/>',home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',sheet:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/>',tt:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M13 13h3M8 16h3"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',meal:'<path d="M4 12a8 8 0 0 0 16 0z"/><path d="M2 12h20M9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'};
+const ICON={link:'<path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1.2 1.2"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1.2-1.2"/>',warn:'<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v4.5M12 17.4v.4"/>',checkc:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H19v-5M9 8h6"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',chev:'<path d="M9 6l6 6-6 6"/>',users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.2A5 5 0 0 1 21 19"/>',bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/>',doc:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',chart:'<path d="M4 20V11M10 20V4M16 20v-7M2 20h20"/>',bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',pen:'<path d="M4 20l4-1 11-11a2.1 2.1 0 0 0-3-3L5 16z"/><path d="M14 6l3 3"/>',home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',sheet:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/>',tt:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 13h3M13 13h3M8 16h3"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',meal:'<path d="M4 12a8 8 0 0 0 16 0z"/><path d="M2 12h20M9 8c0-2 2-2 2-4M14 8c0-2 2-2 2-4"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'};
 const SJI={
  book:['책',null],
  calc:['수학','<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01M12 10h.01M8 10h.01M12 14h.01M8 14h.01M12 18h.01M8 18h.01"/>'],
@@ -1645,7 +1653,7 @@ function homeSub(sb){
     cls:DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return {name:cn(c.id),d,gap:lead-d,color:ccv(c.id)}})}:null;
   /* 다음 수업 */
   let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan');if(f){const v0=rec(DB,f.c,SCH.nextN[f.c]),dg=!!(v0&&v0.doing&&!v0.done),fn=dg?SCH.nextN[f.c]:f.n,les=L(fn)||{};
-    nx={date:k,p:f.p,key:f.key,sbId:sb.id,cn:cn(f.c),subj:subjMain(sb),n:fn,doing:dg||!!f.doing,topic:lname(fn),pages:les.pages||'',materials:les.materials||'',note:les.note||'',t1:PT(f.p),t2:endT(f.p),now:isNow(DB,k,f.p)}}}
+    nx={date:k,p:f.p,key:f.key,sbId:sb.id,cn:cn(f.c),subj:subjMain(sb),n:fn,doing:dg||!!f.doing,topic:lname(fn),pages:les.pages||'',materials:les.materials||'',note:les.note||'',links:les.links||[],t1:PT(f.p),t2:endT(f.p),now:isNow(DB,k,f.p)}}}
   /* 다가오는 일정 */
   const evs=allEvents(DB).filter(e=>(e.e||e.s)>=TK).map(e=>{const a=e.assessId?DB.assess.find(x=>x.id===e.assessId):null;
     const tg=a?(a.classes==='all'?'전체 학급':a.classes.map(cn).join(', ')):'';
@@ -1741,7 +1749,7 @@ function vHome(){
   /* 다음 수업 */
   const nextCard=withCls.length?`<div class="card"><h2>${ic('clock',18)} 다음 수업<span class="right"><button class="hlink" data-a="go" data-x="tt">전체 일정 보기 →</button></span></h2>
     ${nxAll?`<div class="nxcard" data-sub="${nxAll.sbId}" data-a="sess" data-x="${nxAll.key}" role="button" tabindex="0"><span class="ic">${ic('cal',20)}</span><div class="nxt"><b>${nxAll.date===TK?(nxAll.now?'지금':'오늘'):mdw(nxAll.date)} ${nxAll.p}교시 · ${esc(nxAll.cn)}</b><span>${multi?esc(nxAll.subj)+' · ':''}${nxAll.n}차시 · ${esc(nxAll.topic)}</span><span class="mono muted">${nxAll.t1} ~ ${nxAll.t2}</span>
-      ${nxAll.pages||nxAll.materials||nxAll.note?`<span class="nxi">${nxAll.pages?`<span class="tag gray">교과서 p.${esc(nxAll.pages)}</span>`:''}${nxAll.materials?`<span class="tag gray">${esc(nxAll.materials)}</span>`:''}${nxAll.note?`<span class="tag warn">${esc(nxAll.note)}</span>`:''}</span>`:''}</div><span class="chv">${ic('chev',16)}</span></div>`:'<p class="muted" style="margin:0">예정된 수업이 없어요.</p>'}</div>`:'';
+      ${nxAll.pages||nxAll.materials||nxAll.note||nxAll.links.length?`<span class="nxi">${nxAll.pages?`<span class="tag gray">교과서 p.${esc(nxAll.pages)}</span>`:''}${nxAll.materials?`<span class="tag gray">${esc(nxAll.materials)}</span>`:''}${nxAll.note?`<span class="tag warn">${esc(nxAll.note)}</span>`:''}${nxAll.links.map(u=>lnkChip(u)).join('')}</span>`:''}</div><span class="chv">${ic('chev',16)}</span></div>`:'<p class="muted" style="margin:0">예정된 수업이 없어요.</p>'}</div>`:'';
   /* 다가오는 일정 */
   const seen=new Set();
   const evs=withCls.length||parts.length?parts.flatMap(p=>p.h.evs).filter(e=>!seen.has(e.key)&&seen.add(e.key)).sort((a,b)=>a.s<b.s?-1:a.s>b.s?1:0).slice(0,4):[];
@@ -1806,6 +1814,10 @@ function sanitizeRich(h){const t=document.createElement('template');t.innerHTML=
     if(tg==='b'||tg==='strong')o+=`<b>${inner}</b>`;else if(tg==='i'||tg==='em')o+=`<i>${inner}</i>`;else if(tg==='u')o+=`<u>${inner}</u>`;else if(tg==='br')o+='<br>';
     else if(tg==='div'||tg==='p'||tg==='li')o+=(o&&!o.endsWith('<br>')?'<br>':'')+inner;else{const st=c.getAttribute('style')||'';let x=inner;if(/font-weight:\s*(bold|[6-9]00)/.test(st))x=`<b>${x}</b>`;if(/font-style:\s*italic/.test(st))x=`<i>${x}</i>`;if(/underline/.test(st))x=`<u>${x}</u>`;o+=x}}});return o};
   return walk(t.content).replace(/(<br>)+$/,'')}
+/* 수업 자료 링크: http(s)만 허용, 주소창 형태로 적어도 https:// 붙여 줌 */
+function normUrl(v){v=String(v||'').trim();if(!v)return '';if(!/^[a-z][a-z0-9+.-]*:/i.test(v))v='https://'+v;try{const u=new URL(v);return /^https?:$/.test(u.protocol)&&u.hostname.includes('.')?u.href:''}catch(e){return ''}}
+function urlLabel(u){try{const x=new URL(u),h=x.hostname.replace(/^www\.|^m\./,'');if(/youtube\.com$|youtu\.be$/.test(h))return 'YouTube';if(/docs\.google\.com$/.test(h))return x.pathname.includes('/presentation')?'구글 슬라이드':x.pathname.includes('/spreadsheets')?'구글 시트':x.pathname.includes('/forms')?'구글 설문':'구글 문서';if(/drive\.google\.com$/.test(h))return '구글 드라이브';if(/padlet\.com$/.test(h))return '패들렛';if(/canva\.com$/.test(h))return '캔바';return h}catch(e){return u}}
+const lnkChip=(u,del)=>`<span class="lnk"><a href="${esc(u)}" target="_blank" rel="noopener noreferrer" data-a="lnkgo" title="${esc(u)}">${ic('link',13)}<span>${esc(urlLabel(u))}</span></a>${del?`<button type="button" class="x" data-a="lnkdel" data-x="${del}" aria-label="링크 삭제" title="링크 삭제">×</button>`:''}</span>`;
 const lessonInfo=n=>{const les=L(n);return `<div class="psec common"><h4>수업 정보 <span class="tag info">모든 반 공통</span></h4>
      <label class="field">수업 주제<input class="inp" data-lf="topic" spellcheck="false" data-n="${n}" value="${esc(les.topic)}" placeholder="수업 주제"></label>
      <label class="field">수업 내용<textarea class="inp" rows="2" data-lf="content" spellcheck="false" data-n="${n}" placeholder="수업 내용을 적어요">${esc(les.content||'')}</textarea></label>
@@ -1813,6 +1825,9 @@ const lessonInfo=n=>{const les=L(n);return `<div class="psec common"><h4>수업 
        <div class="rt" spellcheck="false" contenteditable="true" role="textbox" aria-multiline="true" aria-label="수업 계획" data-n="${n}" data-ph="예: 도입 5분 · 개념 설명 · 활동 · 정리">${sanitizeRich(les.plan||'')}</div></div></div>
      <label class="field">교과서 쪽<input class="inp" data-lf="pages" spellcheck="false" data-n="${n}" value="${esc(les.pages)}" placeholder="예: 14-17"></label>
      <label class="field">프린트 · 수업 자료 · 준비물<input class="inp" data-lf="materials" spellcheck="false" data-n="${n}" value="${esc(les.materials||'')}" placeholder="예: PPT, 활동지"></label>
+     <div class="field"><span>수업 자료 링크 <small>(유튜브·구글 문서 등 · 누르면 새 탭으로 열려요)</small></span>
+       ${(les.links||[]).length?`<div class="lnks">${les.links.map((u,i)=>lnkChip(u,n+'|'+i)).join('')}</div>`:''}
+       <div class="lnkadd"><input class="inp" id="lnkIn" data-n="${n}" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="링크 붙여넣기 (https://…)"><button type="button" class="btn sm" data-a="lnkadd" data-x="${n}">추가</button></div></div>
      <label class="field">비고<textarea class="inp" rows="3" data-lf="note" spellcheck="false" data-n="${n}" placeholder="예: 활동지 미리 인쇄, 영상 확인">${esc(les.note)}</textarea></label>
      <div class="field"><span>차시 색 <span class="lgd"><button type="button" class="lgi tipb" aria-label="차시 색 설명">?</button><div class="lgbox tipbox" role="tooltip" style="left:0;right:auto;font-weight:400">차시에 정한 색은 진도표 위쪽 <b>범위</b> 칩과 연동돼요.<br>같은 색의 차시만 모아 볼 수 있고, <b>자동</b>은 정기시험 범위의 색을 따라가요.</div></span> <small>(진도표 차시 번호 칸에 표시돼요)</small></span><div class="swatches lcol col2">
        <div class="srow"><button type="button" class="pill" data-a="lcol" data-x="${n}|a" aria-pressed="${les[CF()]==null}" title="범위 색을 따라가요">자동</button>
@@ -2589,6 +2604,12 @@ document.addEventListener('click',e=>{
    case 'ttw':U.ttWeek=x==='0'?mondayOf(TK):addK(U.ttWeek,7*+x);render();break;
    case 'ttc':U.ttClass=x;render();break;
    case 'dabshow':{const th=e.target.closest('th');const on=!th.classList.contains('arm');document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));if(on)th.classList.add('arm');break}
+   case 'lnkgo':break;
+   case 'lnkadd':{const n=+x,inp=$('#lnkIn');if(!inp||!L(n))break;const u=normUrl(inp.value);if(!u){toast(inp.value.trim()?'링크 주소를 확인해 주세요. (예: https://youtu.be/…)':'링크를 붙여 넣어 주세요.');inp.focus();break}
+     if((L(n).links||[]).includes(u)){toast('이미 넣은 링크예요.');break}
+     mutate(`${n}차시 수업 자료 링크 추가`,db=>{const l=db.lessons[n-1];if(l)l.links=[...(l.links||[]),u]},{refs:DB.classes.map(k=>lref(k.id,n)),msg:'링크를 추가했어요.'});setTimeout(()=>$('#lnkIn')?.focus(),30);break}
+   case 'lnkdel':{const [ns,is]=x.split('|'),nn=+ns,i=+is;if(!L(nn)?.links?.[i])break;
+     mutate(`${nn}차시 수업 자료 링크 삭제`,db=>{const l=db.lessons[nn-1];if(l&&l.links){l.links=l.links.filter((_,j)=>j!==i);if(!l.links.length)delete l.links}},{refs:DB.classes.map(k=>lref(k.id,nn)),msg:'링크를 지웠어요.',undo:true});break}
    case 'bogang':{const [k,p]=x.split('|');openExtra(k,+p);break}
    case 'exgo':{const E=U.ex;if(!E)break;const [sid,cid]=E.sel.split('|');const note=($('#exNote')?.value||'').trim();
      if(sid!==STORE.cur)useSub(sid);const dbn=DB;if(classBlock(dbn,E.date,cid)){toast('그 날은 수업을 넣을 수 없어요.');break}
@@ -2792,6 +2813,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
 });
 document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 document.addEventListener('keydown',e=>{const tg=e.target;
+  if(tg.id==='lnkIn'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();tg.parentElement.querySelector('[data-a=lnkadd]')?.click();return}
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
   if(e.key==='Escape'){if(TOUR){endTour();return}if(GUIDE&&!$('#layer').innerHTML){guideEnd();return}if($('#layer').innerHTML)closeM();else if((U.selCell||U.selRow)&&U.view==='sheet'){U.selCell=null;U.draft=null;U.selRow=null;render()}return}
   /* 표 입력칸: Enter = 아래 칸, Shift+Enter = 줄바꿈 */
