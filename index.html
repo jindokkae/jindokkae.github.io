@@ -732,6 +732,20 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 .hpair{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}.hpair>.card{min-width:0}
 @media (max-width:640px){.hpair{grid-template-columns:minmax(0,1fr)}}
 .hmain{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:start}
+.hedwrap{display:flex;justify-content:center;margin:18px 0 4px}.hedwrap .btn{color:var(--muted);gap:5px;display:inline-flex;align-items:center}
+.hedbar{position:sticky;top:8px;z-index:20;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border:1.5px solid var(--accent);border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));box-shadow:0 4px 16px rgba(30,50,100,.12)}
+.hedbar>span{flex:1;min-width:180px;display:flex;flex-direction:column;gap:2px}.hedbar small{color:var(--muted);font-size:12px}
+.hmain.editing .stack{min-height:80px;border-radius:14px;outline:1.5px dashed transparent;outline-offset:4px;transition:outline-color .15s}
+.hmain.editing .stack.dropc{outline-color:var(--accent)}
+.hcard{position:relative;border-radius:14px;outline:2px dashed color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:3px}
+.hcard[draggable=true]{cursor:grab}.hcard.dragging{opacity:.4}
+.hcard.dropb{box-shadow:0 -4px 0 0 var(--accent)}.hcard.dropa{box-shadow:0 4px 0 0 var(--accent)}
+.hcard .hbody{pointer-events:none;user-select:none}.hcard.off .hbody{opacity:.35;filter:grayscale(.6)}
+.hctl{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:6px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.hctl b{flex:1;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hgrip{color:var(--muted);font-size:16px;line-height:1;cursor:grab}
+.hb{min-width:34px;height:30px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--fg);font-size:12px;font-weight:700;cursor:pointer;padding:0 8px}
+.hb:disabled{opacity:.35;cursor:default}.hb.hv[aria-pressed=true]{background:color-mix(in srgb,var(--ok) 14%,var(--surface));color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,var(--line))}
+.hb.hv[aria-pressed=false]{color:var(--muted)}
 .card h2 svg{color:var(--accent);flex:none}
 .hlink{border:0;background:none;color:var(--accent);font-size:12px;font-weight:700;padding:2px 4px}
 .hlink:hover{text-decoration:underline}
@@ -1695,6 +1709,23 @@ function needRec(){let hit=null;
   setTimeout(()=>{let first=null;hit.ks.forEach(k=>{const el=document.querySelector(`td.cell[data-x="${k}"]`);if(el){el.classList.add('blink');first=first||el}});
     if(first)first.scrollIntoView({block:'center',behavior:'smooth'});else toast('진도표에 아직 없는 차시예요. 차시를 먼저 추가해 주세요.');
     setTimeout(()=>document.querySelectorAll('.blink').forEach(e=>e.classList.remove('blink')),1200)},120)}
+/* ---- 홈 카드 배치 (이 기기에만 저장) ---- */
+const HOMEK='jindokkae.home',HOME_DEF=['today','next','up','|','prog','todo','meal'];
+const HOME_NAMES={today:'오늘의 수업',next:'다음 수업',up:'다가오는 일정',prog:'교과별 진도 현황',todo:'오늘 할 일 · 메모',meal:'오늘 급식'};
+function homeLayout(){let v=null;try{v=JSON.parse(localStorage.getItem(HOMEK)||'null')}catch(e){}
+  let o=Array.isArray(v?.o)?v.o.filter(x=>x==='|'||HOME_DEF.includes(x)):[];o=o.filter((x,i)=>o.indexOf(x)===i);
+  if(!o.includes('|'))o=[...HOME_DEF];HOME_DEF.forEach(x=>{if(!o.includes(x))o.push(x)});
+  return {o,hide:Array.isArray(v?.hide)?v.hide.filter(x=>HOME_DEF.includes(x)):[]}}
+function homeSave(L){try{localStorage.setItem(HOMEK,JSON.stringify(L))}catch(e){}}
+function homeMove(id,dir){const L=homeLayout(),o=L.o;const i=o.indexOf(id);if(i<0)return;
+  /* 옆의 '화면에 있는' 카드나 열 경계(|) 하나를 건너뛴다. 경계를 넘으면 다른 열로 간다 */
+  const shown=x=>x==='|'||!!document.querySelector(`.hcard[data-hid="${x}"]`);
+  let j=i+dir;while(j>=0&&j<o.length&&!shown(o[j]))j+=dir;if(j<0||j>=o.length)return;
+  const t=o[j];o.splice(i,1);const k=o.indexOf(t);o.splice(dir>0?k+1:k,0,id);
+  homeSave(L);render()}
+function homeDrop(id,target,after,col){const L=homeLayout(),o=L.o;if(id===target)return;o.splice(o.indexOf(id),1);
+  if(target){let j=o.indexOf(target);o.splice(after?j+1:j,0,id)}else{const sep=o.indexOf('|');o.splice(col==='0'?sep:o.length,0,id)}
+  homeSave(L);render()}
 function vHome(){
   const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
   const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
@@ -1761,9 +1792,19 @@ function vHome(){
   const todoCard=`<div class="card"><h2>${ic('checkc',18)} 오늘 할 일 · 메모<span class="right">${todos.length?`<span class="tag ${todos.every(t=>t.d)?'ok':'info'}">${todos.every(t=>t.d)?'모두 완료':todos.filter(t=>!t.d).length+'개 남음'}</span>`:''}</span></h2><ul class="todo">${autos.map(t=>`<li class="auto"><span class="tag warn">진도표</span><span>${esc(t)}</span></li>`).join('')}
       ${todos.map(t=>todoLi(t.sid,t.i,t,'td')).join('')||(autos.length?'':'<li class="tdempty">오늘 할 일이 없어요. 아래에 적어 보세요</li>')}</ul>
       <form id="todoForm" class="tdform"><input id="todoIn" class="inp" placeholder="할 일 · 메모를 적고 Enter" aria-label="할 일 · 메모 추가" autocomplete="off"><button class="btn pri">추가</button></form></div>`;
-  /* 고정 배치: 왼쪽 = 오늘의 수업 · 다가오는 일정 · 다음 수업 / 오른쪽 = 교과별 진도 현황 · 오늘 할 일+급식 · 확인이 필요해요 */
-  const col=[[todayCard,nextCard,upCard],[withCls.length?progCard:'',`<div class="hpair">${todoCard}${mealCard()}</div>`]].map(a=>a.filter(Boolean));
-  return top+hero+pendBar+setupCard()+`<div class="hmain"><div class="stack">${col[0].join('')}</div><div class="stack">${col[1].join('')}</div></div>`;
+  /* 배치는 사용자가 '홈 화면 편집'에서 바꾼다 (기기마다 따로 저장). 모바일은 왼쪽 열 → 오른쪽 열 순서로 한 줄 */
+  const CARDS={today:todayCard,next:nextCard,up:upCard,prog:withCls.length?progCard:'',todo:todoCard,meal:mealCard()};
+  const L=homeLayout(),ed=!!U.homeEdit,vis=id=>CARDS[id]&&(ed||TOUR||GUIDE||!L.hide.includes(id));
+  const cols=[[],[]];let ci=0;L.o.forEach(id=>{if(id==='|'){ci=1;return}if(vis(id))cols[ci].push(id)});
+  const wrap=(id,i,arr)=>{const h=CARDS[id];if(!ed)return h;const hid=L.hide.includes(id),flat=[...cols[0],...cols[1]],k=flat.indexOf(id);
+    return `<div class="hcard ${hid?'off':''}" data-hid="${id}" ${matchMedia('(pointer:fine)').matches?'draggable="true"':''}><div class="hctl"><span class="hgrip" title="끌어서 옮기기 (PC)">⠿</span><b>${HOME_NAMES[id]}</b>
+      <button type="button" class="hb" data-a="hmv" data-x="${id}|-1" ${k<=0?'disabled':''} aria-label="${HOME_NAMES[id]} 위로">▲</button><button type="button" class="hb" data-a="hmv" data-x="${id}|1" ${k>=flat.length-1?'disabled':''} aria-label="${HOME_NAMES[id]} 아래로">▼</button>
+      <button type="button" class="hb hv" data-a="hhide" data-x="${id}" aria-pressed="${!hid}">${hid?'숨김':'보임'}</button></div><div class="hbody">${h}</div></div>`};
+  const colHtml=arr=>{let o='';for(let i=0;i<arr.length;i++){const id=arr[i];
+    if(!ed&&id==='todo'&&arr[i+1]==='meal'){o+=`<div class="hpair">${CARDS.todo}${CARDS.meal}</div>`;i++;continue}o+=wrap(id,i,arr)}return o};
+  const edBar=ed?`<div class="hedbar"><span><b>홈 화면 편집 중</b><small>${matchMedia('(pointer:fine)').matches?'카드를 끌어서 옮기거나 ▲▼로 순서를 바꿔요.':'▲▼로 순서를 바꾸고, 안 쓰는 카드는 숨겨요.'}</small></span><button class="btn sm" data-a="hreset">기본 배치로</button><button class="btn sm pri" data-a="hdone">완료</button></div>`:'';
+  return top+hero+pendBar+setupCard()+edBar+`<div class="hmain ${ed?'editing':''}"><div class="stack" data-col="0">${colHtml(cols[0])}</div><div class="stack" data-col="1">${colHtml(cols[1])}</div></div>`
+    +(ed?'':`<div class="hedwrap"><button class="btn sm ghost" data-a="hedit">${ic('pen',13)} 홈 화면 편집</button></div>`);
 }
 function rowHtml(s,kind){const n=kind==='check'?SCH.nextN[s.c]:(s.n||SCH.nextN[s.c]);
   const acts={done:`<span class="stamp">${paw(16)} 완료</span><button class="btn sm" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,
@@ -2613,6 +2654,11 @@ document.addEventListener('click',e=>{
    case 'ttc':U.ttClass=x;render();break;
    case 'dabshow':{const th=e.target.closest('th');const on=!th.classList.contains('arm');document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));if(on)th.classList.add('arm');break}
    case 'lnkgo':break;
+   case 'hedit':U.homeEdit=true;render();break;
+   case 'hdone':U.homeEdit=false;render();toast('홈 배치를 저장했어요. 이 기기에만 적용돼요.');break;
+   case 'hreset':try{localStorage.removeItem(HOMEK)}catch(e){}render();toast('기본 배치로 되돌렸어요.');break;
+   case 'hmv':{const [id,d]=x.split('|');homeMove(id,+d);break}
+   case 'hhide':{const L=homeLayout();L.hide=L.hide.includes(x)?L.hide.filter(z=>z!==x):[...L.hide,x];homeSave(L);render();break}
    case 'lnkadd':{const n=+x,inp=$('#lnkIn'),nm=$('#lnkNm');if(!inp||!L(n))break;const u=normUrl(inp.value);if(!u){toast(inp.value.trim()?'링크 주소를 확인해 주세요. (예: https://youtu.be/…)':'링크를 붙여 넣어 주세요.');inp.focus();break}
      if((L(n).links||[]).some(z=>lkOf(z).u===u)){toast('이미 넣은 링크예요.');break}
      const btn=e.target.closest('button');if(btn.disabled)break;
@@ -2830,6 +2876,18 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
 document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
+/* 홈 편집: PC 드래그로 카드 옮기기 */
+let HDRAG=null;
+document.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('.hmain.editing .hcard');if(!c)return;HDRAG=c.dataset.hid;c.classList.add('dragging');try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',HDRAG)}catch(_){}});
+document.addEventListener('dragend',()=>{HDRAG=null;document.querySelectorAll('.hcard.dragging,.hcard.dropb,.hcard.dropa,.stack.dropc').forEach(x=>x.classList.remove('dragging','dropb','dropa','dropc'))});
+const hdTarget=e=>{const st=e.target.closest&&e.target.closest('.hmain.editing .stack');if(!st)return null;const c=e.target.closest('.hcard');
+  if(c&&c.dataset.hid!==HDRAG){const r=c.getBoundingClientRect();return {st,c,after:e.clientY>r.top+r.height/2}}
+  if(!c){const cs=[...st.querySelectorAll('.hcard')].filter(x=>x.dataset.hid!==HDRAG);const last=cs[cs.length-1];if(last&&e.clientY>last.getBoundingClientRect().bottom)return {st,c:last,after:true};if(!cs.length)return {st,c:null}}
+  return {st,c:null,skip:true}};
+document.addEventListener('dragover',e=>{if(!HDRAG)return;const t=hdTarget(e);if(!t)return;e.preventDefault();
+  document.querySelectorAll('.hcard.dropb,.hcard.dropa,.stack.dropc').forEach(x=>x.classList.remove('dropb','dropa','dropc'));
+  if(t.skip)return;if(t.c)t.c.classList.add(t.after?'dropa':'dropb');else t.st.classList.add('dropc')});
+document.addEventListener('drop',e=>{if(!HDRAG)return;const t=hdTarget(e);if(!t||t.skip)return;e.preventDefault();const id=HDRAG;HDRAG=null;homeDrop(id,t.c?t.c.dataset.hid:null,t.after,t.st.dataset.col)});
 document.addEventListener('keydown',e=>{const tg=e.target;
   if((tg.id==='lnkIn'||tg.id==='lnkNm')&&e.key==='Enter'&&!e.isComposing){e.preventDefault();tg.parentElement.querySelector('[data-a=lnkadd]')?.click();return}
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
