@@ -791,11 +791,11 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 .lnks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
 .lnk{display:inline-flex;align-items:center;border:1px solid color-mix(in srgb,var(--accent) 35%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--surface));border-radius:99px;font-size:12px;line-height:1;max-width:100%}
 .lnk a{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;color:var(--accent);font-weight:600;text-decoration:none;min-width:0}
-.lnk a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.lnk a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}.lnk a small{font-size:10.5px;font-weight:500;color:var(--muted);white-space:nowrap}.lnk .x.ed{padding:3px 2px;display:inline-grid;place-items:center}.lnk .x.ed:hover{color:var(--accent)}
 .lnk a:hover span{text-decoration:underline}
 .lnk .x{border:0;background:none;color:var(--muted);font-size:15px;line-height:1;padding:3px 8px 3px 0;cursor:pointer}
 .lnk .x:hover{color:var(--bad)}
-.lnkadd{display:flex;gap:6px}.lnkadd .inp{flex:1;min-width:0}
+.lnkadd{display:flex;gap:6px;flex-wrap:wrap}.lnkadd #lnkIn{flex:1 1 100%;min-width:0}.lnkadd #lnkNm{flex:1;min-width:0}
 .nxcard .chv{align-self:center}
 .upgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.upgrid .uev{border:1px solid var(--line);border-radius:12px;padding:10px}.upgrid .uev:first-of-type{padding-top:10px;border-top:1px solid var(--line)}.upgrid .uev .ut{overflow:hidden}.upgrid .uev .ut b,.upgrid .uev .ut small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:640px){.upgrid{grid-template-columns:minmax(0,1fr)}}
@@ -1817,7 +1817,15 @@ function sanitizeRich(h){const t=document.createElement('template');t.innerHTML=
 /* 수업 자료 링크: http(s)만 허용, 주소창 형태로 적어도 https:// 붙여 줌 */
 function normUrl(v){v=String(v||'').trim();if(!v)return '';if(!/^[a-z][a-z0-9+.-]*:/i.test(v))v='https://'+v;try{const u=new URL(v);return /^https?:$/.test(u.protocol)&&u.hostname.includes('.')?u.href:''}catch(e){return ''}}
 function urlLabel(u){try{const x=new URL(u),h=x.hostname.replace(/^www\.|^m\./,'');if(/youtube\.com$|youtu\.be$/.test(h))return 'YouTube';if(/docs\.google\.com$/.test(h))return x.pathname.includes('/presentation')?'구글 슬라이드':x.pathname.includes('/spreadsheets')?'구글 시트':x.pathname.includes('/forms')?'구글 설문':'구글 문서';if(/drive\.google\.com$/.test(h))return '구글 드라이브';if(/padlet\.com$/.test(h))return '패들렛';if(/canva\.com$/.test(h))return '캔바';return h}catch(e){return u}}
-const lnkChip=(u,del)=>`<span class="lnk"><a href="${esc(u)}" target="_blank" rel="noopener noreferrer" data-a="lnkgo" title="${esc(u)}">${ic('link',13)}<span>${esc(urlLabel(u))}</span></a>${del?`<button type="button" class="x" data-a="lnkdel" data-x="${del}" aria-label="링크 삭제" title="링크 삭제">×</button>`:''}</span>`;
+/* 링크는 예전 형식(주소 문자열)과 새 형식({u:주소,t:이름})을 모두 읽는다 */
+const lkOf=x=>typeof x==='string'?{u:x,t:''}:{u:x?.u||'',t:x?.t||''};
+const isYT=u=>{try{return /(^|\.)(youtube\.com|youtu\.be)$/.test(new URL(u).hostname)}catch(e){return false}};
+/* 유튜브 영상 제목: 추가할 때 한 번만 가져와 이름으로 저장 (썸네일은 받지 않음) */
+async function ytTitle(u){const tm=ms=>new Promise((_,j)=>setTimeout(()=>j(0),ms));
+  for(const api of ['https://noembed.com/embed?url=','https://www.youtube.com/oembed?format=json&url=']){
+    try{const r=await Promise.race([fetch(api+encodeURIComponent(u)),tm(3000)]);if(!r.ok)continue;const d=await r.json();const t=String(d.title||'').trim();if(t)return t.slice(0,80)}catch(e){}}
+  return ''}
+const lnkChip=(x,del)=>{const {u,t}=lkOf(x);return `<span class="lnk ${t?'named':''}"><a href="${esc(u)}" target="_blank" rel="noopener noreferrer" data-a="lnkgo" title="${esc((t?t+'\n':'')+u)}">${ic('link',13)}<span>${esc(t||urlLabel(u))}</span>${t?`<small>${esc(urlLabel(u))}</small>`:''}</a>${del?`<button type="button" class="x ed" data-a="lnked" data-x="${del}" aria-label="링크 이름 고치기" title="이름 고치기">${ic('pen',12)}</button><button type="button" class="x" data-a="lnkdel" data-x="${del}" aria-label="링크 삭제" title="링크 삭제">×</button>`:''}</span>`};
 const lessonInfo=n=>{const les=L(n);return `<div class="psec common"><h4>수업 정보 <span class="tag info">모든 반 공통</span></h4>
      <label class="field">수업 주제<input class="inp" data-lf="topic" spellcheck="false" data-n="${n}" value="${esc(les.topic)}" placeholder="수업 주제"></label>
      <label class="field">수업 내용<textarea class="inp" rows="2" data-lf="content" spellcheck="false" data-n="${n}" placeholder="수업 내용을 적어요">${esc(les.content||'')}</textarea></label>
@@ -1827,7 +1835,7 @@ const lessonInfo=n=>{const les=L(n);return `<div class="psec common"><h4>수업 
      <label class="field">프린트 · 수업 자료 · 준비물<input class="inp" data-lf="materials" spellcheck="false" data-n="${n}" value="${esc(les.materials||'')}" placeholder="예: PPT, 활동지"></label>
      <div class="field"><span>수업 자료 링크 <small>(유튜브·구글 문서 등 · 누르면 새 탭으로 열려요)</small></span>
        ${(les.links||[]).length?`<div class="lnks">${les.links.map((u,i)=>lnkChip(u,n+'|'+i)).join('')}</div>`:''}
-       <div class="lnkadd"><input class="inp" id="lnkIn" data-n="${n}" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="링크 붙여넣기 (https://…)"><button type="button" class="btn sm" data-a="lnkadd" data-x="${n}">추가</button></div></div>
+       <div class="lnkadd"><input class="inp" id="lnkIn" data-n="${n}" type="url" inputmode="url" spellcheck="false" autocomplete="off" placeholder="링크 붙여넣기 (https://…)"><input class="inp" id="lnkNm" spellcheck="false" autocomplete="off" maxlength="80" placeholder="이름 (선택) · 예: 활동지 원본"><button type="button" class="btn sm" data-a="lnkadd" data-x="${n}">추가</button></div></div>
      <label class="field">비고<textarea class="inp" rows="3" data-lf="note" spellcheck="false" data-n="${n}" placeholder="예: 활동지 미리 인쇄, 영상 확인">${esc(les.note)}</textarea></label>
      <div class="field"><span>차시 색 <span class="lgd"><button type="button" class="lgi tipb" aria-label="차시 색 설명">?</button><div class="lgbox tipbox" role="tooltip" style="left:0;right:auto;font-weight:400">차시에 정한 색은 진도표 위쪽 <b>범위</b> 칩과 연동돼요.<br>같은 색의 차시만 모아 볼 수 있고, <b>자동</b>은 정기시험 범위의 색을 따라가요.</div></span> <small>(진도표 차시 번호 칸에 표시돼요)</small></span><div class="swatches lcol col2">
        <div class="srow"><button type="button" class="pill" data-a="lcol" data-x="${n}|a" aria-pressed="${les[CF()]==null}" title="범위 색을 따라가요">자동</button>
@@ -2605,9 +2613,17 @@ document.addEventListener('click',e=>{
    case 'ttc':U.ttClass=x;render();break;
    case 'dabshow':{const th=e.target.closest('th');const on=!th.classList.contains('arm');document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));if(on)th.classList.add('arm');break}
    case 'lnkgo':break;
-   case 'lnkadd':{const n=+x,inp=$('#lnkIn');if(!inp||!L(n))break;const u=normUrl(inp.value);if(!u){toast(inp.value.trim()?'링크 주소를 확인해 주세요. (예: https://youtu.be/…)':'링크를 붙여 넣어 주세요.');inp.focus();break}
-     if((L(n).links||[]).includes(u)){toast('이미 넣은 링크예요.');break}
-     mutate(`${n}차시 수업 자료 링크 추가`,db=>{const l=db.lessons[n-1];if(l)l.links=[...(l.links||[]),u]},{refs:DB.classes.map(k=>lref(k.id,n)),msg:'링크를 추가했어요.'});setTimeout(()=>$('#lnkIn')?.focus(),30);break}
+   case 'lnkadd':{const n=+x,inp=$('#lnkIn'),nm=$('#lnkNm');if(!inp||!L(n))break;const u=normUrl(inp.value);if(!u){toast(inp.value.trim()?'링크 주소를 확인해 주세요. (예: https://youtu.be/…)':'링크를 붙여 넣어 주세요.');inp.focus();break}
+     if((L(n).links||[]).some(z=>lkOf(z).u===u)){toast('이미 넣은 링크예요.');break}
+     const btn=e.target.closest('button');if(btn.disabled)break;
+     (async()=>{let t=(nm?.value||'').trim().slice(0,80);if(!t&&isYT(u)){btn.disabled=true;btn.textContent='제목 확인 중…';t=await ytTitle(u)}
+       mutate(`${n}차시 수업 자료 링크 추가`,db=>{const l=db.lessons[n-1];if(l)l.links=[...(l.links||[]),t?{u,t}:u]},{refs:DB.classes.map(k=>lref(k.id,n)),msg:t?`'${t}' 링크를 추가했어요.`:'링크를 추가했어요.'});setTimeout(()=>$('#lnkIn')?.focus(),30)})();break}
+   case 'lnked':{const [ns,is]=x.split('|'),nn=+ns,i=+is;const z=L(nn)?.links?.[i];if(!z)break;const {u,t}=lkOf(z);
+     modal(`<form id="lnkForm" style="display:flex;flex-direction:column;gap:12px"><h3>${nn}차시 링크 이름</h3><p class="sub" style="word-break:break-all">${esc(u)}</p>
+       <label class="field">이름<input class="inp" id="lnkEdNm" maxlength="80" value="${esc(t)}" placeholder="${esc(urlLabel(u))}" autofocus></label><input type="hidden" id="lnkEdKey" value="${nn}|${i}">
+       <div class="acts">${isYT(u)?'<button type="button" class="btn" data-a="lnkyt" style="margin-right:auto">영상 제목 가져오기</button>':''}<button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`);break}
+   case 'lnkyt':{const [nn,i]=$('#lnkEdKey').value.split('|').map(Number);const z=L(nn)?.links?.[i];if(!z)break;const btn=e.target.closest('button');btn.disabled=true;btn.textContent='가져오는 중…';
+     ytTitle(lkOf(z).u).then(t=>{btn.disabled=false;btn.textContent='영상 제목 가져오기';if(t&&$('#lnkEdNm'))$('#lnkEdNm').value=t;else toast('제목을 가져오지 못했어요. 직접 적어 주세요.')});break}
    case 'lnkdel':{const [ns,is]=x.split('|'),nn=+ns,i=+is;if(!L(nn)?.links?.[i])break;
      mutate(`${nn}차시 수업 자료 링크 삭제`,db=>{const l=db.lessons[nn-1];if(l&&l.links){l.links=l.links.filter((_,j)=>j!==i);if(!l.links.length)delete l.links}},{refs:DB.classes.map(k=>lref(k.id,nn)),msg:'링크를 지웠어요.',undo:true});break}
    case 'bogang':{const [k,p]=x.split('|');openExtra(k,+p);break}
@@ -2807,13 +2823,15 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     mutate(`일정 추가: ${multi?md(st)+'~'+md(en):md(st)} ${v}`,db=>C.addEvent(db,{s:st,e:en,label:v,kind,block:kind==='hol',src:'직접'}),{msg:kind==='hol'&&act.length?`휴업일로 추가해서 수업 ${act.length}개를 빼고 다시 계산했어요.`:'일정을 추가했어요.'});
     if((kind==='event'||kind==='etc')&&act.length&&!multi)openAbsence(st,[],'교내 일정',`'${esc(v)}' 일정을 추가했어요. 이 일정 때문에 빠지는 수업이 있으면 골라 주세요. 고르지 않고 닫으면 수업은 그대로예요.`)
     else if((kind==='event'||kind==='etc')&&multi)toast('여러 날 일정이에요. 빠지는 수업은 시간표나 날짜별 "이날 수업 결손 처리"로 정해 주세요.')}
+  if(id==='lnkForm'){const [nn,i]=$('#lnkEdKey').value.split('|').map(Number);const z=L(nn)?.links?.[i];if(!z){closeM();return}const {u,t}=lkOf(z),t2=$('#lnkEdNm').value.trim().slice(0,80);
+    if(t===t2){closeM();return}mutate(`${nn}차시 링크 이름 ${t2?'수정':'지우기'}`,db=>{const l=db.lessons[nn-1];if(l&&l.links)l.links[i]=t2?{u,t:t2}:u},{refs:DB.classes.map(k=>lref(k.id,nn)),msg:'링크 이름을 저장했어요.'});return}
   if(id==='memoForm'){const [c,n]=$('#mKey').value.split('|');const v=rec(DB,c,+n),memo=$('#mMemo').value.trim();
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
 document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 document.addEventListener('keydown',e=>{const tg=e.target;
-  if(tg.id==='lnkIn'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();tg.parentElement.querySelector('[data-a=lnkadd]')?.click();return}
+  if((tg.id==='lnkIn'||tg.id==='lnkNm')&&e.key==='Enter'&&!e.isComposing){e.preventDefault();tg.parentElement.querySelector('[data-a=lnkadd]')?.click();return}
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
   if(e.key==='Escape'){if(TOUR){endTour();return}if(GUIDE&&!$('#layer').innerHTML){guideEnd();return}if($('#layer').innerHTML)closeM();else if((U.selCell||U.selRow)&&U.view==='sheet'){U.selCell=null;U.draft=null;U.selRow=null;render()}return}
   /* 표 입력칸: Enter = 아래 칸, Shift+Enter = 줄바꿈 */
