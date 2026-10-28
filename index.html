@@ -738,7 +738,7 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 .hmain.editing .stack{min-height:80px;border-radius:14px;outline:1.5px dashed transparent;outline-offset:4px;transition:outline-color .15s}
 .hmain.editing .stack.dropc{outline-color:var(--accent)}
 .hcard{position:relative;border-radius:14px;outline:2px dashed color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:3px}
-.hcard[draggable=true]{cursor:grab}.hcard.dragging{opacity:.4}
+.hcard.dragging{opacity:.85;z-index:30;pointer-events:none;box-shadow:0 12px 30px rgba(20,40,90,.25);transition:none}.hmain.editing .hctl{touch-action:none;cursor:grab}.hmain.editing .hctl .hb{cursor:pointer}body.hdragging,body.hdragging *{cursor:grabbing!important;user-select:none}
 .hcard.dropb{box-shadow:0 -4px 0 0 var(--accent)}.hcard.dropa{box-shadow:0 4px 0 0 var(--accent)}
 .hcard .hbody{pointer-events:none;user-select:none}.hcard.off .hbody{opacity:.35;filter:grayscale(.6)}
 .hctl{display:flex;align-items:center;gap:6px;padding:6px 8px;margin-bottom:6px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
@@ -1797,12 +1797,12 @@ function vHome(){
   const L=homeLayout(),ed=!!U.homeEdit,vis=id=>CARDS[id]&&(ed||TOUR||GUIDE||!L.hide.includes(id));
   const cols=[[],[]];let ci=0;L.o.forEach(id=>{if(id==='|'){ci=1;return}if(vis(id))cols[ci].push(id)});
   const wrap=(id,i,arr)=>{const h=CARDS[id];if(!ed)return h;const hid=L.hide.includes(id),flat=[...cols[0],...cols[1]],k=flat.indexOf(id);
-    return `<div class="hcard ${hid?'off':''}" data-hid="${id}" ${matchMedia('(pointer:fine)').matches?'draggable="true"':''}><div class="hctl"><span class="hgrip" title="끌어서 옮기기 (PC)">⠿</span><b>${HOME_NAMES[id]}</b>
+    return `<div class="hcard ${hid?'off':''}" data-hid="${id}" ><div class="hctl"><span class="hgrip" title="끌어서 옮기기 (PC)">⠿</span><b>${HOME_NAMES[id]}</b>
       <button type="button" class="hb" data-a="hmv" data-x="${id}|-1" ${k<=0?'disabled':''} aria-label="${HOME_NAMES[id]} 위로">▲</button><button type="button" class="hb" data-a="hmv" data-x="${id}|1" ${k>=flat.length-1?'disabled':''} aria-label="${HOME_NAMES[id]} 아래로">▼</button>
       <button type="button" class="hb hv" data-a="hhide" data-x="${id}" aria-pressed="${!hid}">${hid?'숨김':'보임'}</button></div><div class="hbody">${h}</div></div>`};
   const colHtml=arr=>{let o='';for(let i=0;i<arr.length;i++){const id=arr[i];
     if(!ed&&id==='todo'&&arr[i+1]==='meal'){o+=`<div class="hpair">${CARDS.todo}${CARDS.meal}</div>`;i++;continue}o+=wrap(id,i,arr)}return o};
-  const edBar=ed?`<div class="hedbar"><span><b>홈 화면 편집 중</b><small>${matchMedia('(pointer:fine)').matches?'카드를 끌어서 옮기거나 ▲▼로 순서를 바꿔요.':'▲▼로 순서를 바꾸고, 안 쓰는 카드는 숨겨요.'}</small></span><button class="btn sm" data-a="hreset">기본 배치로</button><button class="btn sm pri" data-a="hdone">완료</button></div>`:'';
+  const edBar=ed?`<div class="hedbar"><span><b>홈 화면 편집 중</b><small>카드 위쪽 막대(⠿)를 잡고 끌거나, ▲▼로 순서를 바꿔요.</small></span><button class="btn sm" data-a="hreset">기본 배치로</button><button class="btn sm pri" data-a="hdone">완료</button></div>`:'';
   return top+hero+pendBar+setupCard()+edBar+`<div class="hmain ${ed?'editing':''}"><div class="stack" data-col="0">${colHtml(cols[0])}</div><div class="stack" data-col="1">${colHtml(cols[1])}</div></div>`
     +(ed?'':`<div class="hedwrap"><button class="btn sm ghost" data-a="hedit">${ic('pen',13)} 홈 화면 편집</button></div>`);
 }
@@ -2876,18 +2876,30 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
 document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
-/* 홈 편집: PC 드래그로 카드 옮기기 */
+/* 홈 편집: 카드 위쪽 막대(⠿)를 잡고 끌어서 옮기기 — 마우스·터치·펜 모두 (pointer 이벤트) */
 let HDRAG=null;
-document.addEventListener('dragstart',e=>{const c=e.target.closest&&e.target.closest('.hmain.editing .hcard');if(!c)return;HDRAG=c.dataset.hid;c.classList.add('dragging');try{e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',HDRAG)}catch(_){}});
-document.addEventListener('dragend',()=>{HDRAG=null;document.querySelectorAll('.hcard.dragging,.hcard.dropb,.hcard.dropa,.stack.dropc').forEach(x=>x.classList.remove('dragging','dropb','dropa','dropc'))});
-const hdTarget=e=>{const st=e.target.closest&&e.target.closest('.hmain.editing .stack');if(!st)return null;const c=e.target.closest('.hcard');
-  if(c&&c.dataset.hid!==HDRAG){const r=c.getBoundingClientRect();return {st,c,after:e.clientY>r.top+r.height/2}}
-  if(!c){const cs=[...st.querySelectorAll('.hcard')].filter(x=>x.dataset.hid!==HDRAG);const last=cs[cs.length-1];if(last&&e.clientY>last.getBoundingClientRect().bottom)return {st,c:last,after:true};if(!cs.length)return {st,c:null}}
-  return {st,c:null,skip:true}};
-document.addEventListener('dragover',e=>{if(!HDRAG)return;const t=hdTarget(e);if(!t)return;e.preventDefault();
-  document.querySelectorAll('.hcard.dropb,.hcard.dropa,.stack.dropc').forEach(x=>x.classList.remove('dropb','dropa','dropc'));
-  if(t.skip)return;if(t.c)t.c.classList.add(t.after?'dropa':'dropb');else t.st.classList.add('dropc')});
-document.addEventListener('drop',e=>{if(!HDRAG)return;const t=hdTarget(e);if(!t||t.skip)return;e.preventDefault();const id=HDRAG;HDRAG=null;homeDrop(id,t.c?t.c.dataset.hid:null,t.after,t.st.dataset.col)});
+function hdClear(){document.querySelectorAll('.hcard.dropb,.hcard.dropa,.stack.dropc').forEach(x=>x.classList.remove('dropb','dropa','dropc'))}
+function hdAt(x,y){const el=document.elementFromPoint(x,y);let st=el&&el.closest&&el.closest('.hmain.editing .stack');
+  if(!st){/* 열 아래 빈 곳: 가로 위치로 열을 고른다 */const ss=[...document.querySelectorAll('.hmain.editing .stack')].filter(z=>z.getBoundingClientRect().width>0);
+    st=ss.find(z=>{const r=z.getBoundingClientRect();return x>=r.left-8&&x<=r.right+8&&y>=r.top})||null;if(!st)return null}
+  const cs=[...st.querySelectorAll('.hcard')].filter(c=>c.dataset.hid!==HDRAG.id);if(!cs.length)return {st,c:null};
+  for(const c of cs){const r=c.getBoundingClientRect();if(y<r.top+r.height/2)return {st,c,after:false}}return {st,c:cs[cs.length-1],after:true}}
+document.addEventListener('pointerdown',e=>{const bar=e.target.closest&&e.target.closest('.hmain.editing .hctl');if(!bar||e.target.closest('button')||e.button>0)return;
+  const card=bar.closest('.hcard');e.preventDefault();HDRAG={id:card.dataset.hid,card,y0:e.clientY,x0:e.clientX,pid:e.pointerId,moved:false,t:null,sy0:window.scrollY};
+  try{bar.setPointerCapture(e.pointerId)}catch(_){}});
+document.addEventListener('pointermove',e=>{const D=HDRAG;if(!D||e.pointerId!==D.pid)return;
+  if(!D.moved){if(Math.abs(e.clientY-D.y0)+Math.abs(e.clientX-D.x0)<6)return;D.moved=true;D.card.classList.add('dragging');document.body.classList.add('hdragging')}
+  e.preventDefault();D.card.style.transform=`translate(${e.clientX-D.x0}px,${e.clientY-D.y0+window.scrollY-D.sy0}px)`;
+  /* 화면 가장자리 근처면 자동 스크롤 */
+  const edge=70,h=innerHeight;D.vy=e.clientY<edge?-(edge-e.clientY)/4:e.clientY>h-edge?(e.clientY-(h-edge))/4:0;D.lx=e.clientX;D.ly=e.clientY;
+  if(D.vy&&!D.raf){const step=()=>{if(!HDRAG||!HDRAG.vy){if(HDRAG)HDRAG.raf=0;return}window.scrollBy(0,HDRAG.vy);hdMark(HDRAG.lx,HDRAG.ly);HDRAG.card.style.transform=`translate(${HDRAG.lx-HDRAG.x0}px,${HDRAG.ly-HDRAG.y0+window.scrollY-HDRAG.sy0}px)`;HDRAG.raf=requestAnimationFrame(step)};D.raf=requestAnimationFrame(step)}
+  hdMark(e.clientX,e.clientY)},{passive:false});
+function hdMark(x,y){const D=HDRAG;hdClear();const t=hdAt(x,y);D.t=t;if(!t)return;if(t.c)t.c.classList.add(t.after?'dropa':'dropb');else t.st.classList.add('dropc')}
+function hdEnd(e,cancel){const D=HDRAG;if(!D||(e&&e.pointerId!==D.pid))return;HDRAG=null;if(D.raf)cancelAnimationFrame(D.raf);hdClear();
+  D.card.classList.remove('dragging');D.card.style.transform='';document.body.classList.remove('hdragging');
+  if(!cancel&&D.moved&&D.t)homeDrop(D.id,D.t.c?D.t.c.dataset.hid:null,D.t.after,D.t.st.dataset.col)}
+document.addEventListener('pointerup',e=>hdEnd(e,false));
+document.addEventListener('pointercancel',e=>hdEnd(e,true));
 document.addEventListener('keydown',e=>{const tg=e.target;
   if((tg.id==='lnkIn'||tg.id==='lnkNm')&&e.key==='Enter'&&!e.isComposing){e.preventDefault();tg.parentElement.querySelector('[data-a=lnkadd]')?.click();return}
   if(tg.id==='acNames'&&!e.isComposing){if(e.key==='Enter'){e.preventDefault();acAdd(tg.value);tg.value='';return}if(e.key==='Backspace'&&!tg.value&&U.acTags.length){U.acTags.pop();acDraw();return}}
