@@ -1364,6 +1364,15 @@ const syncLoad=()=>{try{const j=JSON.parse(localStorage.getItem(SYNCK)||'null');
 const syncOn=()=>SYNC.on&&!!SYNC.sess&&!TOUR;
 const syncKey=()=>JSON.stringify({s:STORE.subjects.map(x=>x.id===STORE.cur?{...x,db:DB}:x),d:STORE.dday,y:STORE.yterms||{}});
 const syncPayload=()=>{const cs=curSub();if(cs)cs.db=DB;return {app:'jindokkae',v:5,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},subjects:STORE.subjects,alg:ALGS,log:LOG.slice(-100)}};
+/* 연동 데이터 압축: gzip → base64 로 jsonb 안에 담는다 ({z:'gzip',b:'...'}).
+   예전 형식(압축 안 한 JSON)도 그대로 읽는다. 압축을 못 하는 브라우저는 예전 형식으로 올린다 */
+const CANZ=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
+async function gzB64(str){const buf=await new Response(new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+  const u=new Uint8Array(buf);let bin='';for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(bin)}
+async function unB64(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
+async function packData(d){if(!CANZ)return d;try{const b=await gzB64(JSON.stringify(d));return {app:'jindokkae',v:d.v,z:'gzip',b}}catch(e){return d}}
+async function unpackData(d){if(!d||d.z!=='gzip')return d;if(!CANZ)throw Object.assign(new Error('nogz'),{nogz:true});return JSON.parse(await unB64(d.b))}
 const keyOf=d=>JSON.stringify({s:d.subjects,d:d.dday,y:d.yterms||{}});
 const devName=()=>{const u=navigator.userAgent;return /Android|iPhone|iPad|Mobile/i.test(u)?'모바일':'PC'};
 const jwtMail=t=>{try{const p=JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))));return p.email||''}catch(e){return ''}};
@@ -1393,7 +1402,7 @@ function syncApply(row,markDirty){const d=row.data;if(!validRemote(d)){toast('�
     STORE.subjects.forEach(x=>ensureSub(x));ddInit();HIST={};UNDO=[];REDO=[];DB=curSub().db;ALGS=d.alg||ALGS;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;U.periodSub=null;
     persist();SYNC_HASH=syncKey()}finally{SYNC_APPLY=false}
   SYNC.base=row.updated_at||SYNC.base;SYNC.dirty=!!markDirty;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();closeM();render();return true}
-async function syncPush(force){const body={data:syncPayload(),device:devName()};let rows;
+async function syncPush(force){const body={data:await packData(syncPayload()),device:devName()};let rows;
   if(!SYNC.base){try{rows=await sbApi('/rest/v1/user_data?select=updated_at',{method:'POST',prefer:'return=representation',body:{user_id:SYNC.sess.uid,...body}})}catch(e){if(e.status===409)return 'conflict';throw e}}
   else rows=await sbApi(rowUrl()+'&select=updated_at'+(force?'':`&updated_at=eq.${encodeURIComponent(SYNC.base)}`),{method:'PATCH',prefer:'return=representation',body});
   if(!rows||!rows.length)return 'conflict';
@@ -1402,7 +1411,7 @@ async function syncPush(force){const body={data:syncPayload(),device:devName()};
 async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;chipSync();let changed=false;const sig=()=>[SYNC.err,SYNC.dirty,!!SYNC.hold,SYNC.base].join('|'),s0=sig();
   try{/* 전송량 절약: 먼저 저장 시각만 확인하고, 처음 연결이거나 바뀌었을 때만 데이터 전체를 받는다 */
     const rows=await sbApi(rowUrl()+'&select=updated_at,device');let row=rows&&rows[0];
-    if(row&&(!SYNC.base||row.updated_at!==SYNC.base)){const full=await sbApi(rowUrl()+'&select=data,updated_at,device');row=full&&full[0]}
+    if(row&&(!SYNC.base||row.updated_at!==SYNC.base)){const full=await sbApi(rowUrl()+'&select=data,updated_at,device');row=full&&full[0];if(row)row.data=await unpackData(row.data)}
     if(!row){SYNC.base=null;const r=await syncPush();changed=true;if(r==='conflict')SYNC.err='서버 상태가 바뀌었어요. 잠시 뒤 다시 시도해요.'}
     else if(!SYNC.base){ /* 처음 연결 */
       if(localEmpty()){syncApply(row,false);toast('연동된 진도 데이터를 불러왔어요.')}
@@ -1415,7 +1424,7 @@ async function syncTick(why){if(!syncOn()||SYNC.busy)return;SYNC.busy=true;chipS
     else if(SYNC.dirty){const r=await syncPush();changed=true;if(r==='conflict')return syncTick('retry')}
     else{/* 바뀐 게 없으면 시각을 갱신하지 않는다: '저장 시각'은 실제로 올리거나 받은 때만 */}
     SYNC.err=SYNC.err&&SYNC.err.startsWith('로그인')?SYNC.err:''}
-  catch(e){if(e.message!=='expired')SYNC.err=navigator.onLine===false?'오프라인이에요. 연결되면 자동으로 맞춰요.':'서버와 연결하지 못했어요. 잠시 뒤 다시 시도해요.';
+  catch(e){if(e.nogz)SYNC.err='이 브라우저는 연동 데이터를 열 수 없어요. 브라우저를 최신으로 업데이트해 주세요.';else if(e.message!=='expired')SYNC.err=navigator.onLine===false?'오프라인이에요. 연결되면 자동으로 맞춰요.':'서버와 연결하지 못했어요. 잠시 뒤 다시 시도해요.';
     if(e.status===404||(e.body&&/relation .* does not exist|PGRST205/.test(e.body)))SYNC.err='서버 준비가 아직 안 됐어요. 관리자에게 알려 주세요.'}
   finally{SYNC.busy=false;chipSync();const ae=document.activeElement;if(U.view==='set'&&!$('#layer').innerHTML&&(sig()!==s0||why==='manual')&&!(ae&&ae.matches&&ae.matches('input,textarea,select')))render()}}
 /* persist()가 부르는 훅: 진짜 바뀐 게 있을 때만 '올릴 것 있음' 표시 */
@@ -1435,7 +1444,7 @@ async function openSyncHist(){let rows=[];try{rows=await sbApi(`/rest/v1/user_da
   <div class="dlist">${rows.map(r=>`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>${fmtT(r.saved_at)}</b> <small>${esc(r.device||'')}</small></span><button class="btn sm" data-a="synchist" data-x="${r.id}">이 버전으로</button></div>`).join('')||'<p class="muted">아직 이전 버전이 없어요.</p>'}
   ${bak&&bak.data?`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>이 기기에서 마지막으로 바꾸기 전</b> <small>${esc(bak.t||'')} · ${sumOf(bak.data)}</small></span><button class="btn sm" data-a="synchist" data-x="bak">이 버전으로</button></div>`:''}</div>
   <div class="acts"><button class="btn" data-a="close">닫기</button></div>`)}
-async function syncHistGo(id){try{let d;if(id==='bak'){d=JSON.parse(localStorage.getItem('jindokkae.syncbak')).data}else{const r=await sbApi(`/rest/v1/user_data_hist?id=eq.${+id}&select=data`);d=r&&r[0]&&r[0].data}
+async function syncHistGo(id){try{let d;if(id==='bak'){d=JSON.parse(localStorage.getItem('jindokkae.syncbak')).data}else{const r=await sbApi(`/rest/v1/user_data_hist?id=eq.${+id}&select=data`);d=await unpackData(r&&r[0]&&r[0].data)}
   if(syncApply({data:d,updated_at:SYNC.base},true)){toast('이전 버전을 불러왔어요.');clearTimeout(SYNC_T);SYNC_T=setTimeout(()=>syncTick('push'),600)}}catch(e){toast('불러오지 못했어요.')}}
 function syncLogin(){location.href=`${SB_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(location.origin+location.pathname)}`}
 function syncOff(){const t=SYNC.sess&&SYNC.sess.access;if(t)fetch(SB_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+t}}).catch(()=>{});
