@@ -439,6 +439,7 @@ table.mtt{border-spacing:3px;min-width:240px}
 .day.out{opacity:.35}
 .day.sel{border-color:var(--accent);background:var(--accent-soft)}
 .day .dn{font-size:12px;font-weight:700}
+.dnw{display:flex;align-items:center;gap:4px;line-height:1}.tdd{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);flex:none}.tdd.done{background:color-mix(in srgb,var(--warn) 30%,var(--surface-2));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--warn) 45%,transparent)}.wh .tdd{margin-left:5px;vertical-align:middle}
 .day.today .dn{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:0 7px;align-self:flex-start}
 .day.hol .dn{color:var(--bad)}
 .ev{font-size:10.5px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:4px;padding:0 4px;max-width:100%}
@@ -2133,14 +2134,17 @@ function calBody(){const SRc=srInfo();
         pip:`<span class="pip ${s.status==='done'?'':s.status}" style="--cc:${ccv(s.c)}" title="${esc(pre)}">${esc(cn(s.c))}</span>`,
         row:`<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center">${sessChip(s,true,pre,`data-sub="${sb.id}"`)}<span style="font-size:12px;min-width:0">${s.p}교시 · ${stag(sk(s))} ${s.n?`${s.n}차시 ${esc(lname(s.n))}`:s.status==='moved'?moveDest(s):s.status==='absent'?esc((excOf(s)?.reason||'')+' '+(excOf(s)?.note||'')):''}</span></div>`}))})}));
   const evVis=k=>DD[k].evs.filter(x=>x.e.kind==='hol'||U.flt[x.e.kind]!==false);
+  /* 날짜가 있는 할 일 · 메모가 있는 날: 날짜 옆에 점 (남은 게 있으면 진하게, 모두 완료면 연하게) */
+  const TDM={};DB.todos.forEach(t=>{if(!t.date)return;const o=TDM[t.date]||(TDM[t.date]={n:0,open:0});o.n++;if(!t.d)o.open++});
+  const tdDot=k=>{const o=TDM[k];return o?`<i class="tdd ${o.open?'':'done'}" title="${o.open?`할 일 · 메모 ${o.open}개 남음`:'할 일 · 메모 모두 완료'}" role="img" aria-label="할 일 · 메모 ${o.n}개"></i>`:''};
   const ssVis=k=>DD[k].ss.filter(x=>U.flt[kindOf(x.s)]).sort((a,b)=>a.s.p-b.s.p);
   if(U.calMode==='month'){const {y,m}=U.month;title=`${y}. ${pad(m+1)}`;
     let cells='';dates.forEach(k=>{const dt=D(k);
       const hol=DD[k].evs.some(x=>x.e.kind==='hol')||dt.getDay()===0;
-      cells+=`<button class="day ${dt.getMonth()!==m?'out':''} ${k===TK?'today':''} ${k===U.sel?'sel':''} ${hol?'hol':''}" data-a="day" data-x="${k}" aria-label="${md(k)}"><span class="dn mono">${dt.getDate()}</span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}<span class="pips">${ssVis(k).map(x=>x.pip).join('')}</span></button>`});
+      cells+=`<button class="day ${dt.getMonth()!==m?'out':''} ${k===TK?'today':''} ${k===U.sel?'sel':''} ${hol?'hol':''}" data-a="day" data-x="${k}" aria-label="${md(k)}"><span class="dnw"><span class="dn mono">${dt.getDate()}</span>${tdDot(k)}</span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}<span class="pips">${ssVis(k).map(x=>x.pip).join('')}</span></button>`});
     grid=`<div class="calg">${[...WD].map(w=>`<div class="wd">${w}</div>`).join('')}${cells}</div>`;
   }else{title=`${md(U.week)} ~ ${md(addK(U.week,4))}`;
-    grid=`<div class="weekg">${dates.map(k=>`<div class="wcol ${k===TK?'today':''} ${k===U.sel?'sel':''}" data-a="day" data-x="${k}"><span class="wh">${wd(k)} <b class="mono">${md(k)}</b></span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}${ssVis(k).map(x=>x.chip).join('')}</div>`).join('')}</div>`;}
+    grid=`<div class="weekg">${dates.map(k=>`<div class="wcol ${k===TK?'today':''} ${k===U.sel?'sel':''}" data-a="day" data-x="${k}"><span class="wh">${wd(k)} <b class="mono">${md(k)}</b>${tdDot(k)}</span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}${ssVis(k).map(x=>x.chip).join('')}</div>`).join('')}</div>`;}
   const k=U.sel,evs=DD[k].evs,ss=DD[k].ss.sort((a,b)=>a.s.p-b.s.p),tds=DB.todos.map((t,i)=>({...t,i})).filter(t=>t.date===k);
   const actSubs=[...new Map(ss.filter(x=>['plan','check','done'].includes(x.s.status)).map(x=>[x.sb.id,x.sb])).values()];
   const blk=subs.length&&subs.every(sb=>dayBlock(sb.db,k))?dayBlock(subs[0].db,k):null;
