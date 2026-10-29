@@ -1658,8 +1658,10 @@ function autoFor(k){return (SCH.by[k]||[]).filter(s=>s.status==='plan'||(k===TK&
 /* 할 일 박스에서 넘길 다음/이전 '수업일' (주말·휴업일 건너뜀) */
 function tdStep(k,dir){const subs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());const dbs=(subs.length?subs:STORE.subjects).map(x=>x.db).filter(Boolean);
   let d=k;for(let i=0;i<60;i++){d=addK(d,dir);if(dir<0&&d<TK)return TK;if(!dbs.length?![0,6].includes(D(d).getDay()):dbs.some(db=>!dayBlock(db,d)))return d}return addK(k,dir)}
+function lsStep(k,dir){const subs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());const dbs=(subs.length?subs:STORE.subjects).map(x=>x.db).filter(Boolean);
+  let d=k;for(let i=0;i<60;i++){d=addK(d,dir);if(!dbs.length?![0,6].includes(D(d).getDay()):dbs.some(db=>!dayBlock(db,d)))return d}return addK(k,dir)}
 function homeSub(sb){
-  const tday=SCH.by[TK]||[];
+  const tday=SCH.by[TK]||[],LD=U.lsDay||TK,lday=SCH.by[LD]||[];
   const act=tday.filter(s=>['plan','check','done'].includes(s.status));
   const done=act.filter(s=>s.status==='done'),plan=act.filter(s=>s.status==='plan');
   const checks=[];for(let i=21;i>=0;i--){(SCH.by[addK(TK,-i)]||[]).forEach(s=>{if(s.status==='check')checks.push(s)})}
@@ -1667,8 +1669,8 @@ function homeSub(sb){
   const sq=`var(--c${Math.max(0,STORE.subjects.findIndex(x=>x.id===sb.id))%PALETTE+1})`;
   /* 오늘의 수업 목록 */
   const dseen={},dsh={};
-  const rows=tday.map(s=>{let ovr=false;if(s.status==='plan'&&!s.doing&&!dseen[s.c]){const v0=rec(DB,s.c,SCH.nextN[s.c]);if(v0&&v0.doing&&!v0.done){ovr=true;dsh[s.c]=Math.max(0,(s.n||0)-SCH.nextN[s.c])}}if(['plan','check','done'].includes(s.status))dseen[s.c]=1;
-    const k=ovr?'doing':s.status==='plan'&&isNow(DB,TK,s.p)?'now':sk(s),[lab,tg]=HST[k],n=ovr?SCH.nextN[s.c]:s.status==='plan'&&dsh[s.c]&&s.n?s.n-dsh[s.c]:s.n||SCH.nextN[s.c],dead=s.status==='absent'||s.status==='moved';
+  const rows=lday.map(s=>{let ovr=false;if(LD===TK&&s.status==='plan'&&!s.doing&&!dseen[s.c]){const v0=rec(DB,s.c,SCH.nextN[s.c]);if(v0&&v0.doing&&!v0.done){ovr=true;dsh[s.c]=Math.max(0,(s.n||0)-SCH.nextN[s.c])}}if(['plan','check','done'].includes(s.status))dseen[s.c]=1;
+    const k=ovr?'doing':s.status==='plan'&&LD===TK&&isNow(DB,TK,s.p)?'now':sk(s),[lab,tg]=HST[k],n=ovr?SCH.nextN[s.c]:s.status==='plan'&&dsh[s.c]&&s.n?s.n-dsh[s.c]:s.n||SCH.nextN[s.c],dead=s.status==='absent'||s.status==='moved';
     const sub2=s.status==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:s.status==='moved'?moveDest(s):esc(lname(n));
     const pawb=dead?'':s.status==='done'?`<button class="tog on" data-a="uncomplete" data-x="${s.c}|${s.n}" title="완료 취소" aria-label="${esc(cn(s.c))} ${s.p}교시 완료 취소">${paw(20)}</button>`
       :`<button class="tog ${k==='doing'?'doing':''}" data-a="done" data-x="${s.key}" title="${k==='doing'?'진행 중인 수업을 완료로 기록':'수업 완료로 기록'}" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
@@ -1784,8 +1786,9 @@ function vHome(){
   /* 오늘의 수업 */
   const rows=parts.flatMap(p=>p.h.rows).sort((a,b)=>a.p-b.p);
   const nxAll=withCls.map(p=>p.h.nx).filter(Boolean).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.p-b.p)[0];
-  const emptyDay=nxAll?`<p class="muted" style="margin:0">오늘은 수업이 없어요. 다음 수업은 <b>${mdw(nxAll.date)} ${nxAll.p}교시</b>예요.</p>`:'<p class="muted" style="margin:0">오늘은 수업이 없어요.</p>';
-  const todayCard=withCls.length?`<div class="card" id="todaycard"><h2>${ic('cal',18)} 오늘의 수업<span class="right"><button class="hlink" data-a="gott">전체 보기 →</button></span></h2>${rows.length?rows.map(r=>r.html).join(''):emptyDay}</div>`:'';
+  const LD=U.lsDay||TK,lsT=LD===TK,lsName=lsT?'오늘':LD===addK(TK,1)?'내일':LD===addK(TK,-1)?'어제':mdw(LD);
+  const emptyDay=!lsT?`<p class="muted" style="margin:0">${mdw(LD)}에는 수업이 없어요.</p>`:nxAll?`<p class="muted" style="margin:0">오늘은 수업이 없어요. 다음 수업은 <b>${mdw(nxAll.date)} ${nxAll.p}교시</b>예요.</p>`:'<p class="muted" style="margin:0">오늘은 수업이 없어요.</p>';
+  const todayCard=withCls.length?`<div class="card" id="todaycard"><h2 class="tdh"><button type="button" class="tdnav" data-a="lsday" data-x="-1" aria-label="이전 수업일">‹</button><span class="tdt">${ic('cal',18)} <span>${lsName}의 수업</span></span><button type="button" class="tdnav" data-a="lsday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${lsT?'':`<button class="hlink" data-a="lsday" data-x="0">오늘로</button>`}<button class="hlink" data-a="gott">전체 보기 →</button></span></h2>${rows.length?rows.map(r=>r.html).join(''):emptyDay}</div>`:'';
   const noCls=withCls.length?parts.filter(p=>!p.h.hasCls):[];
   const alertsCard=(parts.some(p=>p.h.alerts)||noCls.length)?`<div class="card" id="alertcard" style="border-color:var(--warn)"><h2>${ic('warn',18)} 확인이 필요해요</h2>
     ${noCls.map(({sb})=>`<div class="hempty2" data-sub="${sb.id}"><span><b>${esc(subjMain(sb))}</b> <span class="muted">${esc(subjMeta(sb))}</span> 교과는 아직 학급이 없어요.</span><button class="btn sm pri" data-a="addclass">학급 추가</button></div>`).join('')}
@@ -2692,6 +2695,7 @@ document.addEventListener('click',e=>{
    case 'ttc':U.ttClass=x;render();break;
    case 'dabshow':{const th=e.target.closest('th');const on=!th.classList.contains('arm');document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));if(on)th.classList.add('arm');break}
    case 'lnkgo':break;
+   case 'lsday':U.lsDay=x==='0'?TK:lsStep(U.lsDay||TK,+x);render();break;
    case 'tdday':U.tdDay=x==='0'?TK:tdStep(U.tdDay||TK,+x);render();break;
    case 'hedit':U.homeEdit=true;render();break;
    case 'hdone':U.homeEdit=false;render();toast('홈 배치를 저장했어요. 이 기기에만 적용돼요.');break;
@@ -2916,10 +2920,13 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
 });
 document.addEventListener('click',e=>{if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 /* 할 일 박스: 휴대폰에서 좌우로 밀면 날짜 넘기기 */
-let TDSW=null;
+let TDSW=null,LSSW=null;
 document.addEventListener('touchstart',e=>{const c=e.target.closest&&e.target.closest('#todocard');if(!c||e.touches.length>1||e.target.closest('input,textarea,form,.hmain.editing'))return;TDSW={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
 document.addEventListener('touchend',e=>{const S=TDSW;TDSW=null;if(!S)return;const t=e.changedTouches[0],dx=t.clientX-S.x,dy=t.clientY-S.y;
   if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;if(dx>0&&(U.tdDay||TK)<=TK)return;U.tdDay=tdStep(U.tdDay||TK,dx<0?1:-1);render()},{passive:true});
+document.addEventListener('touchstart',e=>{const c=e.target.closest&&e.target.closest('#todaycard');if(!c||e.touches.length>1||e.target.closest('input,textarea,form,.hmain.editing'))return;LSSW={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
+document.addEventListener('touchend',e=>{const S=LSSW;LSSW=null;if(!S)return;const t=e.changedTouches[0],dx=t.clientX-S.x,dy=t.clientY-S.y;
+  if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;U.lsDay=lsStep(U.lsDay||TK,dx<0?1:-1);render()},{passive:true});
 /* 홈 편집: 카드 위쪽 막대(⠿)를 잡고 끌어서 옮기기 — 마우스·터치·펜 모두 (pointer 이벤트) */
 let HDRAG=null;
 function hdClear(){document.querySelectorAll('.hcard.dropb,.hcard.dropa,.stack.dropc').forEach(x=>x.classList.remove('dropb','dropa','dropc'))}
