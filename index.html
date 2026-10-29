@@ -2333,6 +2333,8 @@ function closeM(){$('#layer').innerHTML='';U.abs=U.mv=U.ttEdit=U.imp=U.sess=U.av
 function openSess(k){U.sess=k;const s=SCH.key[k];if(!s)return;const e=excOf(s),n=s.status==='check'?SCH.nextN[s.c]:(s.n||SCH.nextN[s.c]);const acts=[];
   if(s.status==='plan'){if(s.date<=TK)acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업 완료</button>`);if(!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);acts.push(`<button class="btn" data-a="nop" data-x="${s.key}" title="수업은 했지만 진도는 안 나간 날(자습·활동·시험 뒤풀이 등). 차시를 쓰지 않고 다음으로 넘어가요">진도 없음</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 처리</button>`)}
   if(s.status==='check')acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업했어요 (${n}차시)</button>`,`<button class="btn" data-a="nop" data-x="${s.key}" title="수업은 했지만 진도는 안 나간 날(자습·활동 등)">진도 없음 (자습·활동)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손이었어요</button>`);if(s.status==='check'&&!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);
+  if((s.status==='plan'||s.status==='check')&&s.date<=TK&&L(SCH.nextN[s.c])){const rc=rec(DB,s.c,SCH.nextN[s.c]),dg=!!(rc&&rc.doing&&!rc.done);
+    const at=acts.findIndex(h=>h.includes('data-a="done"'));acts.splice(at<0?0:at+1,0,`<button class="btn" data-a="doingtog" data-x="${s.key}" title="${dg?'진행 중 표시를 없애요':'이 차시를 아직 다 못 끝냈을 때 \'진행 중\'으로 두면, 다음 수업이 같은 차시를 이어 가요'}">${dg?'진행 중 해제':'진행 중으로 표시'}</button>`)}
   if(s.status==='skipped')acts.push(`<button class="btn" data-a="nop" data-x="${s.key}">진도 없음 (자습·활동)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 처리</button>`);
   if(s.status==='done')acts.push(`<button class="btn" data-a="cell" data-x="${s.c}|${s.n}">진도표에서 보기</button>`,`<button class="btn" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손으로 바꾸기</button>`);
   if(['plan','check','done','skipped'].includes(s.status)&&!s.extra){const al=autoAbsLab(s);if(al)acts.push(`<button class="btn bad" data-a="autoabs" data-x="${s.key}">'${esc(al)}' 결손 다시 적용</button>`)}
@@ -2653,6 +2655,11 @@ document.addEventListener('click',e=>{
    case 'cmdel':{const nm=cn(x);if(U.selCell?.c===x){U.selCell=null;U.draft=null}mutate(`학급 삭제: ${nm}`,db=>C.removeClass(db,x));break}
    case 'sess':openSess(x);break;
    case 'absence':openAbsence(SCH.key[x].date,[x]);break;
+   case 'doingtog':{const z=SCH.key[x];if(!z)break;const n=SCH.nextN[z.c];if(!L(n))break;const r=rec(DB,z.c,n),dg=!!(r&&r.doing&&!r.done);
+     mutate(`${cn(z.c)} ${n}차시 ${dg?'진행 중 해제':'진행 중 표시'}`,db=>{const o=rec(db,z.c,n)||{},pr=o.print?{print:true}:{},memo=o.memo||'',actual=o.actual||'';
+       if(dg){C.setRecord(db,z.c,n,(memo||actual||o.print)?{done:false,date:'',memo,actual,...pr}:null)}
+       else C.setRecord(db,z.c,n,{done:false,doing:true,date:'',memo,actual,...pr})},
+       {refs:[lref(z.c,n)],msg:dg?`${n}차시 '진행 중' 표시를 없앴어요.`:`${cn(z.c)} ${n}차시를 '진행 중'으로 표시했어요. 다음 수업이 이어 가요.`});break}
    case 'nop':{const z=SCH.key[x];if(!z)break;mutate(`${md(z.date)} ${cn(z.c)} 진도 없음`,db=>C.nop(db,[z]),{msg:`${md(z.date)} ${z.p}교시를 '진도 없음'으로 두었어요. 차시는 그대로 다음 수업으로 넘어가요.`});break}
    case 'absday':openAbsence(x,(SCH.by[x]||[]).filter(z=>['plan','check','done','skipped'].includes(z.status)).map(z=>z.key));break;
    case 'absall':{const ss=(SCH.by[U.abs.date]||[]).filter(s=>['plan','check','done'].includes(s.status));const all=ss.every(s=>U.abs.keys.has(s.key));U.abs.keys=new Set(all?[]:ss.map(s=>s.key));drawAbsence();break}
