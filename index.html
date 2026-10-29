@@ -1686,7 +1686,7 @@ function homeSub(sb){
   const prog=DB.classes.length&&total?{sbId:sb.id,icon:sb.icon,name:subjMain(sb),meta:subjMeta(sb),sq,done:lead,total,pct:Math.round(lead/total*100),nCheck:checks.length,
     cls:DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return {name:cn(c.id),d,gap:lead-d,color:ccv(c.id)}})}:null;
   /* 다음 수업 */
-  let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan');if(f){const v0=rec(DB,f.c,SCH.nextN[f.c]),dg=!!(v0&&v0.doing&&!v0.done),fn=dg?SCH.nextN[f.c]:f.n,les=L(fn)||{};
+  let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan'&&!isPast(DB,k,x.p));if(f){const v0=rec(DB,f.c,SCH.nextN[f.c]),dg=!!(v0&&v0.doing&&!v0.done),fn=dg?SCH.nextN[f.c]:f.n,les=L(fn)||{};
     nx={date:k,p:f.p,key:f.key,sbId:sb.id,cn:cn(f.c),subj:subjMain(sb),n:fn,doing:dg||!!f.doing,topic:lname(fn),pages:les.pages||'',materials:les.materials||'',note:les.note||'',links:les.links||[],t1:PT(f.p),t2:endT(f.p),now:isNow(DB,k,f.p)}}}
   /* 다가오는 일정 */
   const evs=allEvents(DB).filter(e=>(e.e||e.s)>=TK).map(e=>{const a=e.assessId?DB.assess.find(x=>x.id===e.assessId):null;
