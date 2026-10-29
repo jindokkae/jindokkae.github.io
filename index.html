@@ -1238,7 +1238,7 @@ const predTxt=v=>v>DB.lessons.length?`준비된 ${DB.lessons.length}차시 모�
 
 /* ---- 저장·실행 취소 ---- */
 const curSub=()=>STORE.subjects.find(x=>x.id===STORE.cur);
-function persist(){if(TOUR)return;try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}try{schedRem()}catch(e){}try{syncDirty()}catch(e){}}
+function persist(){if(TOUR)return;try{if(NOTIF.push&&(NOTIF.todoOn||NOTIF.nagOn))schedRem()}catch(e){}try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}try{schedRem()}catch(e){}try{syncDirty()}catch(e){}}
 function persistNeis(){try{localStorage.setItem(NEISK,JSON.stringify(NEIS));localStorage.setItem(MEALK,JSON.stringify(MEALS))}catch(e){}}
 function logAdd(label,refs){LOG.push({t:stamp(),label,refs:refs||[]});if(LOG.length>300)LOG.shift()}
 function boot(){try{const u=JSON.parse(localStorage.getItem('jindokkae.ui')||'{}');if(u.tpW>=120&&u.tpW<=560)U.tpW=u.tpW}catch(e){}
@@ -2234,7 +2234,7 @@ function sheetTSV(){const h=['차시','수업 주제','교과서','수업 내용
   const rows=DB.lessons.map((l,i)=>[(i+1)+'차시',l.topic,l.pages,l.content,l.note,...DB.classes.flatMap(c=>{const r=rec(DB,c.id,i+1);return [r?.done?'O':r?.doing?'진행중':'',r?.done?mdw(r.date):'',r?.print?'O':'',r?.memo||'']})]);
   return [h,...rows].map(r=>r.map(v=>String(v??'').replace(/[\t\n]/g,' ')).join('\t')).join('\n')}
 function sheetCSV(){return '﻿'+sheetTSV().split('\n').map(r=>r.split('\t').map(v=>/[",]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v).join(',')).join('\r\n')}
-const NOTK='jindokkae.notif';let NOTIF={on:false,meal:'12:00',last:'',after:true,delay:3,seen:{}};
+const NOTK='jindokkae.notif';let NOTIF={on:false,meal:'12:00',last:'',after:true,delay:3,seen:{},todoOn:false,todoTime:'07:30',todoLast:'',nagOn:false,nagTime:'18:00',nagLast:''};
 try{NOTIF={...NOTIF,...JSON.parse(localStorage.getItem(NOTK)||'{}')}}catch(e){}
 const saveNotif=()=>{try{localStorage.setItem(NOTK,JSON.stringify(NOTIF))}catch(e){}};
 const canNotif=()=>typeof Notification!=='undefined';
@@ -2254,19 +2254,36 @@ async function pushOff(){try{const sub=await pushSub(false);if(sub){const ep=sub
 let NTRY=0;
 var REMT=null;
 function schedRem(now){clearTimeout(REMT);REMT=setTimeout(remSync,now?200:2500)}
+/* 오늘 할 일 · 메모 알림 / 독촉 알림 */
+function todoSubs(){const subs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());return subs.length?subs:STORE.subjects}
+function openTodosOn(k){/* 날짜 없는 메모는 오늘과 평일에만, 날짜를 정한 항목은 그 날에 */
+  return todoSubs().flatMap(sb=>(sb.db.todos||[]).filter(t=>!t.d&&(t.date?t.date===k:(k===TK||![0,6].includes(D(k).getDay())))).map(t=>t.t))}
+function todoBody(items,nag){const sh=items.slice(0,3).map(x=>x.length>22?x.slice(0,21)+'…':x).join(', '),more=items.length>3?` 외 ${items.length-3}개`:'';
+  return nag?`아직 못 끝낸 할 일 · 메모가 ${items.length}개 남았어요: ${sh}${more}`:`오늘 할 일 · 메모 ${items.length}개: ${sh}${more}`}
+const TODO_TITLE='진도깨의 오늘 할 일 📝',NAG_TITLE='진도깨의 할 일 독촉 ⏰';
+function buildTodoReminders(){const out=[],now=Date.now();
+  for(let i=0;i<=7;i++){const k=addK(TK,i),it=openTodosOn(k);if(!it.length)continue;
+    [[NOTIF.todoOn,NOTIF.todoTime,TODO_TITLE,'todo',false],[NOTIF.nagOn,NOTIF.nagTime,NAG_TITLE,'nag',true]].forEach(([on,tm,title,tg,nag])=>{
+      if(!on||!/^\d\d:\d\d$/.test(tm||''))return;const at=new Date(`${k}T${tm}:00+09:00`);if(isNaN(+at)||+at<=now)return;
+      out.push({at:at.toISOString(),title,body:todoBody(it,nag),tag:`${tg}-${k}`})})}
+  return out}
+function todoTick(){const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes());
+  [['todoOn','todoTime','todoLast',TODO_TITLE,false],['nagOn','nagTime','nagLast',NAG_TITLE,true]].forEach(([on,tm,last,title,nag])=>{
+    if(!NOTIF[on]||NOTIF[last]===TK||hm<NOTIF[tm]||toMin(hm)>toMin(NOTIF[tm])+180)return;
+    NOTIF[last]=TK;saveNotif();const it=openTodosOn(TK);if(it.length)showNote(title,todoBody(it,nag),(nag?'nag-':'todo-')+TK)})}
 function buildReminders(){const out=[],dl=+NOTIF.delay||3,now=Date.now();
   STORE.subjects.forEach(sb=>{try{withSub(sb,()=>{for(let i=0;i<=7;i++){const k=addK(TK,i);(SCH.by[k]||[]).forEach(s=>{if(s.status!=='plan'&&s.status!=='check')return;
     const e=toMin(PT(s.p))+50+dl;if(isNaN(e))return;const at=new Date(`${k}T${pad(Math.floor(e/60))}:${pad(e%60)}:00+09:00`);if(+at<=now)return;
     out.push({at:at.toISOString(),body:`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크 부탁드려요! 🐾`,tag:`end-${sb.id}-${s.key}`})})}})}catch(e){}});
   out.sort((a,b)=>a.at<b.at?-1:1);return out.slice(0,150)}
 async function remSync(){if(!NOTIF.on||!NOTIF.push||TOUR)return;try{const sub=await pushSub(false);if(!sub)return;
-  await pushCall({action:'reminders',endpoint:sub.endpoint,items:NOTIF.after===false?[]:buildReminders()})}catch(e){}}
+  await pushCall({action:'reminders',endpoint:sub.endpoint,items:[...(NOTIF.after===false?[]:buildReminders()),...buildTodoReminders()].sort((a,b)=>a.at<b.at?-1:1).slice(0,190)})}catch(e){}}
 function afterTick(){if(NOTIF.after===false)return;const d=new Date(),cur=d.getHours()*60+d.getMinutes(),dl=+NOTIF.delay||3;const seen=NOTIF.seen||(NOTIF.seen={});
   Object.keys(seen).forEach(k=>{if(k.slice(0,10)<TK)delete seen[k]});
   STORE.subjects.forEach(sb=>{try{withSub(sb,()=>{(SCH.by[TK]||[]).forEach(s=>{if(s.status!=='plan'&&s.status!=='check')return;
     const e=toMin(PT(s.p))+50+dl,kk=TK+'|'+sb.id+'|'+s.key;if(isNaN(e)||cur<e||cur>e+30||seen[kk])return;
     seen[kk]=1;saveNotif();showNote('진도깨의 진도 체크 🐾',`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크 부탁드려요!`,'end-'+kk)})})}catch(e){}})}
-function notifTick(){if(NOTIF.push||!NOTIF.on||!canNotif()||Notification.permission!=='granted'||TOUR)return;try{afterTick()}catch(e){}if(NOTIF.mealOn===false)return;
+function notifTick(){if(NOTIF.push||!NOTIF.on||!canNotif()||Notification.permission!=='granted'||TOUR)return;try{afterTick()}catch(e){}try{todoTick()}catch(e){}if(NOTIF.mealOn===false)return;
   const hm=String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
   if(NOTIF.last===TK||hm<NOTIF.meal||toMin(hm)>toMin(NOTIF.meal)+180)return;
   if([0,6].includes(D(TK).getDay())){NOTIF.last=TK;saveNotif();return}
@@ -2288,8 +2305,12 @@ function notifCard(){const ok=canNotif(),perm=ok?Notification.permission:'unsupp
     <div class="nc"><input type="time" id="notifTime" value="${NOTIF.meal}" ${on&&NOTIF.mealOn!==false?'':'disabled'}><button class="btn sm" data-a="notifTest" data-x="meal" ${on?'':'disabled'}>테스트</button>${sw('notifMeal',NOTIF.mealOn!==false,!on)}</div></div>
    <div class="nrow"><img src="${JD_SRC}" alt="진도깨"><div class="nt"><b>진도깨 · 진도 체크 알림</b><small>수업이 끝나면 진도 체크를 부탁드려요</small></div>
     <div class="nc"><select id="notifDelay" ${on&&NOTIF.after!==false?'':'disabled'}>${[3,5,10].map(m=>`<option value="${m}" ${(+NOTIF.delay||3)===m?'selected':''}>${m}분 뒤</option>`).join('')}</select><button class="btn sm" data-a="notifTest" data-x="after" ${on?'':'disabled'}>테스트</button>${sw('notifAfter',NOTIF.after!==false,!on)}</div></div>
+   <div class="nrow"><img src="${JD_SRC}" alt="진도깨"><div class="nt"><b>진도깨 · 오늘 할 일 알림</b><small>매일 정해진 시각에 오늘 할 일 · 메모를 알려요 (없으면 안 보내요)</small></div>
+    <div class="nc"><input type="time" id="notifTodoTime" value="${NOTIF.todoTime}" ${on&&NOTIF.todoOn?'':'disabled'}><button class="btn sm" data-a="notifTest" data-x="todo" ${on?'':'disabled'}>테스트</button>${sw('notifTodo',!!NOTIF.todoOn,!on)}</div></div>
+   <div class="nrow"><img src="${JD_SRC}" alt="진도깨"><div class="nt"><b>진도깨 · 할 일 독촉 알림</b><small>그 시각까지 못 끝낸 할 일이 남아 있을 때만 다시 알려요</small></div>
+    <div class="nc"><input type="time" id="notifNagTime" value="${NOTIF.nagTime}" ${on&&NOTIF.nagOn?'':'disabled'}><button class="btn sm" data-a="notifTest" data-x="nag" ${on?'':'disabled'}>테스트</button>${sw('notifNag',!!NOTIF.nagOn,!on)}</div></div>
   </div>
-  <details class="nhelp"><summary>알림이 안 올 때 · 창을 닫아도 받으려면</summary><div><b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기<br><b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기<br>컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요. 진도 체크 알림은 앞으로 7일 안의 미기록 수업이 대상이고, 앱을 열 때마다 새로 맞춰져요.</div></details>`}</div>`}
+  <details class="nhelp"><summary>알림이 안 올 때 · 창을 닫아도 받으려면</summary><div><b>크롬</b>: 설정 → 시스템 → "Chrome을 닫은 후에도 백그라운드 앱 계속 실행" 켜기<br><b>엣지</b>: 설정 → 시스템 및 성능 → "Microsoft Edge를 닫은 후에도 백그라운드 확장 및 앱 계속 실행" 켜기<br>컴퓨터가 꺼져 있거나 절전 중이면 오지 않아요. 진도 체크·할 일 알림은 앞으로 7일 안의 내용이 대상이고, 앱을 열거나 할 일을 바꿀 때마다 새로 맞춰져요. 독촉 알림은 그 시각에 완료되지 않은 항목이 있을 때만 와요.</div></details>`}</div>`}
 /* 설정 맨 위 도구줄: 도움말 · 앱 설치 · 라이트/다크 */
 const themeNow=()=>{const t=document.documentElement.dataset.theme;return t==='dark'||t==='light'?t:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')};
 function applyTheme(){try{const t=localStorage.getItem('jindokkae.theme');if(t==='dark'||t==='light')document.documentElement.dataset.theme=t}catch(e){}}
@@ -2610,12 +2631,13 @@ document.addEventListener('click',e=>{
       Notification.requestPermission().then(async r=>{NOTIF.on=r==='granted';NOTIF.push=false;
         if(NOTIF.on&&pushOk()){try{NOTIF.push=await pushSync(true)}catch(e){NOTIF.push=false}}
         saveNotif();schedRem(true);render();toast(r!=='granted'?'알림이 허용되지 않았어요.':NOTIF.push?`창을 닫아도 매일 ${NOTIF.meal}에 급식을 알려줄게요, 멍!`:`앱이 켜져 있을 때 ${NOTIF.meal}에 알려줄게요. (백그라운드 설정에 실패했어요)`)});break}
-   case 'notifTest':{const kind=x==='after'?'after':'meal',nm=kind==='after'?'진도깨':'밥숑';
+   case 'notifTest':{const kind=['after','todo','nag'].includes(x)?x:'meal',nm=kind==='meal'?'밥숑':'진도깨';
       if(!canNotif()||Notification.permission!=='granted'){toast('먼저 알림을 켜 주세요.');break}
       const stamp=Date.now();
       if(NOTIF.push){toast(`${nm} 테스트 알림을 보내는 중이에요…`);
-        pushSub(false).then(sub=>{if(!sub)throw new Error('구독 정보가 없어요. 알림을 껐다 다시 켜 주세요.');return pushSync(false).then(()=>pushCall({action:'test',kind,endpoint:sub.endpoint}))})
+        pushSub(false).then(sub=>{if(!sub)throw new Error('구독 정보가 없어요. 알림을 껐다 다시 켜 주세요.');return pushSync(false).then(()=>pushCall({action:'test',kind,endpoint:sub.endpoint,body:kind==='todo'||kind==='nag'?(()=>{const it=openTodosOn(TK);return it.length?todoBody(it,kind==='nag')+' (테스트)':'오늘 남은 할 일 · 메모가 없어요. (테스트)'})():undefined}))})
           .then(r=>toast(r&&r.ok?`${nm} 테스트 알림을 보냈어요. 잠시 뒤 도착해요.`:'알림 서버가 전송에 실패했어요.')).catch(e=>toast('테스트 알림을 보내지 못했어요. '+(e&&e.message?e.message:'')));break}
+      if(kind==='todo'||kind==='nag'){const it=openTodosOn(TK);showNote(kind==='nag'?NAG_TITLE:TODO_TITLE,it.length?todoBody(it,kind==='nag')+' (테스트)':'오늘 남은 할 일 · 메모가 없어요. (테스트)','test-'+kind+'-'+stamp).then(ok=>toast(ok?`${nm} 테스트 알림을 보냈어요.`:'알림을 표시하지 못했어요. 브라우저·윈도우 알림 설정을 확인해 주세요.'));break}
       (kind==='after'?showNote('진도깨의 진도 체크 🐾','수업이 끝났어요. 진도 체크 부탁드려요! (테스트)','test-after-'+stamp):showNote('밥숑의 오늘 급식 🍚',mealNoteBody()||'밥숑이 알림을 잘 보내고 있어요, 왈! (테스트)','test-meal-'+stamp)).then(ok=>toast(ok?`${nm} 테스트 알림을 보냈어요.`:'알림을 표시하지 못했어요. 브라우저·윈도우 알림 설정을 확인해 주세요.'));break}
    case 'zoom':setZoom(+x);break
    case 'tut':openHelp();break;
@@ -2826,6 +2848,8 @@ document.addEventListener('change',e=>{const tg=e.target;
   if(tg.id==='tYear'){U.setYear=+tg.value;render();return}
   if(tg.id==='notifTime'){if(tg.value){NOTIF.meal=tg.value;NOTIF.last='';saveNotif();if(NOTIF.push)pushSync(false).catch(()=>{})}return}
   if(tg.id==='notifMeal'){NOTIF.mealOn=tg.checked;NOTIF.last='';saveNotif();if(NOTIF.push)pushSync(false).catch(()=>{});render();return}
+  if(tg.id==='notifTodo'||tg.id==='notifNag'){const n=tg.id==='notifNag';NOTIF[n?'nagOn':'todoOn']=tg.checked;NOTIF[n?'nagLast':'todoLast']='';saveNotif();schedRem(true);render();return}
+  if(tg.id==='notifTodoTime'||tg.id==='notifNagTime'){const n=tg.id==='notifNagTime';if(tg.value){NOTIF[n?'nagTime':'todoTime']=tg.value;NOTIF[n?'nagLast':'todoLast']='';saveNotif();schedRem(true)}return}
   if(tg.id==='notifAfter'){NOTIF.after=tg.checked;saveNotif();schedRem(true);render();return}
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
   if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){sb.db.todos[+ix].d=tg.checked;persist();render()}return}
