@@ -1600,7 +1600,7 @@ function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
   <div class="acts">${sb?`<button type="button" class="btn bad" data-a="subjdel" data-x="${sb.id}" ${STORE.subjects.length<2?'disabled title="마지막 교과는 지울 수 없어요"':''}>이 교과 삭제</button>`:''}<span style="flex:1"></span><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">${sb?'저장':'만들기'}</button></div></form>`)}
 function refreshChrome(){
   const pend=DB.inbox.filter(i=>i.state==='pending').length+SCH.conflicts.length;
-  $('#nav').innerHTML=VIEWS.map(([v,l])=>`<button data-a="go" data-x="${v}" ${U.view===v?'aria-current="page"':''}>${ic(v)}<span>${l}</span>${v==='cal'&&pend?`<span class="badge">${pend}</span>`:''}</button>`).join('');
+  $('#nav').innerHTML=VIEWS.map(([v,l])=>`<button data-a="navgo" data-x="${v}" ${U.view===v?'aria-current="page"':''}>${ic(v)}<span>${l}</span>${v==='cal'&&pend?`<span class="badge">${pend}</span>`:''}</button>`).join('');
   $('#hello').innerHTML=`${paw(15)}<span class="pals"><img src="${JD_SRC}" alt="진도깨" width="36" height="36"><img src="${BAB_SRC}" alt="밥숑" width="36" height="36"></span><span>오늘 수업도<br>힘내세요!</span>`;
   chipSync();
   const ub=$('[data-a=undo].tb'),rb=$('[data-a=redo].tb');if(ub)ub.disabled=!UNDO.length;if(rb)rb.disabled=!REDO.length;
@@ -2555,6 +2555,7 @@ document.addEventListener('click',e=>{
   switch(a){
    case 'close':if(e.target===t)closeM();break;
    case 'go':go(x);break;
+   case 'navgo':if(x==='cal'&&U.view==='cal'){U.schedMode=U.schedMode==='tt'?'cal':'tt';closeM();render();window.scrollTo(0,0)}else go(x);break;
    case 'goneis':go('set');setTimeout(()=>{const c=$('#neisCard');if(c){c.scrollIntoView({behavior:'smooth',block:'start'});c.classList.add('flashc');setTimeout(()=>c.classList.remove('flashc'),1800)}},60);break;
    case 'gott':go('tt');break;
    case 'gocal':U.schedMode='cal';go('cal');break;
