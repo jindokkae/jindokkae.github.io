@@ -1708,6 +1708,8 @@ function openDday(){const i=ddayInfo();
   <label class="field">이름<input id="ddLabel" class="inp" maxlength="12" value="${esc(i.label)}" placeholder="예: 방학까지, 기말고사"></label>
   <label class="field">날짜<input type="date" id="ddDate" value="${i.date}"></label>
   <div class="acts"><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`)}
+/* 완료한 항목은 맨 아래로 (안정 정렬: 체크를 풀면 원래 순서 자리로 돌아와요) */
+const doneLast=a=>a.map((t,j)=>[t,j]).sort((x,y)=>(x[0].d?1:0)-(y[0].d?1:0)||x[1]-y[1]).map(x=>x[0]);
 function todoLi(sid,i,t,pre){const key=sid+':'+i;
   if(U.tdEdit===key)return `<li class="tdedit"><form data-tdform="${key}" style="display:flex;gap:6px;flex:1"><input class="inp" id="tdEditIn" value="${esc(t.t)}" aria-label="내용 수정"><button class="btn sm pri">저장</button><button type="button" class="btn sm" data-a="tdcancel">취소</button></form></li>`;
   return `<li class="${t.d?'d':''}"><input type="checkbox" id="${pre}${sid}${i}" data-todo="${key}" ${t.d?'checked':''}><label for="${pre}${sid}${i}" style="flex:1">${esc(t.t)}</label>${t.d?'':(()=>{const to=tdStep((t.date||TK)<TK?TK:(t.date||TK),1);return `<button type="button" class="tdb" data-a="tdpost" data-x="${key}" aria-label="${mdw(to)}로 미루기" title="${to===addK(TK,1)?'내일':mdw(to)}로 미루기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M11 6l6 6-6 6M20 5v14"/></svg></button>`})()}<button type="button" class="tdb" data-a="tdedit" data-x="${key}" aria-label="수정" title="수정">✎</button><button type="button" class="tdb" data-a="tddel" data-x="${key}" aria-label="삭제" title="삭제">✕</button></li>`}
@@ -1816,7 +1818,7 @@ function vHome(){
   const autos=[]; /* 할 일 · 메모에는 직접 적은 것만 보여 준다 (진도표 준비물 자동 항목 없음) */
   const todos=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i})).filter(t=>isT?(!t.date||t.date===TK):t.date===TD));
   const todoCard=`<div class="card" id="todocard"><h2 class="tdh"><button type="button" class="tdnav" data-a="tdday" data-x="-1" ${isT?'disabled':''} aria-label="이전 수업일">‹</button><span class="tdt">${ic('checkc',18)} <span>${dayName} 할 일 · 메모</span></span><button type="button" class="tdnav" data-a="tdday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${isT?'':`<button class="hlink" data-a="tdday" data-x="0">오늘로</button>`}${todos.length?`<span class="tag ${todos.every(t=>t.d)?'ok':'info'}">${todos.every(t=>t.d)?'모두 완료':todos.filter(t=>!t.d).length+'개 남음'}</span>`:''}</span></h2><ul class="todo">${autos.map(a=>`<li class="auto"><span class="tag warn">진도표</span><span style="flex:1;min-width:0">${esc(a.t)}${a.links.length?`<span class="tdlnks">${a.links.map(u=>lnkChip(u)).join('')}</span>`:''}</span></li>`).join('')}
-      ${todos.map(t=>todoLi(t.sid,t.i,t,'td')).join('')||(autos.length?'':`<li class="tdempty">${dayName} 할 일이 없어요. 아래에 적어 보세요</li>`)}</ul>
+      ${doneLast(todos).map(t=>todoLi(t.sid,t.i,t,'td')).join('')||(autos.length?'':`<li class="tdempty">${dayName} 할 일이 없어요. 아래에 적어 보세요</li>`)}</ul>
       <form id="todoForm" class="tdform"><input id="todoIn" class="inp" placeholder="${isT?'':esc(dayName)+' '}할 일 · 메모를 적고 Enter" aria-label="할 일 · 메모 추가" autocomplete="off"><button class="btn pri">추가</button></form></div>`;
   /* 배치는 사용자가 '홈 화면 편집'에서 바꾼다 (기기마다 따로 저장). 모바일은 왼쪽 열 → 오른쪽 열 순서로 한 줄 */
   const CARDS={today:todayCard,next:nextCard,up:upCard,prog:withCls.length?progCard:'',todo:todoCard,meal:mealCard()};
@@ -2161,7 +2163,7 @@ function calBody(){const SRc=srInfo();
     <div class="sect" style="margin-top:6px">수업 <span style="font-weight:400">· 누르면 완료·결손·교환</span></div>
     <div class="dlist">${ss.length?ss.map(x=>x.row).join(''):'<p class="muted" style="margin:0">수업이 없는 날이에요.</p>'}</div>
     <div class="sect">이날 할 일 · 메모</div>
-    <ul class="todo">${tds.map(t=>todoLi(STORE.cur,t.i,t,'ctd')).join('')||'<li class="tdempty">이날 할 일이 없어요</li>'}</ul>
+    <ul class="todo">${doneLast(tds).map(t=>todoLi(STORE.cur,t.i,t,'ctd')).join('')||'<li class="tdempty">이날 할 일이 없어요</li>'}</ul>
     <form id="calTodo" class="tdform"><input id="ctIn" class="inp" placeholder="할 일 · 메모를 적고 Enter" aria-label="이날 할 일 · 메모 추가" autocomplete="off"><button class="btn pri">추가</button></form>
     <div class="sect">일정 추가</div>
     <form id="evForm" class="evf"><div class="inl"><label class="field" style="flex:0 0 130px">종류<select id="evK"><option value="event">학교 행사</option><option value="hol">휴업일 (수업 없음)</option><option value="exam">정기시험</option><option value="etc">기타</option></select></label><label class="field">제목<input id="evT" placeholder="예: 체육대회"></label></div>
