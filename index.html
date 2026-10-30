@@ -187,7 +187,10 @@ button.sum:hover{border-color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
 .todo li.tdempty{border-style:dashed;background:none;color:var(--muted);justify-content:center;font-size:13px}
-.tdform{display:flex;gap:6px;margin-top:10px}.tdform .inp{flex:1;min-width:0;padding:9px 12px;font-size:14px}.tdform .btn{padding:0 16px;font-weight:700}
+.tdform{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.tdform .inp#todoIn{flex:1 1 140px}.tddb{padding:0 11px;color:var(--muted)}.tddb.on{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+.tddl{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted)}.tddl .inp{padding:5px 8px;font-size:13px;width:auto;flex:none}.tddl.full{flex:1 1 100%}
+.tdpin{margin-bottom:10px;padding:8px;border-radius:12px;background:var(--warn-soft)}.tdpinh{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--warn);margin:0 2px 6px}.tdpin .todo{margin:0}.tdpin .todo li{background:var(--surface)}
+.tdmore{margin-top:6px}.tdmore summary{cursor:pointer;font-size:12px;font-weight:700;color:var(--warn);padding:2px 4px}.tdmore .todo{margin-top:6px}.tddue{flex:none;font-weight:800}.tdform .inp{flex:1;min-width:0;padding:9px 12px;font-size:14px}.tdform .btn{padding:0 16px;font-weight:700}
 .mini{display:flex;flex-direction:column;gap:6px}
 .mini > div{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:8px;align-items:center;font-size:13px}
 .mini .tr{height:8px;border-radius:99px;background:var(--surface-2);overflow:hidden}
@@ -1724,9 +1727,10 @@ function openDday(){const i=ddayInfo();
   <div class="acts"><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">저장</button></div></form>`)}
 /* 완료한 항목은 맨 아래로 (안정 정렬: 체크를 풀면 원래 순서 자리로 돌아와요) */
 const doneLast=a=>a.map((t,j)=>[t,j]).sort((x,y)=>(x[0].d?1:0)-(y[0].d?1:0)||x[1]-y[1]).map(x=>x[0]);
+const dueLab=k=>{const n=dday(k);return n===0?'D-day':n>0?'D-'+n:'D+'+(-n)},dueCls=k=>{const n=dday(k);return n<0?'bad':n<=3?'warn':'gray'};
 function todoLi(sid,i,t,pre){const key=sid+':'+i;
-  if(U.tdEdit===key)return `<li class="tdedit"><form data-tdform="${key}" style="display:flex;gap:6px;flex:1"><input class="inp" id="tdEditIn" value="${esc(t.t)}" aria-label="내용 수정"><button class="btn sm pri">저장</button><button type="button" class="btn sm" data-a="tdcancel">취소</button></form></li>`;
-  return `<li class="${t.d?'d':''}"><input type="checkbox" id="${pre}${sid}${i}" data-todo="${key}" ${t.d?'checked':''}><label for="${pre}${sid}${i}" style="flex:1">${esc(t.t)}</label>${t.d?'':(()=>{const to=tdStep((t.date||TK)<TK?TK:(t.date||TK),1);return `<button type="button" class="tdb" data-a="tdpost" data-x="${key}" aria-label="${mdw(to)}로 미루기" title="${to===addK(TK,1)?'내일':mdw(to)}로 미루기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M11 6l6 6-6 6M20 5v14"/></svg></button>`})()}<button type="button" class="tdb" data-a="tdedit" data-x="${key}" aria-label="수정" title="수정">✎</button><button type="button" class="tdb" data-a="tddel" data-x="${key}" aria-label="삭제" title="삭제">✕</button></li>`}
+  if(U.tdEdit===key)return `<li class="tdedit"><form data-tdform="${key}" style="display:flex;gap:6px;flex:1;flex-wrap:wrap;align-items:center"><input class="inp" id="tdEditIn" value="${esc(t.t)}" aria-label="내용 수정" style="flex:1 1 140px;min-width:0"><label class="tddl" title="마감일 (선택)">마감 <input type="date" class="inp" id="tdEditDue" value="${esc(t.due||'')}" aria-label="마감일"></label><button class="btn sm pri">저장</button><button type="button" class="btn sm" data-a="tdcancel">취소</button></form></li>`;
+  return `<li class="${t.d?'d':''}"><input type="checkbox" id="${pre}${sid}${i}" data-todo="${key}" ${t.d?'checked':''}><label for="${pre}${sid}${i}" style="flex:1">${esc(t.t)}</label>${t.due&&!t.d?`<span class="tag ${dueCls(t.due)} tddue" title="마감 ${mdw(t.due)}">${dueLab(t.due)} · ${md(t.due)}</span>`:''}${t.d||t.due?'':(()=>{const to=tdStep((t.date||TK)<TK?TK:(t.date||TK),1);return `<button type="button" class="tdb" data-a="tdpost" data-x="${key}" aria-label="${mdw(to)}로 미루기" title="${to===addK(TK,1)?'내일':mdw(to)}로 미루기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M11 6l6 6-6 6M20 5v14"/></svg></button>`})()}<button type="button" class="tdb" data-a="tdedit" data-x="${key}" aria-label="수정" title="수정">✎</button><button type="button" class="tdb" data-a="tddel" data-x="${key}" aria-label="삭제" title="삭제">✕</button></li>`}
 function sayTime(done){const h=new Date().getHours(),m=new Date().getMinutes(),t=h*60+m;
   const P=(a)=>a[(+TK.slice(8)+h)%a.length];
   if(done)return P(['꼬리가 붕붕~ 오늘도 정말 수고했어요, 멍멍! 쓰담쓰담 해주세요!','헥헥! 오늘 진도 다 깼어요! 칭찬해 주세요, 멍!','와우~ 오늘 수업 끝! 간식 먹어도 되죠? 왈왈!']);
@@ -1830,10 +1834,16 @@ function vHome(){
   if(!U.tdDay||U.tdDay<TK)U.tdDay=TK;const TD=U.tdDay,isT=TD===TK,nxt1=tdStep(TK,1);
   const dayName=isT?'오늘':TD===addK(TK,1)?'내일':TD===nxt1?`다음 수업일 ${mdw(TD)}`:mdw(TD);
   const autos=[]; /* 할 일 · 메모에는 직접 적은 것만 보여 준다 (진도표 준비물 자동 항목 없음) */
-  const todos=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i})).filter(t=>isT?(!t.date||t.date===TK):t.date===TD));
-  const todoCard=`<div class="card" id="todocard"><h2 class="tdh"><button type="button" class="tdnav" data-a="tdday" data-x="-1" ${isT?'disabled':''} aria-label="이전 수업일">‹</button><span class="tdt">${ic('checkc',18)} <span>${dayName} 할 일 · 메모</span></span><button type="button" class="tdnav" data-a="tdday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${isT?'':`<button class="hlink" data-a="tdday" data-x="0">오늘로</button>`}${todos.length?`<span class="tag ${todos.every(t=>t.d)?'ok':'info'}">${todos.every(t=>t.d)?'모두 완료':todos.filter(t=>!t.d).length+'개 남음'}</span>`:''}</span></h2><ul class="todo">${autos.map(a=>`<li class="auto"><span class="tag warn">진도표</span><span style="flex:1;min-width:0">${esc(a.t)}${a.links.length?`<span class="tdlnks">${a.links.map(u=>lnkChip(u)).join('')}</span>`:''}</span></li>`).join('')}
-      ${doneLast(todos).map(t=>todoLi(t.sid,t.i,t,'td')).join('')||(autos.length?'':`<li class="tdempty">${dayName} 할 일이 없어요. 아래에 적어 보세요</li>`)}</ul>
-      <form id="todoForm" class="tdform"><input id="todoIn" class="inp" placeholder="${isT?'':esc(dayName)+' '}할 일 · 메모를 적고 Enter" aria-label="할 일 · 메모 추가" autocomplete="off"><button class="btn pri">추가</button></form></div>`;
+  /* 마감일이 있는 할 일: 마감 7일 전부터(지나도 완료 전까지) 오늘 목록 맨 위에 고정 */
+  const allTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i})));
+  const isPin=t=>t.due&&!t.d&&dday(t.due)<=7;
+  const pins=isT?allTd.filter(isPin).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0):[];
+  const todos=allTd.filter(t=>isT?(!isPin(t)&&(!t.date||t.date===TK||(t.due&&!t.d&&t.date<TK))):t.date===TD);
+  const openN=todos.filter(t=>!t.d).length+pins.length,allDone=!pins.length&&todos.length>0&&todos.every(t=>t.d),anyTd=todos.length+pins.length>0;
+  const pinHtml=pins.length?`<div class="tdpin"><div class="tdpinh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg> 마감 임박</div><ul class="todo">${pins.slice(0,3).map(t=>todoLi(t.sid,t.i,t,'tp')).join('')}</ul>${pins.length>3?`<details class="tdmore"><summary>외 ${pins.length-3}개 더 보기</summary><ul class="todo">${pins.slice(3).map(t=>todoLi(t.sid,t.i,t,'tp')).join('')}</ul></details>`:''}</div>`:'';
+  const todoCard=`<div class="card" id="todocard"><h2 class="tdh"><button type="button" class="tdnav" data-a="tdday" data-x="-1" ${isT?'disabled':''} aria-label="이전 수업일">‹</button><span class="tdt">${ic('checkc',18)} <span>${dayName} 할 일 · 메모</span></span><button type="button" class="tdnav" data-a="tdday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${isT?'':`<button class="hlink" data-a="tdday" data-x="0">오늘로</button>`}${anyTd?`<span class="tag ${allDone?'ok':'info'}">${allDone?'모두 완료':openN+'개 남음'}</span>`:''}</span></h2>${pinHtml}<ul class="todo">${autos.map(a=>`<li class="auto"><span class="tag warn">진도표</span><span style="flex:1;min-width:0">${esc(a.t)}${a.links.length?`<span class="tdlnks">${a.links.map(u=>lnkChip(u)).join('')}</span>`:''}</span></li>`).join('')}
+      ${doneLast(todos).map(t=>todoLi(t.sid,t.i,t,'td')).join('')||(autos.length||pins.length?'':`<li class="tdempty">${dayName} 할 일이 없어요. 아래에 적어 보세요</li>`)}</ul>
+      <form id="todoForm" class="tdform"><input id="todoIn" class="inp" placeholder="${isT?'':esc(dayName)+' '}할 일 · 메모를 적고 Enter" aria-label="할 일 · 메모 추가" autocomplete="off"><button type="button" class="btn tddb ${U.tdDueOn?'on':''}" data-a="tddue" aria-pressed="${!!U.tdDueOn}" title="마감일 정하기 (선택)" aria-label="마감일 정하기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg></button><button class="btn pri">추가</button>${U.tdDueOn?`<label class="tddl full">마감일 <input type="date" class="inp" id="todoDue" min="${TK}" aria-label="마감일"></label>`:''}</form></div>`;
   /* 배치는 사용자가 '홈 화면 편집'에서 바꾼다 (기기마다 따로 저장). 모바일은 왼쪽 열 → 오른쪽 열 순서로 한 줄 */
   const CARDS={today:todayCard,next:nextCard,up:upCard,prog:withCls.length?progCard:'',todo:todoCard,meal:mealCard()};
   const L=homeLayout(),ed=!!U.homeEdit,vis=id=>CARDS[id]&&(ed||TOUR||GUIDE||!L.hide.includes(id));
@@ -2158,7 +2168,7 @@ function calBody(){const SRc=srInfo();
         row:`<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center">${sessChip(s,true,pre,`data-sub="${sb.id}"`)}<span style="font-size:12px;min-width:0">${s.p}교시 · ${stag(sk(s))} ${s.n?`${s.n}차시 ${esc(lname(s.n))}`:s.status==='moved'?moveDest(s):s.status==='absent'?esc((excOf(s)?.reason||'')+' '+(excOf(s)?.note||'')):''}</span></div>`}))})}));
   const evVis=k=>DD[k].evs.filter(x=>x.e.kind==='hol'||U.flt[x.e.kind]!==false);
   /* 날짜가 있는 할 일 · 메모가 있는 날: 날짜 옆에 점 (남은 게 있으면 진하게, 모두 완료면 연하게) */
-  const TDM={};DB.todos.forEach(t=>{if(!t.date)return;const o=TDM[t.date]||(TDM[t.date]={n:0,open:0});o.n++;if(!t.d)o.open++});
+  const TDM={};DB.todos.forEach(t=>[...new Set([t.date,t.due].filter(Boolean))].forEach(dk=>{const o=TDM[dk]||(TDM[dk]={n:0,open:0});o.n++;if(!t.d)o.open++}));
   const tdDot=k=>{const o=TDM[k];return o?`<i class="tdd ${o.open?'':'done'}" title="${o.open?`할 일 · 메모 ${o.open}개 남음`:'할 일 · 메모 모두 완료'}" role="img" aria-label="할 일 · 메모 ${o.n}개"></i>`:''};
   const ssVis=k=>DD[k].ss.filter(x=>U.flt[kindOf(x.s)]).sort((a,b)=>a.s.p-b.s.p);
   if(U.calMode==='month'){const {y,m}=U.month;title=`${y}. ${pad(m+1)}`;
@@ -2168,7 +2178,7 @@ function calBody(){const SRc=srInfo();
     grid=`<div class="calg">${[...WD].map(w=>`<div class="wd">${w}</div>`).join('')}${cells}</div>`;
   }else{title=`${md(U.week)} ~ ${md(addK(U.week,4))}`;
     grid=`<div class="weekg">${dates.map(k=>`<div class="wcol ${k===TK?'today':''} ${k===U.sel?'sel':''}" data-a="day" data-x="${k}"><span class="wh">${wd(k)} <b class="mono">${md(k)}</b>${tdDot(k)}</span>${evVis(k).map(x=>`<span class="ev ${x.e.kind}">${esc(x.e.label)}</span>`).join('')}${ssVis(k).map(x=>x.chip).join('')}</div>`).join('')}</div>`;}
-  const k=U.sel,evs=DD[k].evs,ss=DD[k].ss.sort((a,b)=>a.s.p-b.s.p),tds=DB.todos.map((t,i)=>({...t,i})).filter(t=>t.date===k);
+  const k=U.sel,evs=DD[k].evs,ss=DD[k].ss.sort((a,b)=>a.s.p-b.s.p),tds=DB.todos.map((t,i)=>({...t,i})).filter(t=>t.date===k||t.due===k);
   const actSubs=[...new Map(ss.filter(x=>['plan','check','done'].includes(x.s.status)).map(x=>[x.sb.id,x.sb])).values()];
   const blk=subs.length&&subs.every(sb=>dayBlock(sb.db,k))?dayBlock(subs[0].db,k):null;
   const KIND={hol:'휴업·휴일',exam:'정기시험',task:'수행평가',event:'학교 행사',etc:'기타'};
@@ -2276,8 +2286,12 @@ var REMT=null;
 function schedRem(now){clearTimeout(REMT);REMT=setTimeout(remSync,now?200:2500)}
 /* 오늘 할 일 · 메모 알림 / 독촉 알림 */
 function todoSubs(){const subs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());return subs.length?subs:STORE.subjects}
-function openTodosOn(k){/* 날짜 없는 메모는 오늘과 평일에만, 날짜를 정한 항목은 그 날에 */
-  return todoSubs().flatMap(sb=>(sb.db.todos||[]).filter(t=>!t.d&&(t.date?t.date===k:(k===TK||![0,6].includes(D(k).getDay())))).map(t=>t.t))}
+function openTodosOn(k){/* 마감 7일 전부터는 마감 항목을 맨 앞에 (D-n 표시), 그 밖은 그날 항목 · 날짜 없는 메모는 평일에만 */
+  const wk=![0,6].includes(D(k).getDay()),all=todoSubs().flatMap(sb=>sb.db.todos||[]).filter(t=>!t.d);
+  const dl=du=>{const n=Math.round((D(du)-D(k))/864e5);return n===0?'D-day':n>0?'D-'+n:'D+'+(-n)};
+  const pin=t=>t.due&&k>=addK(t.due,-7)&&(wk||t.date===k);
+  return [...all.filter(pin).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0).map(t=>`${t.t} (${dl(t.due)})`),
+    ...all.filter(t=>!pin(t)&&(t.date?t.date===k:(k===TK||wk))).map(t=>t.t)]}
 function todoBody(items,nag){const sh=items.slice(0,3).map(x=>x.length>22?x.slice(0,21)+'…':x).join(', '),more=items.length>3?` 외 ${items.length-3}개`:'';
   return nag?`아직 못 끝낸 할 일 · 메모가 ${items.length}개 남았어요: ${sh}${more}`:`오늘 할 일 · 메모 ${items.length}개: ${sh}${more}`}
 const TODO_TITLE='진도깨의 오늘 할 일 📝',NAG_TITLE='진도깨의 할 일 독촉 ⏰';
@@ -2646,6 +2660,7 @@ document.addEventListener('click',e=>{
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;const f=db.rgBasis==='unit'?'ucol':'col';if(nS==='a')delete l[f];else l[f]=+nS},{silent:true});break}
    case 'tdedit':U.tdEdit=x;render();setTimeout(()=>{const i=$('#tdEditIn');if(i){i.focus();i.select()}},0);break;
+   case 'tddue':U.tdDueOn=!U.tdDueOn;render();setTimeout(()=>$(U.tdDueOn?'#todoDue':'#todoIn')?.focus(),0);break;
    case 'tdcancel':U.tdEdit=null;render();break;
    case 'tdpost':{const [sid,ix]=x.split(':'),sb=STORE.subjects.find(k=>k.id===sid),t=sb&&sb.db.todos[+ix];if(!t)break;const from=(t.date||TK)<TK?TK:(t.date||TK),to=tdStep(from,1);
      t.date=to;U.tdEdit=null;persist();render();toast(`${to===addK(TK,1)?'내일':mdw(to)}로 미뤘어요.`);break}
@@ -2941,9 +2956,9 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
       persist();closeM();render();toast('교과 정보를 바꿨어요.')}
     else{const terms=getYT(year);const d=emptyDB(sem,terms);d.periods=clone(DB.periods);d.events=clone(DB.events);
       const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,icon:$('#sjIcon').value||'book',db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
-  if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=$('#tdEditIn').value.trim();U.tdEdit=null;if(sb&&sb.db.todos[+ix]){if(v)sb.db.todos[+ix].t=v;else sb.db.todos.splice(+ix,1);persist()}render();return}
+  if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=$('#tdEditIn').value.trim();U.tdEdit=null;if(sb&&sb.db.todos[+ix]){if(v){sb.db.todos[+ix].t=v;const du=($('#tdEditDue')||{}).value||'';if(du)sb.db.todos[+ix].due=du;else delete sb.db.todos[+ix].due}else sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'방학까지',date:$('#ddDate').value,init:true,touched:true});persist();closeM();render();return}
-  if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay&&U.tdDay>TK?U.tdDay:TK;if(v){quick(db=>db.todos.push({t:v,d:false,date:dd}));setTimeout(()=>$('#todoIn')?.focus(),30)}}
+  if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay&&U.tdDay>TK?U.tdDay:TK,du=($('#todoDue')||{}).value||'';if(v){U.tdDueOn=false;quick(db=>db.todos.push(du?{t:v,d:false,date:dd,due:du}:{t:v,d:false,date:dd}));setTimeout(()=>$('#todoIn')?.focus(),30)}}
   if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:U.sel}))}
   if(id==='addClassForm'){acAdd($('#acNames').value);$('#acNames').value='';const names=U.acTags.slice(),lead=$('#acLead').value.trim();
     if(!names.length){toast('학급 이름을 적어 주세요. 예: 2-1');return}
