@@ -963,7 +963,7 @@ const HOLIDAYS=[
  {s:'2026-10-03',e:'2026-10-03',label:'개천절'},{s:'2026-10-05',e:'2026-10-05',label:'대체공휴일'},
  {s:'2026-10-09',e:'2026-10-09',label:'한글날'},{s:'2026-12-25',e:'2026-12-25',label:'성탄절'},
  {s:'2027-01-01',e:'2027-01-01',label:'신정'}];
-const REASONS=['교내 일정','휴업','복무','기타'];
+const REASONS=['교내 일정','휴업','복무','자습·활동','기타'];
 const LESSON_FIELDS=['topic','pages','content','note'];
 
 /* ---- 날짜 ---- */
@@ -1066,7 +1066,7 @@ function rawSessions(db,k,ex){
   ex.forEach(e=>{if(e.type==='move'&&e.date===k){const t=out.find(x=>x.st==='on'&&!x.movedIn&&x.c===e.c&&x.p===e.p);if(t){t.st='movedOut';t.excId=e.id}}});
   ex.forEach(e=>{if(e.type==='move'&&e.toDate===k&&ids.includes(e.c)&&!classBlock(db,k,e.c)&&originOk(db,e))out.push({date:k,c:e.c,p:e.toP,st:'on',movedIn:e.id,from:{date:e.date,p:e.p}})});
   ex.forEach(e=>{if(e.type==='extra'&&e.date===k&&ids.includes(e.c)&&!classBlock(db,k,e.c))out.push({date:k,c:e.c,p:e.p,st:'on',extra:e.id})});
-  ex.forEach(e=>{if(e.type==='absence'&&e.date===k){const t=out.find(x=>x.st==='on'&&x.c===e.c&&x.p===e.p);if(t){t.st='absent';t.excId=e.id;if(e.nop)t.nop=1}}});
+  ex.forEach(e=>{if(e.type==='absence'&&e.date===k){const t=out.find(x=>x.st==='on'&&x.c===e.c&&x.p===e.p);if(t){t.st='absent';t.excId=e.id;if(e.nop||e.reason==='자습·활동')t.nop=1}}});
   return out.sort((a,b)=>a.p-b.p||(a.st==='on'?-1:1));
 }
 function originOk(db,e){if(classBlock(db,e.date,e.c))return false;const dw=D(e.date).getDay();return ttFor(db,e.date).some(s=>s.d===dw&&s.c===e.c&&s.p===e.p)}
@@ -1304,11 +1304,11 @@ const SJI={
  star:['기타','<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>']};
 const sjic=(k,sz=15)=>{const e=SJI[k];return e&&e[1]?`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e[1]}</svg>`:ic('book',sz)};
 const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
-const sessChip=(s,showN=true,pre='',attr='')=>`<button class="sess ${sk(s)} ${s.nop?'nop':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'진도 없음':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}">${sic(sk(s),11)}<span>${pre?`<small>${esc(pre)}</small> `:''}${esc(cn(s.c))}${s.extra?' <small>보강</small>':''}${showN&&s.n&&s.status!=='check'?` <small>${s.n}차시</small>`:''}</span></button>`;
+const sessChip=(s,showN=true,pre='',attr='')=>`<button class="sess ${sk(s)} ${s.nop?'nop':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'결손 · 자습·활동':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}">${sic(sk(s),11)}<span>${pre?`<small>${esc(pre)}</small> `:''}${esc(cn(s.c))}${s.extra?' <small>보강</small>':''}${showN&&s.n&&s.status!=='check'?` <small>${s.n}차시</small>`:''}</span></button>`;
 const EXN={absence:'결손',move:'교환',extra:'보강'};
 const ttChip=(s,sb,pre,attr)=>{const nowS=s.status==='plan'&&isNow(DB,s.date,s.p);const dead=s.status==='absent'||s.status==='moved';
-  const sub=s.status==='skipped'?'기록 없음':s.status==='absent'?(excOf(s)?.reason||'결손'):s.status==='moved'?'교환됨':'';
-  return `<button class="tc ${sk(s)} ${s.nop?'nop':''} ${nowS?'now':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'진도 없음':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}${!dead&&s.n?' · '+esc(lname(s.n)):''}">
+  const sub=s.status==='skipped'?'기록 없음':s.status==='absent'?((excOf(s)?.nop?'자습·활동':excOf(s)?.reason)||'결손'):s.status==='moved'?'교환됨':'';
+  return `<button class="tc ${sk(s)} ${s.nop?'nop':''} ${nowS?'now':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'결손 · 자습·활동':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}${!dead&&s.n?' · '+esc(lname(s.n)):''}">
     <span class="tc1">${pre?`<em class="tcp">${esc(pre)}</em>`:''}<b>${esc(cn(s.c))}</b>${s.extra?'<i>보강</i>':''}${!dead&&s.n&&s.status!=='check'&&s.status!=='skipped'?`<small>${s.n}차시</small>${taskTagOf(s.c,s.n)}`:''}${sub?`<span class="tcr">${esc(sub)}</span>`:''}<span class="tcs">${sic(sk(s),13)}</span></span></button>`};
 
 /* ---- 렌더 ---- */
@@ -1861,8 +1861,8 @@ function vHome(){
 function rowHtml(s,kind){const n=kind==='check'?SCH.nextN[s.c]:(s.n||SCH.nextN[s.c]);
   const acts={done:`<span class="stamp">${paw(16)} 완료</span><button class="btn sm" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,
     plan:`<button class="btn sm" data-a="memo" data-x="${s.c}|${n}">메모</button><button class="btn sm" data-a="sess" data-x="${s.key}">일정</button><button class="btn sm pri" data-a="done" data-x="${s.key}">완료</button>`,
-    check:`<span class="tag warn">기록 없음</span><button class="btn sm" data-a="nop" data-x="${s.key}" title="수업은 했지만 진도는 안 나간 날(자습·활동 등)">진도 없음</button><button class="btn sm" data-a="absence" data-x="${s.key}">결손이었어요</button><button class="btn sm pri" data-a="done" data-x="${s.key}">수업했어요</button>`,
-    absent:`${s.nop?'<span class="tag gray">진도 없음</span>':stag('absent')}<button class="btn sm" data-a="sess" data-x="${s.key}">복구</button>`,
+    check:`<span class="tag warn">기록 없음</span><button class="btn sm" data-a="absence" data-x="${s.key}" title="수업이 없었거나, 수업은 했지만 진도가 안 나간 날(사유에서 고르세요)">결손 · 진도 없음</button><button class="btn sm pri" data-a="done" data-x="${s.key}">수업했어요</button>`,
+    absent:`${s.nop?'<span class="tag gray">결손 · 자습·활동</span>':stag('absent')}<button class="btn sm" data-a="sess" data-x="${s.key}">복구</button>`,
     moved:`${stag('moved')}<button class="btn sm" data-a="sess" data-x="${s.key}">자세히</button>`}[kind];
   const sub=kind==='check'?`${mdw(s.date)} 수업 기록이 없어요 · 다음 차시 ${n}차시`:kind==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:kind==='moved'?moveDest(s):esc(lname(n));
   return `<div class="row ${kind} ${U.flash===s.c+'|'+s.n?'justdone':''}" style="--cc:${ccv(s.c)}"><span class="pp mono">${kind==='check'?md(s.date)+' ':''}${s.p}교시<small>${PT(s.p)}</small></span><span class="bar"></span>
@@ -2081,7 +2081,7 @@ function inboxCard(i){const after=buildSched(DB,{extra:[inboxExc(i)]});const ori
     ${usable?`<div class="note">${esc(cn(i.c))} ${i.type==='absence'?shiftNote(SCH,after,i.c,n):`${n}차시 수업 시간이 바뀌어요`}.${ex?` ${esc(ex.title)} 전까지 예상 진도 ${predTxt(b)} → <b>${predTxt(a)}</b>.`:''} 실제 수업 기록은 바뀌지 않아요.</div>`:`<p class="warnbox">${mvErr?esc(mvErr):'원래 수업 칸이 이미 결손·교환돼 있어 그대로 반영할 수 없어요.'}</p>`}
     <div class="ft"><span>${esc(i.why)} · ${esc(i.src)}</span><span class="gap"></span><button class="btn sm" data-a="dismiss" data-x="${i.id}">반영 안 함</button><button class="btn sm pri" data-a="accept" data-x="${i.id}" ${usable?'':'disabled'}>진도 계획에 반영</button></div></div>`}
 function excRow(e,sbId='',pre=''){const on=e.state==='active';
-  const t=e.type==='absence'?(e.nop?`${mdw(e.date)} ${e.p}교시 진도 없음 (자습·활동)`:`${mdw(e.date)} ${e.p}교시 결손 · ${esc(e.reason)}`):e.type==='extra'?`${mdw(e.date)} ${e.p}교시 수업 보강`:`${md(e.date)} ${e.p}교시 → ${mdw(e.toDate)} ${e.toP}교시 교환`;
+  const t=e.type==='absence'?(`${mdw(e.date)} ${e.p}교시 결손 · ${esc(e.nop?'자습·활동':e.reason)}`):e.type==='extra'?`${mdw(e.date)} ${e.p}교시 수업 보강`:`${md(e.date)} ${e.p}교시 → ${mdw(e.toDate)} ${e.toP}교시 교환`;
   return `<div class="exc ${on?'':'off'}" style="--cc:${ccv(e.c)}" ${sbId?`data-sub="${sbId}"`:''}><span class="bar"></span><span><b>${pre?`<small class="muted">${esc(pre)}</small> `:''}${esc(cn(e.c))} ${t}</b><small>${esc(e.note||'')}${e.note?' · ':''}${esc(e.src)} · ${esc(e.at)} 등록${on?'':' · 취소됨'}</small></span>
   ${on?`<button class="btn sm" data-a="excoff" data-x="${e.id}">${EXN[e.type]} 취소</button>`:`<button class="btn sm" data-a="excon" data-x="${e.id}">다시 적용</button>`}</div>`}
 const schedSeg=()=>`<span class="seg" role="group" aria-label="보기"><button data-a="sm" data-x="tt" aria-pressed="${U.schedMode==='tt'}">시간표</button><button data-a="sm" data-x="cal" aria-pressed="${U.schedMode==='cal'}">캘린더</button></span>`;
@@ -2393,21 +2393,21 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
 function modal(html,wide){$('#layer').innerHTML=`<div class="scrim" data-a="close"><div class="modal ${wide?'wide':''}" role="dialog" aria-modal="true">${html}</div></div>`;setTimeout(()=>{const f=$('#layer [autofocus]')||$('#layer button.pri');f&&f.focus()},20)}
 function closeM(){$('#layer').innerHTML='';U.abs=U.mv=U.ttEdit=U.imp=U.sess=U.av=U.ni=null}
 function openSess(k){U.sess=k;const s=SCH.key[k];if(!s)return;const e=excOf(s),n=s.status==='check'?SCH.nextN[s.c]:(s.n||SCH.nextN[s.c]);const acts=[];
-  if(s.status==='plan'){if(s.date<=TK)acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업 완료</button>`);if(!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);acts.push(`<button class="btn" data-a="nop" data-x="${s.key}" title="수업은 했지만 진도는 안 나간 날(자습·활동·시험 뒤풀이 등). 차시를 쓰지 않고 다음으로 넘어가요">진도 없음</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 처리</button>`)}
-  if(s.status==='check')acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업했어요 (${n}차시)</button>`,`<button class="btn" data-a="nop" data-x="${s.key}" title="수업은 했지만 진도는 안 나간 날(자습·활동 등)">진도 없음 (자습·활동)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손이었어요</button>`);if(s.status==='check'&&!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);
+  if(s.status==='plan'){if(s.date<=TK)acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업 완료</button>`);if(!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);acts.push(`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 · 진도 없음</button>`)}
+  if(s.status==='check')acts.push(`<button class="btn pri" data-a="done" data-x="${s.key}">${paw(14)} 수업했어요 (${n}차시)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}" title="수업이 없었거나, 수업은 했지만 진도가 안 나간 날 (사유에서 고르세요)">결손 · 진도 없음</button>`);if(s.status==='check'&&!s.extra)acts.push(`<button class="btn" data-a="moveopen" data-x="${s.key}">수업 교환</button>`);
   if((s.status==='plan'||s.status==='check')&&s.date<=TK&&L(SCH.nextN[s.c])){const rc=rec(DB,s.c,SCH.nextN[s.c]),dg=!!(rc&&rc.doing&&!rc.done);
     const at=acts.findIndex(h=>h.includes('data-a="done"'));acts.splice(at<0?0:at+1,0,`<button class="btn" data-a="doingtog" data-x="${s.key}" title="${dg?'진행 중 표시를 없애요':'이 차시를 아직 다 못 끝냈을 때 \'진행 중\'으로 두면, 다음 수업이 같은 차시를 이어 가요'}">${dg?'진행 중 해제':'진행 중으로 표시'}</button>`)}
-  if(s.status==='skipped')acts.push(`<button class="btn" data-a="nop" data-x="${s.key}">진도 없음 (자습·활동)</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 처리</button>`);
+  if(s.status==='skipped')acts.push(`<button class="btn bad" data-a="absence" data-x="${s.key}">결손 · 진도 없음</button>`);
   if(s.status==='done')acts.push(`<button class="btn" data-a="cell" data-x="${s.c}|${s.n}">진도표에서 보기</button>`,`<button class="btn" data-a="uncomplete" data-x="${s.c}|${s.n}">완료 취소</button>`,`<button class="btn bad" data-a="absence" data-x="${s.key}">결손으로 바꾸기</button>`);
   if(['plan','check','done','skipped'].includes(s.status)&&!s.extra){const al=autoAbsLab(s);if(al)acts.push(`<button class="btn bad" data-a="autoabs" data-x="${s.key}">'${esc(al)}' 결손 다시 적용</button>`)}
-  if(s.status==='absent')acts.push(`<button class="btn pri" data-a="excoff" data-x="${s.excId}">${s.nop?'진도 없음 취소':'결손 취소 (수업 복구)'}</button>`);
+  if(s.status==='absent')acts.push(`<button class="btn pri" data-a="excoff" data-x="${s.excId}">결손 취소 (수업 복구)</button>`);
   if(s.status==='moved')acts.push(`<button class="btn pri" data-a="excoff" data-x="${s.excId}">교환 취소 (원래 자리로)</button>`);
   if(s.movedIn&&s.status!=='moved')acts.push(`<button class="btn" data-a="excoff" data-x="${s.movedIn}">교환 취소 (원래 ${md(s.from.date)} ${s.from.p}교시로)</button>`);
   if(s.extra&&s.status!=='absent')acts.push(`<button class="btn" data-a="excoff" data-x="${s.extra}">보강 취소</button>`);
   if(s.n&&L(s.n))acts.push(`<button class="btn" data-a="memo" data-x="${s.c}|${s.n}">메모</button>`);
-  modal(`<h3><span class="dot" style="background:${ccv(s.c)}"></span>${esc(cn(s.c))} · ${when(s)} ${s.nop?'<span class="tag gray">진도 없음</span>':stag(sk(s))}${s.extra?' <span class="tag info">수업 보강</span>':''}</h3>
+  modal(`<h3><span class="dot" style="background:${ccv(s.c)}"></span>${esc(cn(s.c))} · ${when(s)} ${s.nop?'<span class="tag gray">결손 · 자습·활동</span>':stag(sk(s))}${s.extra?' <span class="tag info">수업 보강</span>':''}</h3>
     ${s.n?`<p class="sub">${s.n}차시 · ${esc(lname(s.n))}</p>`:''}
-    ${s.status==='skipped'?`<p class="note">시간표상 수업이 있던 날인데 기록이 없어요. 이후 차시가 이미 기록돼 있어 진도 계산에는 쓰지 않아요. 자습·활동이었다면 '진도 없음', 수업이 없었다면 '결손'으로 정리해 두면 깔끔해요.</p>`:''}
+    ${s.status==='skipped'?`<p class="note">시간표상 수업이 있던 날인데 기록이 없어요. 이후 차시가 이미 기록돼 있어 진도 계산에는 쓰지 않아요. 수업이 없었거나 자습·활동이라 진도가 안 나갔다면 '결손 · 진도 없음'으로 정리하고 사유를 고르면 깔끔해요.</p>`:''}
     ${s.status==='check'?`<p class="warnbox">지난 수업인데 기록이 없어요. 수업했다면 ${n}차시로 기록돼요.</p>`:''}
     ${s.nop?`<p class="note">수업은 했지만 진도가 나가지 않은 날이에요(자습·활동 등). 차시를 쓰지 않고, 다음 수업이 이 차시를 이어 가요.</p>`:s.status==='absent'?`<p class="note">결손 사유: <b>${esc(e?.reason)}</b> ${esc(e?.note||'')} · ${esc(e?.src)} · ${esc(e?.at)} 등록</p>`:''}
     ${s.status==='moved'?`<p class="note">${moveDest(s)}</p>`:''}
@@ -2443,11 +2443,11 @@ function absPreview(){const a=U.abs;const list=[...a.keys].map(x=>SCH.key[x]).fi
   return list.map(s=>{if(s.status==='done'&&!a.revert)return `<div class="ln"><span><b>${esc(cn(s.c))}</b> <span class="w">${s.n}차시 완료 기록은 그대로 두고 '일정 충돌'로 표시돼요</span></span></div>`;
     const n=s.status==='done'?s.n:(s.n||SCH.nextN[s.c]);return `<div class="ln"><span><b>${esc(cn(s.c))}</b> ${s.status==='check'?'기록 없던 수업을 결손으로 정리 · ':''}${shiftNote(SCH,after,s.c,n)}. 다른 반은 그대로예요.</span></div>`}).join('')}
 function drawAbsence(){const a=U.abs;const ss=(SCH.by[a.date]||[]).filter(s=>['plan','check','done','skipped'].includes(s.status));const hasDone=[...a.keys].some(x=>SCH.key[x]?.status==='done');
-  modal(`<h3>${mdw(a.date)} 결손 처리</h3>${a.hint?`<p class="note">${a.hint}</p>`:''}
+  modal(`<h3>${mdw(a.date)} 결손 · 진도 없음 처리</h3>${a.hint?`<p class="note">${a.hint}</p>`:''}
   <div style="display:flex;justify-content:space-between;align-items:center"><h4>빠지는 수업</h4>${ss.length>1?`<button class="btn sm" data-a="absall">${ss.every(s=>a.keys.has(s.key))?'전체 해제':'전체 선택'}</button>`:''}</div>
   <div class="others">${ss.map(s=>`<label><input type="checkbox" data-abs="${s.key}" ${a.keys.has(s.key)?'checked':''}><span class="dot" style="background:${ccv(s.c)}"></span>${s.p}교시 ${esc(cn(s.c))}<span class="cur">${STM[s.status][0]}${s.n?` · ${s.n}차시`:''}</span></label>`).join('')||'<p class="muted">이날 처리할 수업이 없어요.</p>'}</div>
   <h4>사유</h4><div class="seg" style="flex-wrap:wrap">${[...dayEvLabels(a.date),...REASONS].map(r=>`<button data-a="absr" data-x="${r}" aria-pressed="${a.reason===r}">${r}</button>`).join('')}</div>
-  <label class="field">메모 (선택)<input id="absNote" value="${esc(a.note)}" placeholder="예: 교과 연수 출장"></label>
+  <label class="field">메모 (선택)<input id="absNote" value="${esc(a.note)}" placeholder="예: 교과 연수 출장, 영상 시청 수업"></label>
   ${hasDone?`<label class="chk"><input type="checkbox" id="absRev" ${a.revert?'checked':''}><span>이미 완료로 기록된 수업은 기록도 미완료로 되돌리기 <span class="muted">(체크하지 않으면 완료 기록은 그대로 둬요)</span></span></label>`:''}
   <h4>미리보기</h4><div class="pv" id="absPv">${absPreview()}</div>
   <div class="acts"><button class="btn" data-a="close">${a.hint?'결손 없이 닫기':'취소'}</button><button class="btn badfill" data-a="absgo" ${a.keys.size?'':'disabled'}>${a.keys.size?`${a.keys.size}개 수업 결손 처리`:'결손 처리'}</button></div>`)}
