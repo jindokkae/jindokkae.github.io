@@ -378,6 +378,8 @@ table.tt{border-collapse:separate;border-spacing:4px;width:100%;min-width:520px;
 .tktag{font-style:normal;flex:none;font-size:10px;font-weight:800;line-height:1.5;padding:0 6px;border-radius:999px;background:color-mix(in srgb,var(--warn) 16%,var(--surface));color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);white-space:nowrap}
 .ttex{display:block;margin:3px auto 0;max-width:100%;width:fit-content;font-size:11px;font-weight:800;line-height:1.5;padding:0 8px;border-radius:999px;background:#f7e1d2;color:#b4531a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-theme=dark] .ttex{background:#4a2c1a;color:#ffb27a}
+kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:6px;background:var(--surface-2);font:700 12px/1.5 var(--mono,ui-monospace,monospace);text-align:center;color:var(--fg)}
+.keyt{width:100%;border-collapse:collapse}.keyt td{padding:7px 4px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}.keyt td:first-child{white-space:nowrap;width:1%;padding-right:14px}
 .tt th{padding:4px 2px}.tt th{text-align:center}.tt th .dabw{height:22px;display:flex;justify-content:center;align-items:center}.tt th .dabs{visibility:hidden}.tt th:hover .dabs,.tt th:focus-within .dabs{visibility:visible}.tt thead th.arm .btn.dabs{visibility:visible;opacity:1}.tt thead th[data-a=dabshow]{cursor:pointer}@media (max-width:760px){.tt thead th .btn.dabs{font-size:10.5px;height:20px;min-height:0;padding:0 4px!important;line-height:1}}
 .tt th .dn{font-size:13px;color:var(--fg);font-weight:700}.tt th.today .dn,.tt th.today .dtx{color:var(--accent)}
 .tt th.today{background:var(--accent-soft);border-radius:9px}.tt th.nowp{color:var(--accent);font-weight:800}
@@ -1309,6 +1311,14 @@ const ttChip=(s,sb,pre,attr)=>{const nowS=s.status==='plan'&&isNow(DB,s.date,s.p
 /* ---- 렌더 ---- */
 const VIEWS=[['home','홈'],['sheet','진도표'],['cal','시간표·캘린더'],['meal','급식'],['set','설정']];
 function subjTabs(){const cs=curSub();return `<div class="stabs" role="tablist" aria-label="교과 시트"><div class="semwrap">${semBar()}</div>${STORE.subjects.filter(x=>(x.year||0)===(cs.year||0)&&(x.sem||0)===(cs.sem||0)).map(x=>`<span class="stab ${x.id===STORE.cur?'on':''}"><button role="tab" data-a="subj" data-x="${x.id}" aria-selected="${x.id===STORE.cur}" title="${esc(x.name)}"><span class="sm1">${sjic(x.icon,13)} ${esc(subjMain(x))}</span><small class="mono">${esc(subjMeta(x))}</small></button>${x.id===STORE.cur?`<button class="sm" data-a="subjmenu" data-x="${x.id}" aria-label="교과 정보 바꾸기·삭제" title="교과 정보 바꾸기·삭제">⋯</button>`:''}</span>`).join('')}<button class="stab add" data-a="subjadd">+ 교과 추가</button></div>`}
+const KEYS_HTML=()=>`<table class="keyt"><tbody>
+<tr><td><kbd>1</kbd> ~ <kbd>5</kbd></td><td>홈 · 진도표 · 시간표/캘린더 · 급식 · 설정으로 이동</td></tr>
+<tr><td><kbd>2</kbd> <kbd>2</kbd></td><td>같은 키를 한 번 더 누르면 전체 ↔ 반별 진도표 전환 (<kbd>3</kbd>은 시간표 ↔ 캘린더)</td></tr>
+<tr><td><kbd>Alt</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>이전 · 다음 메뉴로 이동</td></tr>
+<tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>이전 · 다음 주(캘린더는 월간일 때 달) · 홈은 이전 · 다음 수업일</td></tr>
+<tr><td><kbd>?</kbd></td><td>이 단축키 안내 열기</td></tr>
+<tr><td><kbd>Esc</kbd></td><td>창 닫기</td></tr></tbody></table><p class="muted" style="margin:8px 0 0;font-size:12px">입력칸에 글을 쓰는 중이거나 창이 열려 있을 때는 동작하지 않아요.</p>`;
+function openKeys(){modal(`<div class="tut"><div class="tuthd"><h3>키보드 단축키</h3></div>${KEYS_HTML()}<div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div></div>`)}
 const TUT=[
  {t:'진도표에 바로 쓰기',go:['sheet','진도표 열기'],b:`<ol><li>학급 이름·수업 주제는 <b>표 칸에 바로</b> 적어요. Enter는 아래 칸, Shift+Enter는 줄바꿈이에요.</li><li>'수업 주제 · 내용' 열의 오른쪽 경계를 끌면 열 너비를 바꿀 수 있어요. 더블클릭하면 기본 너비로 돌아가요.</li><li>엑셀에서 여러 칸을 복사해 주제 칸에 붙여넣으면 한 번에 채워져요.</li></ol>`},
  {t:'수업 내용 · 수업 정보',go:['sheet','진도표 열기'],b:`<ol><li>수업 내용은 주제 칸 아래 <b>점선 밑줄 칸</b>에 바로 적어요.</li><li>비고·교과서 쪽·준비물은 차시 번호 옆 <b>⋯</b> 버튼을 눌러 열리는 오른쪽 '수업 정보'에 적어요. 고친 내용은 바로 표에 반영돼요.</li><li>차시를 끼우거나 옮기고 지우기, 여러 반을 한꺼번에 기록하기는 '수업 정보' 위쪽의 <b>차시 관리</b> 버튼에서 해요.</li></ol>`},
@@ -1590,7 +1600,7 @@ function openHelp(){const r=ready(),done=GSTEPS.filter(s=>s.ok(r)).length;
    <div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>처음이라면: 시작하기 가이드</b><small style="white-space:normal;display:block;margin-top:2px">학급 → 시간표 → 학사일정 → 차시. 화면을 옮겨 다니며 누를 버튼을 하나씩 가리켜 드려요. (${done}/4 완료)</small></span><button class="btn sm pri" data-a="guide" data-x="0">${done?'이어서 하기':'시작하기'}</button></div>
    <div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>둘러보기: 연습 화면 투어</b><small style="white-space:normal;display:block;margin-top:2px">가짜 예시 데이터로 오늘의 수업·진도표·시간표를 눌러 볼 수 있어요. 끝나면 모두 사라져요.</small></span><button class="btn sm" data-a="tour">투어 보기</button></div></div>
   <h4 style="margin:6px 0">기능 설명</h4>
-  ${TUT.map((t,k)=>`<details class="hlp"><summary><b>${t.t}</b></summary><div class="tutbody">${t.b}</div>${t.go?`<div class="acts left"><button class="btn sm" data-a="tutgo" data-x="${t.go[0]}">${t.go[1]}</button></div>`:''}</details>`).join('')}
+  ${[...TUT,{t:'키보드 단축키',b:KEYS_HTML()}].map((t,k)=>`<details class="hlp"><summary><b>${t.t}</b></summary><div class="tutbody">${t.b}</div>${t.go?`<div class="acts left"><button class="btn sm" data-a="tutgo" data-x="${t.go[0]}">${t.go[1]}</button></div>`:''}</details>`).join('')}
   <div class="acts"><button class="btn pri" data-a="close">닫기</button></div></div>`,true)}
 function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
   const cur=curSub()||{};const yr=sb?sb.year:(cur.year||yearNow()),sm=sb?sb.sem:(cur.sem||semNow());
@@ -2996,6 +3006,15 @@ document.addEventListener('keydown',e=>{const tg=e.target;
   if(tg.classList&&tg.classList.contains('ie')&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&e.keyCode!==229){e.preventDefault();
     if(tg.dataset.lf){const nx=document.querySelector(`.ie[data-lf="${tg.dataset.lf}"][data-n="${+tg.dataset.n+1}"]`);if(nx){nx.focus();nx.select&&nx.select()}else tg.blur()}else tg.blur();return}
   const inField=tg.matches('input,textarea,select')||tg.isContentEditable;
+  /* 메뉴 단축키: 1~5 이동 · Alt+←/→ 이전/다음 메뉴 · [ ] 이전/다음 기간 · ? 안내 */
+  if(!inField&&!TOUR&&!e.isComposing&&!e.ctrlKey&&!e.metaKey&&!$('#layer').innerHTML){
+    const nb=v=>document.querySelector(`#nav [data-x="${v}"]`),clk=sel=>{const b=document.querySelector(sel);if(b&&!b.disabled){b.click();return true}return false};
+    if(!e.altKey&&!e.shiftKey&&/^[1-5]$/.test(e.key)){const v=VIEWS[+e.key-1];if(v&&nb(v[0])){e.preventDefault();nb(v[0]).click();return}}
+    if(e.altKey&&!e.shiftKey&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){const i=VIEWS.findIndex(v=>v[0]===U.view),j=i+(e.key==='ArrowLeft'?-1:1);if(i>=0&&VIEWS[j]&&nb(VIEWS[j][0])){e.preventDefault();nb(VIEWS[j][0]).click()}else e.preventDefault();return}
+    if(!e.altKey&&(e.key==='['||e.key===']')){const d=e.key==='['?'-1':'1';
+      const sel=U.view==='cal'?(U.schedMode==='tt'?`.calbar [data-a=ttw][data-x="${d}"]`:`[data-a=mon][data-x="${d}"]`):U.view==='meal'?`[data-a=mw][data-x="${d}"]`:U.view==='home'?`#todaycard [data-a=lsday][data-x="${d}"]`:'';
+      if(sel&&clk(sel)){e.preventDefault()}return}
+    if(e.key==='?'){e.preventDefault();openKeys();return}}
   if(e.key===' '&&!inField&&!TOUR&&U.view==='sheet'&&U.selCell&&!$('#layer').innerHTML&&!(tg.closest&&tg.closest('button,a,summary'))){e.preventDefault();toggleRec(U.selCell.c,U.selCell.n);return}
   if(e.key.startsWith('Arrow')&&!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&!TOUR&&U.view==='sheet'&&U.selCell&&!$('#layer').innerHTML&&!(tg.closest&&tg.closest('button,a,summary,select'))){
     const {c,n}=U.selCell,els=[...document.querySelectorAll('[data-a=sel]')].map(x=>x.dataset.x.split('|')).filter(a=>a.length===2).map(a=>({c:a[0],n:+a[1]}));
