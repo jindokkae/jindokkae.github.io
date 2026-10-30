@@ -1132,9 +1132,10 @@ const C={
     if(s.movedIn){const prev=db.exc.find(e=>e.id===s.movedIn);od=prev.date;op=prev.p;prev.state='cancelled'}
     if(opt.revertDone&&s.status==='done')C.uncomplete(db,s.c,s.n);
     if(od===toDate&&op===toP)return;
-    db.exc.push({id:uid('m'),type:'move',date:od,c:s.c,p:op,toDate,toP,reason:opt.reason||'수업 교환',note:note||'',src:opt.src||'직접',state:'active',at:stamp()})},
+    const id=uid('m');db.exc.push({id:id,type:'move',date:od,c:s.c,p:op,toDate,toP,reason:opt.reason||'수업 교환',note:note||'',src:opt.src||'직접',state:'active',at:stamp(),...(opt.pair?{pair:opt.pair}:{})});return id},
+  swap(db,s,occ,toDate,toP,opt={}){const pr=uid('p');const a=C.move(db,s,toDate,toP,`${clsName(db,occ.c)}와 맞교환`,{revertDone:opt.revertDone,pair:pr,reason:'수업 맞교환'});const b=C.move(db,occ,s.date,s.p,`${clsName(db,s.c)}와 맞교환`,{pair:pr,reason:'수업 맞교환'});return [a,b]},
   extra(db,c,date,p,note){db.exc.push({id:uid('x'),type:'extra',date,c,p,reason:'수업 보강',note:note||'',src:'직접',state:'active',at:stamp()})},
-  setExc(db,id,state){const e=db.exc.find(x=>x.id===id);if(e)e.state=state},
+  setExc(db,id,state){const e=db.exc.find(x=>x.id===id);if(e){e.state=state;if(e.pair)db.exc.forEach(x=>{if(x.pair===e.pair)x.state=state})}},
   accept(db,id,opt={}){const i=db.inbox.find(x=>x.id===id);const S=buildSched(db);
     const s=S.key[`${i.date}|${i.c}|${i.p}`];
     if(!s||!['plan','check','done'].includes(s.status))return false;
@@ -2467,17 +2468,27 @@ function drawExtra(){const E=U.ex;if(!E)return;const o=extraOpts(E.date);if(!o.s
   <div class="pv"><div class="ln"><span>${esc(pv)}</span></div></div>
   <div class="acts"><button class="btn" data-a="close">취소</button><button class="btn pri" data-a="exgo">보강 추가</button></div>`)}
 function openMove(k){const s=SCH.key[k];U.mv={key:k,toDate:s.date,toP:s.p,revert:false};drawMove()}
-function mvCheck(){const m=U.mv,s=SCH.key[m.key];const err=validateMove(DB,SCH,s,m.toDate,m.toP);if(err)return {err};
+/* 옮길 칸에 다른 반의 (아직 안 한) 수업이 있으면 서로 맞교환할 수 있다 */
+function mvSwapOcc(s,toDate,toP){if(!toDate||toDate<DB.term.start||toDate>DB.term.end||classBlock(DB,toDate,s.c))return null;
+  const occ=(SCH.by[toDate]||[]).find(x=>x.p===toP&&['plan','check','done'].includes(x.status)&&x.key!==s.key);
+  if(!occ||occ.c===s.c||occ.status==='done'||occ.extra||classBlock(DB,s.date,occ.c))return null;
+  if(toDate===s.date&&toP===s.p)return null;return occ}
+function mvCheck(){const m=U.mv,s=SCH.key[m.key];const occ=mvSwapOcc(s,m.toDate,m.toP);
+  if(occ){const o1={id:'tmp',type:'move',date:s.movedIn?s.from.date:s.date,c:s.c,p:s.movedIn?s.from.p:s.p,toDate:m.toDate,toP:m.toP,state:'active'},
+    o2={id:'tmp2',type:'move',date:occ.movedIn?occ.from.date:occ.date,c:occ.c,p:occ.movedIn?occ.from.p:occ.p,toDate:s.date,toP:s.p,state:'active'};
+    const after=buildSched(DB,{extra:[o1,o2],skip:[s.movedIn,occ.movedIn].filter(Boolean)});const n1=s.n||SCH.nextN[s.c],n2=occ.n||SCH.nextN[occ.c];
+    return {swap:occ,txt:`${esc(cn(occ.c))}와 서로 맞교환해요. ${esc(cn(occ.c))}는 ${mdw(s.date)} ${s.p}교시로 가요. ${esc(cn(s.c))} ${shiftNote(SCH,after,s.c,n1)}. ${esc(cn(occ.c))} ${shiftNote(SCH,after,occ.c,n2)}`}}
+  const err=validateMove(DB,SCH,s,m.toDate,m.toP);if(err)return {err};
   const ex={id:'tmp',type:'move',date:s.movedIn?s.from.date:s.date,c:s.c,p:s.movedIn?s.from.p:s.p,toDate:m.toDate,toP:m.toP,state:'active'};
   const after=buildSched(DB,{extra:[ex],skip:s.movedIn?[s.movedIn]:[]});
   const n=s.n||SCH.nextN[s.c];return {txt:s.status==='done'?`${n}차시 완료 기록(${md(s.date)})은 ${m.revert?'미완료로 되돌려요':"그대로 두고 '일정 충돌'로 표시돼요"}`:shiftNote(SCH,after,s.c,n)}}
-const mvPv=()=>{const r=mvCheck(),m=U.mv,s=SCH.key[m.key];return r.err?`<div class="ln"><span class="w">${esc(r.err)}</span></div>`:`<div class="ln"><span><b>${esc(cn(s.c))}</b> ${mdw(m.toDate)} ${m.toP}교시로 옮겨요. ${r.txt}.</span></div>`};
+const mvPv=()=>{const r=mvCheck(),m=U.mv,s=SCH.key[m.key];return r.err?`<div class="ln"><span class="w">${esc(r.err)}</span></div>`:r.swap?`<div class="ln"><span><b>${esc(cn(s.c))}</b> ${mdw(m.toDate)} ${m.toP}교시로 옮겨요. ${r.txt}.</span></div>`:`<div class="ln"><span><b>${esc(cn(s.c))}</b> ${mdw(m.toDate)} ${m.toP}교시로 옮겨요. ${r.txt}.</span></div>`};
 function drawMove(){const m=U.mv,s=SCH.key[m.key];
   modal(`<h3>${esc(cn(s.c))} · ${when(s)} 수업 교환</h3><p class="sub">원래 칸은 '교환됨'으로 남고, 언제든 교환 취소로 되돌릴 수 있어요.</p>
   <div class="inl"><label class="field">옮길 날짜<input type="date" id="mvDate" value="${m.toDate}" min="${DB.term.start}" max="${DB.term.end}"></label><label class="field" style="flex:0 0 90px">교시<select id="mvP">${[1,2,3,4,5,6,7].map(p=>`<option value="${p}" ${p===m.toP?'selected':''}>${p}교시</option>`).join('')}</select></label></div>
   ${s.status==='done'?`<label class="chk"><input type="checkbox" id="mvRev" ${m.revert?'checked':''}><span>이 수업의 완료 기록도 미완료로 되돌리기</span></label>`:''}
   <div class="pv" id="mvPv">${mvPv()}</div>
-  <div class="acts"><button class="btn" data-a="close">취소</button><button class="btn pri" data-a="mvgo" id="mvGo" ${mvCheck().err?'disabled':''}>교환하기</button></div>`)}
+  <div class="acts"><button class="btn" data-a="close">취소</button><button class="btn pri" data-a="mvgo" id="mvGo" ${mvCheck().err?'disabled':''}>${mvCheck().swap?'맞교환하기':'교환하기'}</button></div>`)}
 function openMemo(c,n){const v=rec(DB,c,n);
   modal(`<form id="memoForm" style="display:flex;flex-direction:column;gap:12px"><h3>${esc(cn(c))} · ${n}차시 메모</h3><p class="sub">${esc(lname(n))}</p>
   <label class="field">반별 비고 (${esc(cn(c))}만 저장돼요)<textarea id="mMemo" rows="3" autofocus placeholder="예: 미응시 학생, 북간도부터 안 함">${esc(v?.memo||'')}</textarea></label><input type="hidden" id="mKey" value="${c}|${n}">
@@ -2734,7 +2745,8 @@ document.addEventListener('click',e=>{
    case 'absgo':{const A=U.abs,list=[...A.keys].map(k=>SCH.key[k]).filter(Boolean);if(!list.length)break;
      mutate(`${md(A.date)} ${list.map(s=>cn(s.c)).join(', ')} 결손 (${A.reason})`,db=>C.absence(db,list,A.reason,A.note,{revertDone:A.revert,src:dayEvLabels(A.date).includes(A.reason)?'학사일정':'직접'}),{refs:list.filter(s=>s.n).map(s=>lref(s.c,s.n)),msg:`${list.length}개 수업을 결손 처리했어요. 이후 차시를 다시 계산했어요.`});break}
    case 'moveopen':openMove(x);break;
-   case 'mvgo':{const M=U.mv,s=SCH.key[M.key];if(mvCheck().err)break;
+   case 'mvgo':{const M=U.mv,s=SCH.key[M.key],chk=mvCheck();if(chk.err)break;
+     if(chk.swap){const occ=chk.swap;mutate(`${cn(s.c)} ${when(s)} ↔ ${cn(occ.c)} ${when(occ)} 맞교환`,db=>C.swap(db,s,occ,M.toDate,M.toP,{revertDone:M.revert}),{msg:`${cn(s.c)}와 ${cn(occ.c)}를 서로 맞교환했어요. 두 반의 예정 진도를 다시 계산했어요.`});break}
      mutate(`${cn(s.c)} ${when(s)} → ${md(M.toDate)} ${M.toP}교시 교환`,db=>C.move(db,s,M.toDate,M.toP,'',{revertDone:M.revert}));break}
    case 'mockabs':{const me=(allEvents(DB).filter(e=>inRange(x,e)&&MOCK_RE.test(e.label||'')&&!e.off&&!e.gx)[0]);const lab=String((me&&me.label)||'전국연합학력평가'),list=(SCH.by[x]||[]).filter(z=>['plan','check','done','skipped'].includes(z.status));if(!list.length)break;
      mutate(`${md(x)} ${lab} 결손 적용`,db=>{list.forEach(z=>{const old=db.exc.find(e=>e.type==='absence'&&e.date===z.date&&e.c===z.c&&e.p===z.p);if(old){old.state='active';old.reason=lab.slice(0,18);old.src='자동(학사일정)'}else db.exc.push({id:uid('a'),type:'absence',date:z.date,c:z.c,p:z.p,reason:lab.slice(0,18),note:'',src:'자동(학사일정)',state:'active',at:stamp()})})},{msg:`${list.length}개 수업을 ${lab} 결손으로 처리했어요.`});break}
@@ -2917,7 +2929,7 @@ document.addEventListener('input',e=>{const tg=e.target;
   if(U.abs&&tg.id==='absRev'){U.abs.revert=tg.checked;drawAbsence();return}
   if(U.ex&&tg.id==='exSel'){U.ex.note=($('#exNote')?.value||'');U.ex.sel=tg.value;drawExtra();return}
   if(U.mv&&(tg.id==='mvDate'||tg.id==='mvP'||tg.id==='mvRev')){if(tg.id==='mvDate')U.mv.toDate=tg.value;if(tg.id==='mvP')U.mv.toP=+tg.value;if(tg.id==='mvRev')U.mv.revert=tg.checked;
-    $('#mvPv').innerHTML=mvPv();$('#mvGo').disabled=!!mvCheck().err;return}
+    $('#mvPv').innerHTML=mvPv();{const r=mvCheck();$('#mvGo').disabled=!!r.err;$('#mvGo').textContent=r.swap?'맞교환하기':'교환하기'}return}
   if(U.ttEdit&&(tg.dataset.tts||tg.id==='ttFrom')){const T=U.ttEdit;
     if(tg.id==='ttFrom'){if(tg.value)T.from=tg.value}else{const [d,p]=tg.dataset.tts.split('|').map(Number);T.slots=T.slots.filter(s=>!(s.d===d&&s.p===p));if(tg.value)T.slots.push({d,p,c:tg.value})}
     const diff=ttEditDiff();$('#ttDiff').innerHTML=diff?`적용하면 오늘부터 4주 안에 <b>${diff}일</b>의 수업 칸이 바뀌어요.`:'지금 시간표와 같아요.';return}
