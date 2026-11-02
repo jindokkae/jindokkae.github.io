@@ -1864,7 +1864,7 @@ function vHome(){
   /* 마감일이 있는 할 일: 마감 7일 전부터(지나도 완료 전까지) 오늘 목록 맨 위에 고정 */
   const allTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i,ref:TD})).filter(t=>!t.rep&&!(t.due&&!t.d&&t.due<TD))),repTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>t.rep?tdInst(t,i,sb.id,TD):null).filter(Boolean));
   const fl=U.tdFlt&&TDTAGS.includes(U.tdFlt)?U.tdFlt:'',hasTag=allTd.some(t=>t.tag)||repTd.some(t=>t.tag);
-  const isPin=t=>t.due&&!t.d&&ddayFrom(t.due,TD)>=0&&ddayFrom(t.due,TD)<=7&&(t.date||TK)<=TD;
+  const isPin=t=>t.due&&!t.d&&ddayFrom(t.due,TD)>=0&&ddayFrom(t.due,TD)<=7;
   const pins=TD>=TK?allTd.filter(t=>isPin(t)&&(!fl||t.tag===fl)).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0):[];
   const todos=[...allTd.filter(t=>(!fl||t.tag===fl)&&(TD>=TK?(!isPin(t)&&((isT&&!t.date)||t.date===TD||(t.due&&!t.d&&(t.date||TK)<TD))):t.date===TD)),...repTd.filter(t=>!fl||t.tag===fl)];
   const openN=todos.filter(t=>!t.d).length+pins.length,allDone=!pins.length&&todos.length>0&&todos.every(t=>t.d),anyTd=todos.length+pins.length>0;
