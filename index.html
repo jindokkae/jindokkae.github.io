@@ -3035,7 +3035,8 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
-document.addEventListener('click',e=>{if(U.tdEdit&&!(e.target.closest&&e.target.closest('li.tdedit,[data-a=tdedit]'))){U.tdEdit=null;U.tdE=null;render()}if(U.tdMenu&&!(e.target.closest&&e.target.closest('[data-a=tdmenu],[data-a=tdedit],[data-a=tddel]'))){U.tdMenu=null;render()}if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
+let tdPdIn=false;document.addEventListener('pointerdown',e=>{tdPdIn=!!(e.target.closest&&e.target.closest('li.tdedit'))},true);
+document.addEventListener('click',e=>{if(U.tdEdit&&!tdPdIn&&!(e.target.closest&&e.target.closest('li.tdedit,[data-a=tdedit]'))){U.tdEdit=null;U.tdE=null;render()}tdPdIn=false;if(U.tdMenu&&!(e.target.closest&&e.target.closest('[data-a=tdmenu],[data-a=tdedit],[data-a=tddel]'))){U.tdMenu=null;render()}if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 /* 할 일 박스: 휴대폰에서 좌우로 밀면 날짜 넘기기 */
 let TDSW=null,LSSW=null;
 document.addEventListener('touchstart',e=>{const c=e.target.closest&&e.target.closest('#todocard');if(!c||e.touches.length>1||e.target.closest('input,textarea,form,.hmain.editing'))return;TDSW={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
