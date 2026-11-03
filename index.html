@@ -1866,7 +1866,7 @@ function vHome(){
   const dayName=isT?'오늘':TD===addK(TK,1)?'내일':TD===addK(TK,-1)?'어제':TD===nxt1?`다음 수업일 ${mdw(TD)}`:mdw(TD);
   const autos=[]; /* 할 일에는 직접 적은 것만 보여 준다 (진도표 준비물 자동 항목 없음) */
   /* 마감일이 있는 할 일: 마감 7일 전부터(지나도 완료 전까지) 오늘 목록 맨 위에 고정 */
-  const allTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i,ref:TD})).filter(t=>!t.rep&&!(t.due&&!t.d&&t.due<TD))),repTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>t.rep?tdInst(t,i,sb.id,TD):null).filter(Boolean));
+  const allTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i,ref:TD})).filter(t=>!t.rep&&!(t.due&&!t.d&&(t.due<TD||ddayFrom(t.due,TD)>7)))),repTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>t.rep?tdInst(t,i,sb.id,TD):null).filter(Boolean));
   const fl=U.tdFlt&&TDTAGS.includes(U.tdFlt)?U.tdFlt:'',hasTag=allTd.some(t=>t.tag)||repTd.some(t=>t.tag);
   const isPin=t=>t.due&&!t.d&&ddayFrom(t.due,TD)>=0&&ddayFrom(t.due,TD)<=7;
   const pins=TD>=TK?allTd.filter(t=>isPin(t)&&(!fl||t.tag===fl)).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0):[];
@@ -2319,7 +2319,7 @@ function schedRem(now){clearTimeout(REMT);REMT=setTimeout(remSync,now?200:2500)}
 /* 오늘 할 일 알림 / 독촉 알림 */
 function todoSubs(){const subs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());return subs.length?subs:STORE.subjects}
 function openTodosOn(k){/* 마감 7일 전부터는 마감 항목을 맨 앞에 (D-n 표시), 그 밖은 그날 항목 · 날짜 없는 메모는 평일에만 */
-  const wk=![0,6].includes(D(k).getDay()),all=todoSubs().flatMap(sb=>(sb.db.todos||[]).map(t=>t.rep?(repHit(t,k)&&!(t.doneOn||[]).includes(k)?{...t,date:k,due:''}:null):(t.d||(t.due&&t.due<k)?null:t)).filter(Boolean));
+  const wk=![0,6].includes(D(k).getDay()),all=todoSubs().flatMap(sb=>(sb.db.todos||[]).map(t=>t.rep?(repHit(t,k)&&!(t.doneOn||[]).includes(k)?{...t,date:k,due:''}:null):(t.d||(t.due&&(t.due<k||t.due>addK(k,7)))?null:t)).filter(Boolean));
   const dl=du=>{const n=Math.round((D(du)-D(k))/864e5);return n===0?'D-day':n>0?'D-'+n:'D+'+(-n)};
   const pin=t=>t.due&&k>=addK(t.due,-7)&&(wk||t.date===k);
   return [...all.filter(pin).sort((a,b)=>a.due<b.due?-1:a.due>b.due?1:0).map(t=>`${t.t}`),
