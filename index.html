@@ -1756,7 +1756,7 @@ const newP=t=>t?{k:t.rep?t.rep.k:'',days:t.rep&&t.rep.days?[...t.rep.days]:[],un
 function applyP(o,P,fb){if(P.k){const days=P.k==='w'?(P.days.length?[...P.days]:[D(fb).getDay()]):[];o.rep={k:P.k,days:days.sort((a,b)=>a-b),until:P.until||''};delete o.due}else{delete o.rep;delete o.doneOn;if(P.until)o.due=P.until;else delete o.due}return o}
 const pSum=P=>[P.k==='d'?'매일':P.k==='w'?'매주 '+WDO.filter(d=>P.days.includes(d)).map(d=>WDN[d]).join('·'):'',P.until?`~${md(P.until)}`:''].filter(Boolean).join(' ');
 function pickHtml(P,sc){const b=(k,l)=>`<button type="button" class="tdtc" data-a="tdrk" data-x="${sc}|${k}" aria-pressed="${P.k===k}">${l}</button>`;
-  return `<div class="tdpick"><div class="tdprow"><span class="tdpl">반복</span>${b('','한 번')}${b('d','매일')}${b('w','매주')}</div>${P.k==='w'?`<div class="tdprow"><span class="tdpl">요일</span>${WDO.map(d=>`<button type="button" class="tdtc dow" data-a="tdrd" data-x="${sc}|${d}" aria-pressed="${P.days.includes(d)}">${WDN[d]}</button>`).join('')}</div>`:''}<div class="tdprow"><span class="tdpl">${P.k?'언제까지':'마감일'}</span><input type="date" class="inp" data-pu="${sc}" value="${esc(P.until)}" ${sc==='a'?`min="${TK}"`:''} aria-label="${P.k?'반복 종료일':'마감일'} (선택)">${P.until?`<button type="button" class="tdtc" data-a="tdru" data-x="${sc}">지우기</button>`:`<span class="muted" style="font-size:11px">선택</span>`}</div></div>`}
+  return `<div class="tdpick"><div class="tdprow"><span class="tdpl">반복</span>${b('','한 번')}${b('d','매일')}${b('w','매주')}</div>${P.k==='w'?`<div class="tdprow"><span class="tdpl">요일</span>${WDO.map(d=>`<button type="button" class="tdtc dow" data-a="tdrd" data-x="${sc}|${d}" aria-pressed="${P.days.includes(d)}">${WDN[d]}</button>`).join('')}</div>`:''}<div class="tdprow"><span class="tdpl">${P.k?'언제까지':'마감일'}</span><input type="date" class="inp" data-pu="${sc}" value="${esc(P.until)}" ${sc!=='e'?`min="${TK}"`:''} aria-label="${P.k?'반복 종료일':'마감일'} (선택)">${P.until?`<button type="button" class="tdtc" data-a="tdru" data-x="${sc}">지우기</button>`:`<span class="muted" style="font-size:11px">선택</span>`}</div></div>`}
 const ddayFrom=(k,r)=>Math.round((D(k)-D(r||TK))/864e5);
 const dueLab=(k,r)=>{const n=ddayFrom(k,r);return n===0?'D-day':n>0?'D-'+n:'D+'+(-n)},dueCls=(k,r)=>{const n=ddayFrom(k,r);return n<=0?'badfill':n<=3?'bad':n<=7?'warn':'gray'};
 function todoLi(sid,i,t,pre){const key=sid+':'+i;
@@ -2222,7 +2222,7 @@ function calBody(){const SRc=srInfo();
     <div class="dlist">${ss.length?ss.map(x=>x.row).join(''):'<p class="muted" style="margin:0">수업이 없는 날이에요.</p>'}</div>
     <div class="sect">이날 할 일</div>
     <ul class="todo">${doneLast(tds).map(t=>todoLi(STORE.cur,t.i,t,'ctd')).join('')||'<li class="tdempty">이날 할 일이 없어요</li>'}</ul>
-    <form id="calTodo" class="tdform"><input id="ctIn" class="inp" placeholder="할 일을 적고 Enter" aria-label="이날 할 일 추가" autocomplete="off"><button class="btn pri">추가</button></form>
+    <form id="calTodo" class="tdform"><input id="ctIn" class="inp" value="${esc(U.ctDraft||'')}" placeholder="할 일을 적고 Enter" aria-label="이날 할 일 추가" autocomplete="off"><button type="button" class="btn tddb ${pSum(U.ctP||newP())?'on':''}" data-a="ctpanel" aria-pressed="${!!U.ctPanel}" title="반복 · 마감 정하기 (선택)" aria-label="반복 · 마감 정하기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3M3 11V9a4 4 0 0 1 4-4h13M7 22l-3-3 3-3M21 13v2a4 4 0 0 1-4 4H4"/></svg></button><button class="btn pri">추가</button><div class="tdtags" role="group" aria-label="분류">${TDTAGS.map(g=>`<button type="button" class="tdtc" data-t="${g}" data-a="cttag" data-x="${g}" aria-pressed="${U.ctTag===g}">${g}</button>`).join('')}${pSum(U.ctP||newP())?`<button type="button" class="tdsum" data-a="ctpanel" title="반복 · 마감 설정 열기">↻ ${esc(pSum(U.ctP||newP()))}</button>`:''}</div>${U.ctPanel?pickHtml(U.ctP||(U.ctP=newP()),'c'):''}</form>
     <div class="sect">일정 추가</div>
     <form id="evForm" class="evf"><div class="inl"><label class="field" style="flex:0 0 130px">종류<select id="evK"><option value="event">학교 행사</option><option value="hol">휴업일 (수업 없음)</option><option value="exam">정기시험</option><option value="etc">기타</option></select></label><label class="field">제목<input id="evT" placeholder="예: 체육대회"></label></div>
       <div class="inl"><label class="field">시작일<input type="date" id="evS" value="${k}"></label><label class="field"><span>끝나는 날 <span class="muted">(선택)</span></span><input type="date" id="evE" value="" min="${k}"></label><button class="btn sm pri" style="align-self:flex-end">추가</button></div>
@@ -2700,10 +2700,12 @@ document.addEventListener('click',e=>{
    case 'bdel':{const ids=new Set(U.selRows);U.selRows.clear();U.selCell=null;U.draft=null;U.selRow=null;mutate(`차시 ${ids.size}개 삭제`,db=>{for(let n=db.lessons.length;n>=1;n--)if(ids.has(db.lessons[n-1].id))C.removeLesson(db,n)});break}
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;const f=db.rgBasis==='unit'?'ucol':'col';if(nS==='a')delete l[f];else l[f]=+nS},{silent:true});break}
+   case 'ctpanel':{const i=$('#ctIn');if(i)U.ctDraft=i.value;U.ctPanel=!U.ctPanel;U.ctP=U.ctP||newP();render();break}
+   case 'cttag':{const i=$('#ctIn');if(i)U.ctDraft=i.value;U.ctTag=U.ctTag===x?'':x;render();setTimeout(()=>{const e=$('#ctIn');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},0);break}
    case 'tdpanel':{const i=$('#todoIn');if(i)U.tdDraft=i.value;U.tdPanel=!U.tdPanel;U.tdP=U.tdP||newP();render();break}
-   case 'tdrk':case 'tdrd':case 'tdru':{const [sc,v]=x.split('|'),P=sc==='a'?(U.tdP=U.tdP||newP()):U.tdE&&U.tdE.P;if(!P)break;
-     if(sc==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else if(U.tdE){const i=$('#tdEditIn');if(i)U.tdE.text=i.value}
-     if(a==='tdrk'){P.k=v;if(v==='w'&&!P.days.length)P.days=[D(sc==='a'?(U.tdDay||TK):(U.tdE.date||TK)).getDay()]}
+   case 'tdrk':case 'tdrd':case 'tdru':{const [sc,v]=x.split('|'),P=sc==='a'?(U.tdP=U.tdP||newP()):sc==='c'?(U.ctP=U.ctP||newP()):U.tdE&&U.tdE.P;if(!P)break;
+     if(sc==='c'){const i=$('#ctIn');if(i)U.ctDraft=i.value}else if(sc==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else if(U.tdE){const i=$('#tdEditIn');if(i)U.tdE.text=i.value}
+     if(a==='tdrk'){P.k=v;if(v==='w'&&!P.days.length)P.days=[D(sc==='a'?(U.tdDay||TK):sc==='c'?U.sel:(U.tdE.date||TK)).getDay()]}
      else if(a==='tdrd'){const d=+v,j=P.days.indexOf(d);if(j>=0)P.days.splice(j,1);else P.days.push(d)}
      else P.until='';
      render();break}
@@ -2943,7 +2945,7 @@ document.addEventListener('change',e=>{const tg=e.target;
   if(tg.id==='notifTodoTime'||tg.id==='notifNagTime'){const n=tg.id==='notifNagTime';if(tg.value){NOTIF[n?'nagTime':'todoTime']=tg.value;NOTIF[n?'nagLast':'todoLast']='';saveNotif();schedRem(true)}return}
   if(tg.id==='notifAfter'){NOTIF.after=tg.checked;saveNotif();schedRem(true);render();return}
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
-  if(tg.dataset.pu){const P=tg.dataset.pu==='a'?(U.tdP=U.tdP||newP()):U.tdE&&U.tdE.P;if(P){if(tg.dataset.pu==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else{const i=$('#tdEditIn');if(i&&U.tdE)U.tdE.text=i.value}P.until=tg.value||'';render()}return}
+  if(tg.dataset.pu){const P=tg.dataset.pu==='a'?(U.tdP=U.tdP||newP()):tg.dataset.pu==='c'?(U.ctP=U.ctP||newP()):U.tdE&&U.tdE.P;if(P){if(tg.dataset.pu==='c'){const i=$('#ctIn');if(i)U.ctDraft=i.value}else if(tg.dataset.pu==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else{const i=$('#tdEditIn');if(i&&U.tdE)U.tdE.text=i.value}P.until=tg.value||'';render()}return}
   if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){const tt=sb.db.todos[+ix];if(tt.rep){const dk=tg.dataset.day||TK,a=new Set(tt.doneOn||[]);tg.checked?a.add(dk):a.delete(dk);tt.doneOn=[...a]}else tt.d=tg.checked;persist();render()}return}
   if(tg.id==='impFile'&&tg.files[0]){const r=new FileReader();r.onload=()=>openImport(String(r.result));r.readAsText(tg.files[0]);tg.value='';return}
   if(U.rg&&(tg.id==='rgFrom'||tg.id==='rgTo')){const f=$('#rgFrom'),t=$('#rgTo');if(f&&t){const fi=lessonIdx(DB,f.value),ti=lessonIdx(DB,t.value);if(tg.id==='rgFrom'&&ti<fi)t.value=f.value;if(tg.id==='rgTo'&&ti<fi)f.value=t.value;readRange();drawRange();return}}
@@ -2960,7 +2962,7 @@ document.addEventListener('focusout',e=>{const tg=e.target;
   if(tg.id==='acNames'&&tg.value.trim()){acAdd(tg.value);tg.value=''}
 });
 document.addEventListener('input',e=>{const tg=e.target;
-  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
+  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
   if(tg.id==='acNames'){const v=tg.value;if(/[,，\s]/.test(v)){const parts=v.split(/[,，\s]/),rest=parts.pop();acAdd(parts.join(','));tg.value=rest}return}
   if(tg.classList.contains('ie')&&tg.tagName==='TEXTAREA')autosize(tg);
   if(tg.dataset&&tg.dataset.lf&&tg.dataset.n){const f=tg.dataset.lf,n=tg.dataset.n,v=tg.value;
@@ -3014,7 +3016,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
   if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=($('#tdEditIn')||{}).value.trim(),E=U.tdE;U.tdEdit=null;U.tdE=null;if(sb&&sb.db.todos[+ix]){const t=sb.db.todos[+ix];if(v&&E){t.t=v;if(E.tag)t.tag=E.tag;else delete t.tag;applyP(t,E.P,t.date||TK)}else if(!v)sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'방학까지',date:$('#ddDate').value,init:true,touched:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay||TK;if(v){const o=applyP({t:v,d:false,date:dd,...(U.tdTag?{tag:U.tdTag}:{})},U.tdP||newP(),dd);U.tdDraft='';U.tdP=newP();U.tdPanel=false;quick(db=>db.todos.push(o));setTimeout(()=>$('#todoIn')?.focus(),30)}}
-  if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v)quick(db=>db.todos.push({t:v,d:false,date:U.sel}))}
+  if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v){const o=applyP({t:v,d:false,date:U.sel,...(U.ctTag?{tag:U.ctTag}:{})},U.ctP||newP(),U.sel);U.ctDraft='';U.ctP=newP();U.ctPanel=false;quick(db=>db.todos.push(o))}}
   if(id==='addClassForm'){acAdd($('#acNames').value);$('#acNames').value='';const names=U.acTags.slice(),lead=$('#acLead').value.trim();
     if(!names.length){toast('학급 이름을 적어 주세요. 예: 2-1');return}
     const dup=names.filter(nm=>DB.classes.some(c=>c.name===nm));
