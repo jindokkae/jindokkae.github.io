@@ -1077,8 +1077,9 @@ function autoAbs(sb){const db=sb.db;if(!db)return false;let ch=false;db.gr=Strin
         db.exc.push({id:uid('a'),type:'absence',date:k,c:t.c,p:t.p,reason:lab.length>18?lab.slice(0,18):lab,note:'',src:'자동(학사일정)',state:'active',at:stamp()});ch=true}}}
   return ch}
 function ttFor(db,k){let v=null;for(const t of db.tt)if(t.from<=k&&(!v||t.from>=v.from))v=t;if(!v)for(const t of db.tt)if(!v||t.from<v.from)v=t;return v?v.slots:[]}
-const isPast=(db,k,p)=>k<TK||(k===TK&&toMin(db.periods[p])+50<=NOWMIN);
-const isNow=(db,k,p)=>k===TK&&toMin(db.periods[p])<=NOWMIN&&NOWMIN<toMin(db.periods[p])+50;
+const PDUR=db=>{const n=+(db&&db.periods&&db.periods.dur);return n>=10&&n<=180?n:50};
+const isPast=(db,k,p)=>k<TK||(k===TK&&toMin(db.periods[p])+PDUR(db)<=NOWMIN);
+const isNow=(db,k,p)=>k===TK&&toMin(db.periods[p])<=NOWMIN&&NOWMIN<toMin(db.periods[p])+PDUR(db);
 
 /* 하루의 수업 칸. 결손·이동된 원래 칸도 지우지 않고 상태로 남긴다 */
 function rawSessions(db,k,ex){
@@ -1690,7 +1691,7 @@ function setupCard(){const r=ready();if(r.cls&&r.les&&r.tt&&r.cal)return '';
    ${st(r.cal,3,'학사일정 확인','모의고사·시험·휴업일 때문에 빠지는 수업을 학년에 맞게 미리 확인해요.','guide','2','학사일정 확인',!r.tt,'먼저 시간표를 입력하세요')}
    ${st(r.les,4,'차시 입력','수업 가능한 횟수를 보고 진도표에 수업 주제·내용을 적어요. 엑셀에서 붙여넣어도 돼요.','guide','3','차시 입력하기')}</div>
    <p class="note" style="margin-top:10px">급식과 학사일정은 설정에서 NEIS 인증키를 넣으면 불러올 수 있어요.</p></div>`}
-const endT=p=>{const m=toMin(PT(p))+50;return pad(Math.floor(m/60))+':'+pad(m%60)};
+const endT=p=>{const m=toMin(PT(p))+PDUR(DB);return pad(Math.floor(m/60))+':'+pad(m%60)};
 const HST={doing:['진행 중','warn'],check:['기록 필요','warn'],done:['수업 완료','ok'],plan:['예정','info'],now:['수업 중','info'],absent:['결손','bad'],moved:['교환됨','gray'],skipped:['기록 없음','gray']};
 /* 교과 시트 하나의 오늘 현황. withSub 안에서 불러야 해요 */
 /* 그날 예정 수업 차시의 준비물·비고·자료 링크 (할 일 박스용) */
@@ -2156,7 +2157,7 @@ function ttBody(){
   if(U.ttClass!=='all'&&!filt.some(f=>f.id===U.ttClass))U.ttClass='all';
   const exBlock=k=>{const t=[];for(const sb of subs){const ids=clsIds(sb.db);if(!ids.length)return null;for(const c of ids){const g=classBlock(sb.db,k,c);if(!g)return null;if(!t.includes(g))t.push(g)}}return t.length?t.join(' · '):null};
   const blockOf=k=>subs.every(sb=>dayBlock(sb.db,k))?dayBlock(subs[0].db,k):exBlock(k);
-  let rows='';for(let p=1;p<=7;p++){const nowP=subs.some(sb=>{const t=toMin(sb.db.periods[p]);return NOWMIN>=t&&NOWMIN<t+50});rows+=`<tr><th class="mono ${nowP&&days.includes(TK)?'nowp':''}">${p}<br><span style="font-weight:400;font-size:10px">${PT(p)}</span></th>${days.map(k=>{
+  let rows='';for(let p=1;p<=7;p++){const nowP=subs.some(sb=>{const t=toMin(sb.db.periods[p]);return NOWMIN>=t&&NOWMIN<t+PDUR(sb.db)});rows+=`<tr><th class="mono ${nowP&&days.includes(TK)?'nowp':''}">${p}<br><span style="font-weight:400;font-size:10px">${PT(p)}</span></th>${days.map(k=>{
     const g=blockOf(k);if(g)return p===1?`<td rowspan="7" class="hol ${k===TK?'today':''}">${esc(g)}</td>`:'';
     const all=cellH[k+'|'+p]||[],ss=all.filter(x=>U.ttClass==='all'||x.id===U.ttClass);
     if(!all.length)return `<td class="addable ${k===TK?'today':''}" data-a="bogang" data-x="${k}|${p}" title="빈 칸을 누르면 수업 보강을 추가해요"><span class="plus">+ 보강</span></td>`;
@@ -2343,7 +2344,7 @@ function todoTick(){const d=new Date(),hm=pad(d.getHours())+':'+pad(d.getMinutes
     NOTIF[last]=TK;saveNotif();const it=openTodosOn(TK);if(it.length)showNote(title,todoBody(it,nag),(nag?'nag-':'todo-')+TK)})}
 function buildReminders(){const out=[],dl=+NOTIF.delay||3,now=Date.now();
   STORE.subjects.forEach(sb=>{try{withSub(sb,()=>{for(let i=0;i<=7;i++){const k=addK(TK,i);(SCH.by[k]||[]).forEach(s=>{if(s.status!=='plan'&&s.status!=='check')return;
-    const e=toMin(PT(s.p))+50+dl;if(isNaN(e))return;const at=new Date(`${k}T${pad(Math.floor(e/60))}:${pad(e%60)}:00+09:00`);if(+at<=now)return;
+    const e=toMin(PT(s.p))+PDUR(DB)+dl;if(isNaN(e))return;const at=new Date(`${k}T${pad(Math.floor(e/60))}:${pad(e%60)}:00+09:00`);if(+at<=now)return;
     out.push({at:at.toISOString(),body:`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크 부탁드려요! 🐾`,tag:`end-${sb.id}-${s.key}`})})}})}catch(e){}});
   out.sort((a,b)=>a.at<b.at?-1:1);return out.slice(0,150)}
 async function remSync(){if(!NOTIF.on||!NOTIF.push||TOUR)return;try{const sub=await pushSub(false);if(!sub)return;
@@ -2351,7 +2352,7 @@ async function remSync(){if(!NOTIF.on||!NOTIF.push||TOUR)return;try{const sub=aw
 function afterTick(){if(NOTIF.after===false)return;const d=new Date(),cur=d.getHours()*60+d.getMinutes(),dl=+NOTIF.delay||3;const seen=NOTIF.seen||(NOTIF.seen={});
   Object.keys(seen).forEach(k=>{if(k.slice(0,10)<TK)delete seen[k]});
   STORE.subjects.forEach(sb=>{try{withSub(sb,()=>{(SCH.by[TK]||[]).forEach(s=>{if(s.status!=='plan'&&s.status!=='check')return;
-    const e=toMin(PT(s.p))+50+dl,kk=TK+'|'+sb.id+'|'+s.key;if(isNaN(e)||cur<e||cur>e+30||seen[kk])return;
+    const e=toMin(PT(s.p))+PDUR(DB)+dl,kk=TK+'|'+sb.id+'|'+s.key;if(isNaN(e)||cur<e||cur>e+30||seen[kk])return;
     seen[kk]=1;saveNotif();showNote('진도깨의 진도 체크 🐾',`${cn(s.c)} ${s.p}교시 수업이 끝났어요. 진도 체크 부탁드려요!`,'end-'+kk)})})}catch(e){}})}
 function notifTick(){if(NOTIF.push||!NOTIF.on||!canNotif()||Notification.permission!=='granted'||TOUR)return;try{afterTick()}catch(e){}try{todoTick()}catch(e){}if(NOTIF.mealOn===false)return;
   const hm=String(new Date().getHours()).padStart(2,'0')+':'+String(new Date().getMinutes()).padStart(2,'0');
@@ -2409,7 +2410,7 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
     <div class="sect" style="display:flex;align-items:center;gap:8px">학년도 <select id="tYear" aria-label="학년도 선택" style="width:auto">${[...new Set([...STORE.subjects.map(x=>x.year||0),sy-1,sy,sy+1,yearNow(),yearNow()+1].filter(Boolean))].sort().map(y=>`<option value="${y}" ${y===sy?'selected':''}>${y}학년도</option>`).join('')}</select><span class="muted" style="font-size:12px;font-weight:500">연도마다 학기 기간을 따로 정해요</span></div>
     ${[1,2].map(k=>{const n=STORE.subjects.filter(x=>x.year===sy&&x.sem===k).length;return `<div class="sect">${sy}년 ${k}학기 ${n?`<span class="tag ok" style="margin-left:6px">교과 ${n}개에 적용 중</span>`:''}</div><div class="inl g2"><label class="field">${k}학기 시작<input type="date" id="t${k}s" value="${YTV[k].start}"></label><label class="field">${k}학기 끝<input type="date" id="t${k}e" value="${YTV[k].end}"></label></div>`}).join('')}
     <p class="muted" style="font-size:12px;margin:6px 0 0">저장하면 ${sy}학년도의 모든 교과 시트에 같이 적용돼요. 교과 탭의 ⋯에서 교과의 연도·학기를 바꿀 수 있어요.</p>
-    <div class="sect">교시 시작 시각</div><div class="inl g2">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}</div>
+    <div class="sect">교시 시작 시각 · 수업 시간</div><div class="inl g2">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}<label class="field">수업 시간 (분)<input type="number" id="pdur" inputmode="numeric" min="10" max="180" step="5" value="${PDUR(DB)}"></label></div>
     <div style="margin-top:10px"><button class="btn pri" data-a="saveterm">학기 · 교시 저장</button></div></div>
   ${notifCard()}
   ${syncCard()}
@@ -2904,7 +2905,7 @@ document.addEventListener('click',e=>{
       if(!bad&&T[1].end>=T[2].start)bad='1학기 끝나는 날이 2학기 시작일보다 앞서야 해요.';
       if(bad){toast(bad);break}const sy=U.setYear||curSub().year,cs=curSub();YT()[sy]=T;
      STORE.subjects.forEach(sb=>{if(sb.year!==sy||sb===cs)return;sb.db.terms=clone(T);sb.db.term={...T[sb.sem]};if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start});
-     const per={};document.querySelectorAll('[data-pt]').forEach(i=>per[i.dataset.pt]=i.value);
+     const per={};document.querySelectorAll('[data-pt]').forEach(i=>per[i.dataset.pt]=i.value);{const dv=Math.round(+$('#pdur').value);per.dur=dv>=10&&dv<=180?dv:50}
      mutate('학기 · 교시 저장',db=>{if(cs.year===sy){db.terms=clone(T);db.term={...T[cs.sem]};if(db.tt[0]&&db.tt[0].from>db.term.start)db.tt[0].from=db.term.start}db.periods={...db.periods,...per}});break}
    case 'gosync':go('set');setTimeout(()=>{const c=$('#syncCard');if(c){c.scrollIntoView({behavior:'smooth',block:'start'});c.classList.add('flashc');setTimeout(()=>c.classList.remove('flashc'),1800)}},60);break;
    case 'theme':toggleTheme();break;
