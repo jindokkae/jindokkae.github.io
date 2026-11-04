@@ -107,6 +107,9 @@ button.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);
 .field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
 .field input,.field select,.field textarea,.inp{border:1px solid var(--line-2);background:var(--surface);border-radius:9px;padding:7px 10px;font-size:14px;color:var(--fg);min-width:0;width:100%}
 .field input:disabled{opacity:.5}
+input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;box-sizing:border-box;min-width:0;max-width:100%;min-height:38px;line-height:1.2}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;min-width:0;margin:0}
+input[type=date]::-webkit-calendar-picker-indicator,input[type=time]::-webkit-calendar-picker-indicator{margin-left:2px}
 .note{font-size:12px;color:var(--muted);background:var(--surface-2);border-radius:10px;padding:10px 12px;border:1px dashed var(--line-2);margin:0}
 .warnbox{font-size:13px;background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:9px 12px;margin:0}
 .seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;flex:none;flex-wrap:wrap}
@@ -484,6 +487,7 @@ table.mtt{border-spacing:3px;min-width:240px}
 .dlist{display:flex;flex-direction:column;gap:6px}
 .inl{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
 .inl .field{flex:1;min-width:90px}
+.inl.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 6px;align-items:end}.inl.g2 .field{min-width:0!important;flex:none!important}
 
 /* ---- 급식 ---- */
 .week5{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -1321,6 +1325,7 @@ const SJI={
  bulb:['탐구','<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'],
  star:['기타','<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>']};
 const sjic=(k,sz=15)=>{const e=SJI[k];return e&&e[1]?`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e[1]}</svg>`:ic('book',sz)};
+ICON.star='<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8 6.8 19.6l1-5.8L3.5 9.7l5.9-.8z"/>';
 const ic=(n,s=18)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
 const sessChip=(s,showN=true,pre='',attr='')=>`<button class="sess ${sk(s)} ${s.nop?'nop':''}" style="--cc:${ccv(s.c)}" data-a="sess" data-x="${s.key}" ${attr} title="${pre?esc(pre)+' ':''}${esc(cn(s.c))} ${s.p}교시 · ${s.nop?'결손 · 자습·활동':STM[sk(s)][0]}${s.extra?' · 수업 보강':''}">${sic(sk(s),11)}<span>${pre?`<small>${esc(pre)}</small> `:''}${esc(cn(s.c))}${s.extra?' <small>보강</small>':''}${showN&&s.n&&s.status!=='check'?` <small>${s.n}차시</small>`:''}</span></button>`;
 const EXN={absence:'결손',move:'교환',extra:'보강'};
@@ -1387,7 +1392,7 @@ const RECAPPS=[
  {n:'생각이음',u:'https://ieumind.github.io/#teacher',d:'“생각을 잇다, 생각이 자라다.” 수업에서 학생들의 생각을 모으고 이어 가는 수업용 웹앱이에요. 교사 화면에서 활동을 열 수 있어요.'},
  {n:'시험실 세팅 도우미',u:'https://taeneuu.github.io/exam_setting/',d:'간단하게, 빠르게, 정확하게 시험실을 세팅하도록 돕는 웹앱이에요. 시험실 세팅과 시간표 만들기, 저장함을 지원해요.'}];
 function openRecApps(){
-  modal(`<h3>${ic('bolt',18)} 추천 앱</h3><p class="sub">진도깨와 함께 쓰면 좋은 수업·학교 업무용 웹앱이에요.</p>
+  modal(`<h3>${ic('star',18)} 추천 앱</h3><p class="sub">진도깨와 함께 쓰면 좋은 수업·학교 업무용 웹앱이에요.</p>
   <div class="dlist">${RECAPPS.map(a=>`<div class="exc" style="grid-template-columns:minmax(0,1fr) auto"><span><b>${a.n}</b><small style="white-space:normal;display:block;margin-top:2px">${a.d}</small></span><a class="btn sm pri" href="${a.u}" target="_blank" rel="noopener">열기 ↗</a></div>`).join('')}</div>
   <p class="muted" style="margin:14px 0 0;font-size:12px;text-align:right">제작 : 이태형T(한백고)</p>
   <div class="acts"><button class="btn" data-a="close">닫기</button></div>`)}
@@ -2402,9 +2407,9 @@ function vSet(){const sy=U.setYear||curSub().year||yearNow(),YTV=getYT(sy);const
       <details><summary class="muted" style="font-size:12px;cursor:pointer">고급: 프록시 주소</summary><p class="muted" style="font-size:12px">브라우저가 NEIS 직접 연결을 막을 때만 써요. 입력한 주소 뒤에 NEIS 주소가 인코딩되어 붙어요.</p><span style="display:flex;gap:6px"><input id="neisProxy" class="inp mono" value="${esc(NEIS.proxy)}" placeholder="https://내-프록시/?url="><button class="btn sm" data-a="saveproxy">저장</button></span></details></div></div></div>
   <div class="card"><h2>학기 · 교시</h2>
     <div class="sect" style="display:flex;align-items:center;gap:8px">학년도 <select id="tYear" aria-label="학년도 선택" style="width:auto">${[...new Set([...STORE.subjects.map(x=>x.year||0),sy-1,sy,sy+1,yearNow(),yearNow()+1].filter(Boolean))].sort().map(y=>`<option value="${y}" ${y===sy?'selected':''}>${y}학년도</option>`).join('')}</select><span class="muted" style="font-size:12px;font-weight:500">연도마다 학기 기간을 따로 정해요</span></div>
-    ${[1,2].map(k=>{const n=STORE.subjects.filter(x=>x.year===sy&&x.sem===k).length;return `<div class="sect">${sy}년 ${k}학기 ${n?`<span class="tag ok" style="margin-left:6px">교과 ${n}개에 적용 중</span>`:''}</div><div class="inl"><label class="field">${k}학기 시작<input type="date" id="t${k}s" value="${YTV[k].start}"></label><label class="field">${k}학기 끝<input type="date" id="t${k}e" value="${YTV[k].end}"></label></div>`}).join('')}
+    ${[1,2].map(k=>{const n=STORE.subjects.filter(x=>x.year===sy&&x.sem===k).length;return `<div class="sect">${sy}년 ${k}학기 ${n?`<span class="tag ok" style="margin-left:6px">교과 ${n}개에 적용 중</span>`:''}</div><div class="inl g2"><label class="field">${k}학기 시작<input type="date" id="t${k}s" value="${YTV[k].start}"></label><label class="field">${k}학기 끝<input type="date" id="t${k}e" value="${YTV[k].end}"></label></div>`}).join('')}
     <p class="muted" style="font-size:12px;margin:6px 0 0">저장하면 ${sy}학년도의 모든 교과 시트에 같이 적용돼요. 교과 탭의 ⋯에서 교과의 연도·학기를 바꿀 수 있어요.</p>
-    <div class="sect">교시 시작 시각</div><div class="inl">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}</div>
+    <div class="sect">교시 시작 시각</div><div class="inl g2">${[1,2,3,4,5,6,7].map(p=>`<label class="field" style="flex:0 0 116px">${p}교시<input type="time" data-pt="${p}" value="${DB.periods[p]||''}"></label>`).join('')}</div>
     <div style="margin-top:10px"><button class="btn pri" data-a="saveterm">학기 · 교시 저장</button></div></div>
   ${notifCard()}
   ${syncCard()}
