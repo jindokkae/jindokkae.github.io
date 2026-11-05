@@ -185,10 +185,12 @@ button.sum:hover{border-color:var(--accent)}
 .todo .tdb{flex:none;width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--muted);font-size:13px;display:grid;place-items:center;cursor:pointer}.todo .tdb:hover{background:var(--accent-soft);color:var(--accent)}.todo .tdb[data-a=tddel]:hover{background:var(--bad-soft,#fde8e8);color:var(--bad)}
 .todo .tdedit{padding:6px;background:var(--accent-soft);border-color:var(--accent)}
 .todo li.d{background:transparent;border-style:dashed}.todo li.d label{text-decoration:line-through;color:var(--muted)}
-.tdh{display:flex;align-items:center;gap:4px}.tdh .tdt{display:inline-flex;align-items:center;gap:6px;min-width:0}.tdh .tdt>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tdh{display:flex;align-items:center;gap:4px}.tdh .tdt{display:inline-flex;align-items:center;gap:6px;min-width:0;flex:0 1 9.6em}.tdh .tdt>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tdnav{width:28px;height:28px;flex:none;border-radius:8px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--fg);font-size:20px;line-height:1;font-weight:700;display:inline-grid;place-items:center;cursor:pointer;padding:0 0 2px}
 .tdnav:disabled{opacity:.3;cursor:default}.tdnav:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
 .tdh .right{display:inline-flex;align-items:center;gap:8px}
+@media (max-width:380px){.tdh .tdt{flex-basis:8.2em}}
+.gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
 .todo li.tdempty{border-style:dashed;background:none;color:var(--muted);justify-content:center;font-size:13px}
@@ -1818,7 +1820,8 @@ function freeGroups(rows){const busy=new Set(rows.filter(r=>!r.dead).map(r=>r.p)
 function gapLine(k,ps){const a=ps[0],b=ps[ps.length-1],e=toMin(PT(b))+PDUR(DB),end=pad(Math.floor(e/60))+':'+pad(e%60);
   const tds=gapTodos(k,a),open=tds.filter(t=>!t.d),nm=open.length?esc(open[0].t.length>16?open[0].t.slice(0,15)+'…':open[0].t)+(open.length>1?` 외 ${open.length-1}`:''):tds.length?`할 일 ${tds.length}개 완료`:'';
   return `<div class="lgap ${open.length?'has':''}" data-a="gapopen" data-x="${k}|${a}|${b}" role="button" tabindex="0" title="이 공강에 할 일 배정"><span class="gp mono">${a===b?a:a+'~'+b}교시</span><span class="gl">공강 <span class="mono">${PT(a)}~${end}</span></span>${nm?`<span class="gt">${nm}</span>`:''}<span class="ga">${tds.length?'편집':'할 일 배정 +'}</span></div>`}
-function withGaps(rows,k){if(!rows.some(r=>!r.dead))return rows.map(r=>r.html).join('');
+const gapHidden=()=>{try{return localStorage.getItem('jd.gapHide')==='1'}catch(e){return false}};
+function withGaps(rows,k){if(gapHidden()||!rows.some(r=>!r.dead))return rows.map(r=>r.html).join('');
   const gs=freeGroups(rows),items=[...rows.map(r=>({p:r.p,o:0,h:r.html})),...gs.map(ps=>({p:ps[0],o:1,h:gapLine(k,ps)}))];
   return items.sort((x,y)=>x.p-y.p||x.o-y.o).map(x=>x.h).join('')}
 function openGap(x){const [k,a,b]=x.split('|'),key=x;U.gapX=x;
@@ -1869,7 +1872,7 @@ function vHome(){
   const nxAll=withCls.map(p=>p.h.nx).filter(Boolean).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.p-b.p)[0];
   const LD=U.lsDay||TK,lsT=LD===TK,lsName=lsT?'오늘':LD===addK(TK,1)?'내일':LD===addK(TK,-1)?'어제':mdw(LD);
   const emptyDay=!lsT?`<p class="muted" style="margin:0">${mdw(LD)}에는 수업이 없어요.</p>`:nxAll?`<p class="muted" style="margin:0">오늘은 수업이 없어요. 다음 수업은 <b>${mdw(nxAll.date)} ${nxAll.p}교시</b>예요.</p>`:'<p class="muted" style="margin:0">오늘은 수업이 없어요.</p>';
-  const todayCard=withCls.length?`<div class="card" id="todaycard"><h2 class="tdh"><button type="button" class="tdnav" data-a="lsday" data-x="-1" aria-label="이전 수업일">‹</button><span class="tdt">${ic('cal',18)} <span>${lsName}의 수업</span></span><button type="button" class="tdnav" data-a="lsday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${lsT?'':`<button class="hlink" data-a="lsday" data-x="0">오늘로</button>`}<button class="hlink" data-a="gott">전체 보기 →</button></span></h2>${rows.length?withGaps(rows,LD):emptyDay}</div>`:'';
+  const todayCard=withCls.length?`<div class="card" id="todaycard"><h2 class="tdh"><button type="button" class="tdnav" data-a="lsday" data-x="-1" aria-label="이전 수업일">‹</button><span class="tdt">${ic('cal',18)} <span>${lsName}의 수업</span></span><button type="button" class="tdnav" data-a="lsday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${lsT?'':`<button class="hlink" data-a="lsday" data-x="0">오늘로</button>`}<button class="hlink" data-a="gott">전체 보기 →</button></span></h2>${rows.length?withGaps(rows,LD):emptyDay}${rows.some(r=>!r.dead)&&freeGroups(rows).length?`<div class="gapfoot"><button type="button" class="gaptog" data-a="gaptog" aria-pressed="${!gapHidden()}">${gapHidden()?'공강 보기 ▾':'공강 숨기기 ▴'}</button></div>`:''}</div>`:'';
   const noCls=withCls.length?parts.filter(p=>!p.h.hasCls):[];
   const alertsCard=(parts.some(p=>p.h.alerts)||noCls.length)?`<div class="card" id="alertcard" style="border-color:var(--warn)"><h2>${ic('warn',18)} 확인이 필요해요</h2>
     ${noCls.map(({sb})=>`<div class="hempty2" data-sub="${sb.id}"><span><b>${esc(subjMain(sb))}</b> <span class="muted">${esc(subjMeta(sb))}</span> 교과는 아직 학급이 없어요.</span><button class="btn sm pri" data-a="addclass">학급 추가</button></div>`).join('')}
@@ -2730,6 +2733,7 @@ document.addEventListener('click',e=>{
    case 'bdel':{const ids=new Set(U.selRows);U.selRows.clear();U.selCell=null;U.draft=null;U.selRow=null;mutate(`차시 ${ids.size}개 삭제`,db=>{for(let n=db.lessons.length;n>=1;n--)if(ids.has(db.lessons[n-1].id))C.removeLesson(db,n)});break}
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;const f=db.rgBasis==='unit'?'ucol':'col';if(nS==='a')delete l[f];else l[f]=+nS},{silent:true});break}
+   case 'gaptog':try{localStorage.setItem('jd.gapHide',gapHidden()?'0':'1')}catch(e){}render();break;
    case 'gapopen':openGap(x);break;
    case 'ctpanel':{const i=$('#ctIn');if(i)U.ctDraft=i.value;U.ctPanel=!U.ctPanel;U.ctP=U.ctP||newP();render();break}
    case 'cttag':{const i=$('#ctIn');if(i)U.ctDraft=i.value;U.ctTag=U.ctTag===x?'':x;render();setTimeout(()=>{const e=$('#ctIn');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}},0);break}
