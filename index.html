@@ -1347,7 +1347,8 @@ const KEYS_HTML=()=>`<table class="keyt"><tbody>
 <tr><td><kbd>1</kbd> ~ <kbd>5</kbd></td><td>홈 · 진도표 · 시간표/캘린더 · 급식 · 설정으로 이동</td></tr>
 <tr><td><kbd>2</kbd> <kbd>2</kbd></td><td>같은 키를 한 번 더 누르면 전체 ↔ 반별 진도표 전환 (<kbd>3</kbd>은 시간표 ↔ 캘린더)</td></tr>
 <tr><td><kbd>Alt</kbd>+<kbd>←</kbd> <kbd>→</kbd></td><td>이전 · 다음 메뉴로 이동</td></tr>
-<tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>이전 · 다음 주(캘린더는 월간일 때 달) · 홈은 이전 · 다음 수업일</td></tr>
+<tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>이전 · 다음 주(캘린더는 월간일 때 달) · 홈은 오늘의 수업 이전 · 다음 수업일</td></tr>
+<tr><td><kbd>Shift</kbd>+<kbd>[</kbd> <kbd>]</kbd></td><td>홈의 할 일 이전 · 다음 날</td></tr>
 <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>캘린더에서 날짜 칸 이동 (좌우 하루 · 상하 일주일)</td></tr>
 <tr><td><kbd>?</kbd></td><td>이 단축키 안내 열기</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>창 닫기</td></tr></tbody></table><p class="muted" style="margin:8px 0 0;font-size:12px">입력칸에 글을 쓰는 중이거나 창이 열려 있을 때는 동작하지 않아요.</p>`;
@@ -3125,6 +3126,7 @@ document.addEventListener('keydown',e=>{const tg=e.target;
     if(!e.altKey&&(e.key==='['||e.key===']')){const d=e.key==='['?'-1':'1';
       const sel=U.view==='cal'?(U.schedMode==='tt'?`.calbar [data-a=ttw][data-x="${d}"]`:`[data-a=mon][data-x="${d}"]`):U.view==='meal'?`[data-a=mw][data-x="${d}"]`:U.view==='home'?`#todaycard [data-a=lsday][data-x="${d}"]`:'';
       if(sel&&clk(sel)){e.preventDefault()}return}
+    if(!e.altKey&&(e.key==='{'||e.key==='}')&&U.view==='home'){if(clk(`#todocard [data-a=tdday][data-x="${e.key==='{'?'-1':'1'}"]`))e.preventDefault();return}
     if(e.key==='?'){e.preventDefault();openKeys();return}}
   if(e.key.startsWith('Arrow')&&!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&!TOUR&&U.view==='cal'&&U.schedMode==='cal'&&!$('#layer').innerHTML&&!(tg.closest&&tg.closest('summary,select'))&&U.sel&&/^Arrow(Left|Right|Up|Down)$/.test(e.key)){
     const r=schedRange(),wkm=U.calMode!=='month';let k=U.sel;
