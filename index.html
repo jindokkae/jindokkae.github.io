@@ -192,6 +192,7 @@ button.sum:hover{border-color:var(--accent)}
 #todaycard .tdh,#todocard .tdh{flex-wrap:nowrap}.tdh .right{margin-left:auto;flex:none}.mobshow2{display:none}
 @media (max-width:520px){.mobhide2{display:none}.mobshow2{display:inline}.tdh .right{gap:6px}}
 @media (max-width:380px){.tdh .tdt{flex-basis:8.2em}}
+.dsrow{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}.dsrow .dsp{flex:none;white-space:nowrap}.dsrow>.tag{flex:none}.dsrow .dst{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
 .gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
@@ -2232,7 +2233,7 @@ function calBody(){const SRc=srInfo();
       (SCH.by[k]||[]).forEach(s=>DD[k].ss.push({sb,s,pre,
         chip:sessChip(s,true,pre,`data-sub="${sb.id}"`),
         pip:`<span class="pip ${s.status==='done'?'':s.status}" style="--cc:${ccv(s.c)}" title="${esc(pre)}">${esc(cn(s.c))}</span>`,
-        row:`<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center">${sessChip(s,true,pre,`data-sub="${sb.id}"`)}<span style="font-size:12px;min-width:0">${s.p}교시 · ${stag(sk(s))} ${s.n?`${s.n}차시 ${esc(lname(s.n))}`:s.status==='moved'?moveDest(s):s.status==='absent'?esc((excOf(s)?.reason||'')+' '+(excOf(s)?.note||'')):''}</span></div>`}))})}));
+        row:`<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center">${sessChip(s,true,pre,`data-sub="${sb.id}"`)}<span class="dsrow"><span class="dsp">${s.p}교시</span>${stag(sk(s))}<span class="dst" ${s.n?`title="${s.n}차시 ${esc(lname(s.n))}"`:''}>${s.n?`${s.n}차시 ${esc(lname(s.n))}`:s.status==='moved'?moveDest(s):s.status==='absent'?esc((excOf(s)?.reason||'')+' '+(excOf(s)?.note||'')):''}</span></span></div>`}))})}));
   const evVis=k=>DD[k].evs.filter(x=>x.e.kind==='hol'||U.flt[x.e.kind]!==false);
   /* 날짜가 있는 할 일가 있는 날: 날짜 옆에 점 (남은 게 있으면 진하게, 모두 완료면 연하게) */
   const TDM={};DB.todos.forEach(t=>{if(t.rep)return;[...new Set([t.date,t.due].filter(Boolean))].forEach(dk=>{const o=TDM[dk]||(TDM[dk]={n:0,open:0});o.n++;if(!t.d)o.open++})});
