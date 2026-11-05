@@ -1821,8 +1821,8 @@ function gapTodos(k,p){const key=k+'|'+p+'|',out=[];todoSubs().forEach(sb=>(sb.d
 function freeGroups(rows){const busy=new Set(rows.filter(r=>!r.dead).map(r=>r.p)),ps=[1,2,3,4,5,6,7].filter(p=>PT(p)&&!busy.has(p)),g=[];
   ps.forEach(p=>{const l=g[g.length-1];/* 점심시간처럼 20분 넘게 비면 따로 묶음 */if(l&&l[l.length-1]===p-1&&toMin(PT(p))-(toMin(PT(p-1))+PDUR(DB))<=20)l.push(p);else g.push([p])});return g}
 function gapLine(k,ps){const a=ps[0],b=ps[ps.length-1],e=toMin(PT(b))+PDUR(DB),end=pad(Math.floor(e/60))+':'+pad(e%60);
-  const tds=gapTodos(k,a),open=tds.filter(t=>!t.d),nm=open.length?esc(open[0].t.length>16?open[0].t.slice(0,15)+'…':open[0].t)+(open.length>1?` 외 ${open.length-1}`:''):tds.length?`할 일 ${tds.length}개 완료`:'';
-  return `<div class="lgap ${open.length?'has':''}" data-a="gapopen" data-x="${k}|${a}|${b}" role="button" tabindex="0" title="이 공강에 할 일 배정"><span class="gp mono">${a===b?a:a+'~'+b}교시</span><span class="gl">공강 <span class="mono">${PT(a)}~${end}</span></span>${nm?`<span class="gt">${nm}</span>`:''}<span class="ga">${tds.length?'편집':'할 일 배정 +'}</span></div>`}
+  const tds=gapTodos(k,a),open=tds.filter(t=>!t.d),nm=open.length?esc(open.map(t=>t.t).join(', ')):tds.length?`할 일 ${tds.length}개 완료`:'';
+  return `<div class="lgap ${open.length?'has':''}" data-a="gapopen" data-x="${k}|${a}|${b}" role="button" tabindex="0" title="공강 ${PT(a)}~${end} · 눌러서 할 일 배정"><span class="gp mono">${a===b?a:a+'~'+b}교시</span><span class="gl">공강</span>${nm?`<span class="gt">${nm}</span>`:''}<span class="ga">${tds.length?'편집':'할 일 배정 +'}</span></div>`}
 const gapHidden=()=>{try{return localStorage.getItem('jd.gapHide')==='1'}catch(e){return false}};
 function withGaps(rows,k){if(gapHidden()||!rows.some(r=>!r.dead))return rows.map(r=>r.html).join('');
   const gs=freeGroups(rows),items=[...rows.map(r=>({p:r.p,o:0,h:r.html})),...gs.map(ps=>({p:ps[0],o:1,h:gapLine(k,ps)}))];
