@@ -1784,8 +1784,18 @@ const dueLab=(k,r)=>{const n=ddayFrom(k,r);return n===0?'D-day':n>0?'D-'+n:'D+'+
 function todoLi(sid,i,t,pre){const key=sid+':'+i;
   if(U.tdEdit===key&&U.tdE)return `<li class="tdedit"><form data-tdform="${key}" style="display:flex;gap:8px;flex:1;flex-wrap:wrap;align-items:center"><input class="inp" id="tdEditIn" value="${esc(U.tdE.text)}" aria-label="내용 수정" style="flex:1 1 100%;min-width:0"><div class="tdtags" role="group" aria-label="분류">${TDTAGS.map(g=>`<button type="button" class="tdtc" data-t="${g}" data-a="tdetag" data-x="${g}" aria-pressed="${U.tdE.tag===g}">${g}</button>`).join('')}</div>${pickHtml(U.tdE.P,'e')}<button class="btn sm pri">저장</button><button type="button" class="btn sm" data-a="tdcancel">취소</button></form></li>`;
   return `<li class="${t.d?'d':''}"><input type="checkbox" id="${pre}${sid}${i}" data-todo="${key}" data-day="${t.day||''}" aria-label="${esc(t.t)} 완료" ${t.d?'checked':''}>${t.tag?`<span class="tdtag" data-t="${esc(t.tag)}">${esc(t.tag)}</span>`:''}<span class="tdtx" role="button" tabindex="0" data-a="tdedit" data-x="${key}" title="눌러서 수정">${esc(t.t)}</span>${t.rep?`<span class="tag gray tdrep" title="반복: ${t.rep.k==='d'?'매일':'매주 '+repTag(t.rep)}${t.rep.until?' · '+md(t.rep.until)+'까지':''}">↻ ${repTag(t.rep)}</span>`:''}${t.gap&&!t.d&&t.gap.slice(0,10)===(t.ref||t.day||TK)?`<span class="tag gray tdgap" title="공강에 할 일">${gapLab(t.gap)}</span>`:''}${t.due&&!t.d&&ddayFrom(t.due,t.ref)>=0?`<span class="tag ${dueCls(t.due,t.ref)} tddue" title="마감 ${mdw(t.due)}">${dueLab(t.due,t.ref)}</span>`:''}${t.d||t.due||t.rep?'':(()=>{const to=(t.date||TK)<TK?TK:tdStep(t.date||TK,1);return `<button type="button" class="tdb" data-a="tdpost" data-x="${key}" aria-label="${mdw(to)}로 미루기" title="${to===TK?'오늘':to===addK(TK,1)?'내일':mdw(to)}로 미루기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h12M11 6l6 6-6 6M20 5v14"/></svg></button>`})()}<button type="button" class="tdb" data-a="tddel" data-x="${key}" aria-label="삭제" title="${t.rep?'반복 항목 전체 삭제':'삭제'}">✕</button></li>`}
-function sayTime(done){const h=new Date().getHours(),m=new Date().getMinutes(),t=h*60+m;
+function sayTime(done,n){const h=new Date().getHours(),m=new Date().getMinutes(),t=h*60+m;
   const P=(a)=>a[(+TK.slice(8)+h)%a.length];
+  /* 오늘 수업 수: 많은 날(4+) 파이팅 · 적은 날(1~2) 여유 · 수업 없는 평일(0) · 보통(3)은 기본 문구 */
+  const L=n==null?'':n>=4?'many':n===0?'none':n<=2?'few':'';
+  if(done&&L==='many')return P(['오늘 수업 많았는데 다 해냈어요! 최고예요, 멍멍!','체력전 클리어! 오늘은 푹 쉬어요, 쓰담쓰담~','수업 꽉 찬 하루를 다 깨부쉈어요! 꼬리가 멈추질 않아요, 왈왈!']);
+  if(done&&L==='few')return P(['오늘은 가볍게 끝! 남은 시간도 즐겁게 보내요, 왈!','수업 끝~ 오늘은 여유 있게 보내요, 멍!','짧고 굵게 끝냈어요! 꼬리 살랑살랑~ 멍멍!']);
+  if(t<11*60+40&&L){const M={
+    many:t<8*60+30?['오늘 수업이 꽉 찼어요! 물 많이 챙겨 마셔요, 멍!','오늘은 체력전이에요! 진도깨가 끝까지 응원할게요, 왈!','수업 많은 날! 아침 든든히 먹고 같이 달려요, 멍멍!']:['한 시간 한 시간 깨부수는 중! 조금만 더 힘내요, 멍멍!','목 아끼면서 해요~ 진도깨가 옆에 있어요, 왈!','오늘은 장거리 달리기! 페이스 조절하면서 가요, 멍!'],
+    few:t<8*60+30?['오늘은 수업이 적은 날! 꼬리가 살랑살랑~ 멍!','여유로운 하루예요~ 커피 한 잔 어때요? 왈!','오늘은 가뿐한 날! 기분 좋게 시작해요, 멍멍!']:['오늘은 느긋하게~ 공강에 기지개 쭉 펴요, 멍!','수업이 적어서 꼬리가 신났어요! 왈왈!','여유 있는 날이에요~ 천천히 해도 괜찮아요, 멍!'],
+    none:t<8*60+30?['오늘은 수업이 없어요! 밀린 일 같이 해치워요, 멍!','수업 없는 날~ 오늘은 진도깨랑 천천히 가요, 왈!']:['조용한 하루~ 공강 동안 서류 정리 어때요? 멍!','수업이 없는 날이에요. 할 일 하나씩 깨부숴요, 왈!']}[L];return P(M)}
+  if(L==='none'&&t>=14*60&&t<16*60)return P(['오후도 꼬리 붕붕! 할 일 하나씩 끝내 봐요, 멍!','조용한 오후~ 진도깨는 선생님 곁에 있을게요, 왈!']);
+  if(L==='many'&&t>=14*60&&t<16*60)return P(['오후까지 달리는 날! 거의 다 왔어요, 헥헥!','수업 많은 날의 오후! 조금만 더 버텨요, 멍멍!','끝이 보여요! 진도깨가 꼬리로 응원 중이에요, 왈!']);
   if(done)return P(['꼬리가 붕붕~ 오늘도 정말 수고했어요, 멍멍! 쓰담쓰담 해주세요!','헥헥! 오늘 진도 다 깼어요! 칭찬해 주세요, 멍!','와우~ 오늘 수업 끝! 간식 먹어도 되죠? 왈왈!']);
   if(t<8*60+30)return P(['멍멍! 좋은 아침이에요~ 오늘도 같이 달려요!','일어났어요? 진도깨는 벌써 꼬리 흔들고 있어요, 멍!','아침 산책 다녀온 기분이에요! 오늘도 힘내요, 왈!']);
   if(t<11*60+40)return P(['킁킁, 오늘 수업 냄새가 솔솔~ 천천히 해요, 멍!','진도깨가 옆에서 같이 챙겨줄게요, 멍! 오늘도 힘내요!','귀 쫑긋! 수업 시간 놓치지 않게 지켜볼게요, 왈!']);
@@ -1863,7 +1873,7 @@ function vHome(){
   const offK=!off?'':off==='주말'?'wk':/방학/.test(off)?'vac':'hol';
   const iga=w=>{const c=w.charCodeAt(w.length-1)-0xAC00;return c>=0&&c%28?'이라':'라'};
   if(off)say=offK==='wk'?'오늘은 <b>주말</b>이에요. 푹 쉬어요!':offK==='vac'?'지금은 <b>방학</b>이에요.':`오늘은 <b>${esc(off)}</b>${iga(off)} 수업이 없어요.`;
-  const sub=off?sayOff(offK):sayTime(nAct&&!nCheck&&!soon&&withCls.length);
+  const sub=off?sayOff(offK):sayTime(nAct&&!nCheck&&!soon&&withCls.length,withCls.length?nAct:null);
   const d=D(TK);
   /* 상단 */
   const dd=ddayInfo();
