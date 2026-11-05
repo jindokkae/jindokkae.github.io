@@ -193,6 +193,7 @@ button.sum:hover{border-color:var(--accent)}
 @media (max-width:520px){.mobhide2{display:none}.mobshow2{display:inline}.tdh .right{gap:6px}}
 @media (max-width:380px){.tdh .tdt{flex-basis:8.2em}}
 .dsrow{display:flex;align-items:center;gap:6px;font-size:12px;min-width:0}.dsrow .dsp{flex:none;white-space:nowrap}.dsrow>.tag{flex:none}.dsrow .dst{flex:1;min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;line-height:1.35;word-break:keep-all;overflow-wrap:anywhere}
+.sjcopy{display:flex;flex-direction:column;gap:6px;margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);font-size:13px;color:var(--fg)}.sjcopy label{display:flex;gap:8px;align-items:flex-start;line-height:1.4}.sjcopy input[type=checkbox]{width:auto!important;flex:none;margin:2px 0 0}.sjcopy label>span{flex:1;min-width:0}.sjcopy .muted{font-size:12px}.sjcopy[hidden]{display:none}
 .gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
@@ -1639,17 +1640,23 @@ function openHelp(){const r=ready(),done=GSTEPS.filter(s=>s.ok(r)).length;
   <h4 style="margin:6px 0">기능 설명</h4>
   ${[...TUT,{t:'키보드 단축키',b:KEYS_HTML()}].map((t,k)=>`<details class="hlp"><summary><b>${t.t}</b></summary><div class="tutbody">${t.b}</div>${t.go?`<div class="acts left"><button class="btn sm" data-a="tutgo" data-x="${t.go[0]}">${t.go[1]}</button></div>`:''}</details>`).join('')}
   <div class="acts"><button class="btn pri" data-a="close">닫기</button></div></div>`,true)}
-function openSubject(id){const sb=id?STORE.subjects.find(x=>x.id===id):null;
-  const cur=curSub()||{};const yr=sb?sb.year:(cur.year||yearNow()),sm=sb?sb.sem:(cur.sem||semNow());
-  modal(`<form id="subjForm" style="display:flex;flex-direction:column;gap:12px"><h3>${sb?'교과 정보 바꾸기':'교과 추가'}</h3><p class="sub">${sb?'연도·학기를 바꾸면 이 시트의 학기 기간이 설정에 적어 둔 해당 학기 기간으로 바뀌어요.':'새 교과는 학급·차시·기록·시간표가 모두 비어 있는 새 시트로 만들어져요. 학기 기간과 학사일정은 지금 교과에서 가져와요.'}</p>
+function openSubject(id,fromId){const sb=id?STORE.subjects.find(x=>x.id===id):null,src=!sb&&fromId?STORE.subjects.find(x=>x.id===fromId):null;
+  const cur=curSub()||{};const yr=sb?sb.year:src?(+src.year||yearNow())+1:(cur.year||yearNow()),sm=sb?sb.sem:src?src.sem:(cur.sem||semNow());
+  modal(`<form id="subjForm" style="display:flex;flex-direction:column;gap:12px"><h3>${sb?'교과 정보 바꾸기':src?'진도표 복제':'교과 추가'}</h3><p class="sub">${sb?'연도·학기를 바꾸면 이 시트의 학기 기간이 설정에 적어 둔 해당 학기 기간으로 바뀌어요.':'새 시트를 만들어요. 학기 기간과 학사일정은 지금 교과에서 가져와요. 기존 진도표를 고르면 차시(수업 주제·내용)를 그대로 복제해요.'}</p>
   <input type="hidden" id="sjId" value="${sb?sb.id:''}"><input type="hidden" id="sjSem" value="${sm}">
   <div class="inl"><label class="field">연도<input id="sjYear" class="inp" type="number" min="2000" max="2100" value="${yr}"></label>
   <div class="field" style="flex:1.2"><span>학기</span><span class="seg" role="group" aria-label="학기" style="align-self:flex-start"><button type="button" data-a="sjsem" data-x="1" aria-pressed="${sm==1}">1학기</button><button type="button" data-a="sjsem" data-x="2" aria-pressed="${sm==2}">2학기</button></span></div>
-  <label class="field">학년<select id="sjGrade" class="inp"><option value="">-</option>${[1,2,3].map(g=>`<option value="${g}" ${sb&&String(sb.grade)===String(g)?'selected':''}>${g}학년</option>`).join('')}</select></label></div>
-  <label class="field">교과<input id="sjName" class="inp" autofocus maxlength="20" value="${sb?esc(sb.subj):''}" placeholder="예: 한국사, 통합사회"></label>
-  <div class="field"><span>아이콘</span><input type="hidden" id="sjIcon" value="${sb&&sb.icon||'book'}"><div class="sjicons">${Object.entries(SJI).map(([k,v])=>`<button type="button" data-a="sjicon" data-x="${k}" aria-pressed="${(sb&&sb.icon||'book')===k}" title="${v[0]}">${sjic(k,20)}</button>`).join('')}</div></div>
+  <label class="field">학년<select id="sjGrade" class="inp"><option value="">-</option>${[1,2,3].map(g=>`<option value="${g}" ${(sb||src)&&String((sb||src).grade)===String(g)?'selected':''}>${g}학년</option>`).join('')}</select></label></div>
+  ${sb?'':`<div class="field"><span>가져올 진도표</span><select id="sjFrom" class="inp"><option value="">빈 시트로 시작</option>${STORE.subjects.map(x=>`<option value="${x.id}" ${src&&src.id===x.id?'selected':''}>${esc(subjName(x))} 복제</option>`).join('')}</select>
+  <div id="sjCopy" class="sjcopy" ${src?'':'hidden'}><b>함께 복제할 것</b> <span class="muted">· 차시(수업 주제·교과서·내용·자료·비고)는 항상 복제돼요</span>
+  <label><input type="checkbox" id="sjcA" checked><span>정기시험 범위·수행평가 <span class="muted">(날짜는 연도만 바꿔 옮겨요. 학사일정에 맞게 확인하세요)</span></span></label>
+  <label><input type="checkbox" id="sjcC"><span>학급 목록 <span class="muted">(반 이름·색)</span></span></label>
+  <label><input type="checkbox" id="sjcT"><span>시간표 <span class="muted">(학급 목록을 함께 복제할 때만)</span></span></label>
+  <span class="muted">진도 기록·결손·교환·할 일은 복제하지 않아요.</span></div></div>`}
+  <label class="field">교과<input id="sjName" class="inp" autofocus maxlength="20" value="${sb?esc(sb.subj):src?esc(src.subj||''):''}" placeholder="예: 한국사, 통합사회"></label>
+  <div class="field"><span>아이콘</span><input type="hidden" id="sjIcon" value="${(sb||src)&&(sb||src).icon||'book'}"><div class="sjicons">${Object.entries(SJI).map(([k,v])=>`<button type="button" data-a="sjicon" data-x="${k}" aria-pressed="${((sb||src)&&(sb||src).icon||'book')===k}" title="${v[0]}">${sjic(k,20)}</button>`).join('')}</div></div>
   ${sb?`<label class="field"><span>진도 기록 시작일 <span class="muted">(선택)</span></span><input id="sjTrack" class="inp" type="date" value="${sb.db.trackFrom||''}" style="max-width:220px"><span class="muted" style="font-size:12px">이 날 전의 수업은 기록이 없어도 '확인 필요'로 보지 않고, 차시 예정일도 이 날부터 계산해요(학기 중간에 쓰기 시작할 때). 비우면 학기 첫 수업일부터 계산해요.</span></label>`:''}
-  <div class="acts">${sb?`<button type="button" class="btn bad" data-a="subjdel" data-x="${sb.id}" ${STORE.subjects.length<2?'disabled title="마지막 교과는 지울 수 없어요"':''}>이 교과 삭제</button>`:''}<span style="flex:1"></span><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">${sb?'저장':'만들기'}</button></div></form>`)}
+  <div class="acts">${sb?`<button type="button" class="btn" data-a="subjdup" data-x="${sb.id}">이 진도표 복제</button>`:''}${sb?`<button type="button" class="btn bad" data-a="subjdel" data-x="${sb.id}" ${STORE.subjects.length<2?'disabled title="마지막 교과는 지울 수 없어요"':''}>이 교과 삭제</button>`:''}<span style="flex:1"></span><button type="button" class="btn" data-a="close">취소</button><button class="btn pri">${sb?'저장':'만들기'}</button></div></form>`)}
 function refreshChrome(){
   const pend=DB.inbox.filter(i=>i.state==='pending').length+SCH.conflicts.length;
   $('#nav').innerHTML=VIEWS.map(([v,l])=>`<button data-a="navgo" data-x="${v}" ${U.view===v?'aria-current="page"':''}>${ic(v)}<span>${l}</span>${v==='cal'&&pend?`<span class="badge">${pend}</span>`:''}</button>`).join('');
@@ -2792,6 +2799,7 @@ document.addEventListener('click',e=>{
    case 'sjicon':{$('#sjIcon').value=x;document.querySelectorAll('[data-a=sjicon]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.x===x)));break}
    case 'sjsem':{$('#sjSem').value=x;document.querySelectorAll('[data-a=sjsem]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.x===x)));break}
    case 'subjmenu':openSubject(x);break;
+   case 'subjdup':openSubject(null,x);break;
    case 'subjdel':{const sb=STORE.subjects.find(k=>k.id===x);if(!sb||STORE.subjects.length<2)break;const nrec=sb.db.classes.reduce((a,c)=>a+Object.values(sb.db.records[c.id]||{}).filter(r=>r.done).length,0);
      modal(`<h3>'${esc(sb.name)}' 교과를 삭제할까요?</h3><p class="warnbox">이 교과의 학급 ${sb.db.classes.length}개 · 차시 ${sb.db.lessons.length}개 · 완료 기록 ${nrec}개 · 시간표가 모두 사라지고 되돌릴 수 없어요. 먼저 설정에서 백업을 받아 두세요.</p><div class="acts"><button class="btn" data-a="close">취소</button><button class="btn badfill" data-a="subjdelgo" data-x="${x}">삭제</button></div>`);break}
    case 'subjdelgo':{const i=STORE.subjects.findIndex(k=>k.id===x);if(i<0||STORE.subjects.length<2)break;if(STORE.cur===x){useSub(STORE.subjects[i?0:1].id)}delete HIST[x];STORE.subjects=STORE.subjects.filter(k=>k.id!==x);persist();closeM();render();toast('교과를 삭제했어요.');break}
@@ -2985,6 +2993,7 @@ document.addEventListener('change',e=>{const tg=e.target;
   if(tg.id==='notifAfter'){NOTIF.after=tg.checked;saveNotif();schedRem(true);render();return}
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
   if(tg.dataset.pu){const P=tg.dataset.pu==='a'?(U.tdP=U.tdP||newP()):tg.dataset.pu==='c'?(U.ctP=U.ctP||newP()):U.tdE&&U.tdE.P;if(P){if(tg.dataset.pu==='c'){const i=$('#ctIn');if(i)U.ctDraft=i.value}else if(tg.dataset.pu==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else{const i=$('#tdEditIn');if(i&&U.tdE)U.tdE.text=i.value}P.until=tg.value||'';render()}return}
+  if(tg.id==='sjFrom'){const c=$('#sjCopy');if(c)c.hidden=!tg.value;const sb=STORE.subjects.find(k=>k.id===tg.value);if(sb){const n=$('#sjName');if(n&&!n.value.trim())n.value=sb.subj||''}return}
   if(tg.dataset.gapset){const [sid,ix]=tg.dataset.gapset.split(':'),sb=STORE.subjects.find(k=>k.id===sid),t=sb&&sb.db.todos[+ix];if(t&&U.gapX){if(tg.checked)t.gap=U.gapX;else delete t.gap;persist();render();openGap(U.gapX)}return}
   if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){const tt=sb.db.todos[+ix];if(tt.rep){const dk=tg.dataset.day||TK,a=new Set(tt.doneOn||[]);tg.checked?a.add(dk):a.delete(dk);tt.doneOn=[...a]}else tt.d=tg.checked;persist();render()}return}
   if(tg.id==='impFile'&&tg.files[0]){const r=new FileReader();r.onload=()=>openImport(String(r.result));r.readAsText(tg.files[0]);tg.value='';return}
@@ -3052,7 +3061,15 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
       sb.db.trackFrom=($('#sjTrack')&&$('#sjTrack').value)||null;if(moved){sb.db.term={...sb.db.terms[sem]};sb.db.trackFrom=null;if(sb.db.tt[0]&&sb.db.tt[0].from>sb.db.term.start)sb.db.tt[0].from=sb.db.term.start}
       persist();closeM();render();toast('교과 정보를 바꿨어요.')}
     else{const terms=getYT(year);const d=emptyDB(sem,terms);d.periods=clone(DB.periods);d.events=clone(DB.events);
-      const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,icon:$('#sjIcon').value||'book',db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
+      const src=$('#sjFrom')&&$('#sjFrom').value?STORE.subjects.find(k=>k.id===$('#sjFrom').value):null;
+      if(src){const S=src.db,cC=$('#sjcC').checked,cT=cC&&$('#sjcT').checked,cA=$('#sjcA').checked,dy=year-(+src.year||year);
+        d.lessons=clone(S.lessons||[]);if(S.periods)d.periods=clone(S.periods);
+        if(cC)d.classes=clone(S.classes||[]);
+        if(cT){const last=(S.tt||[]).slice(-1)[0];if(last)d.tt=[{from:d.term.start,slots:clone(last.slots||[])}]}
+        if(cA){const sh=k=>{if(!k||!dy)return k;const x=D(k);x.setFullYear(x.getFullYear()+dy);return key(x)};
+          d.assess=clone(S.assess||[]).map(a=>({...a,start:sh(a.start),end:sh(a.end),...(cC||a.classes==='all'?{}:{classes:'all'})}));
+          if(S.ranges)d.ranges=clone(S.ranges);if(S.rgBasis)d.rgBasis=S.rgBasis}}
+      const sb={id:uid('s'),name:full,subj:nm,year,sem,grade,icon:$('#sjIcon').value||'book',db:d};STORE.subjects.push(sb);useSub(sb.id);U.view='sheet';render();toast(src?`'${subjName(src)}' 진도표를 복제했어요 (차시 ${d.lessons.length}개).`:`'${nm}' 시트를 만들었어요. 학급부터 추가해 보세요.`)}return}
   if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=($('#tdEditIn')||{}).value.trim(),E=U.tdE;U.tdEdit=null;U.tdE=null;if(sb&&sb.db.todos[+ix]){const t=sb.db.todos[+ix];if(v&&E){t.t=v;if(E.tag)t.tag=E.tag;else delete t.tag;applyP(t,E.P,t.date||TK)}else if(!v)sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'방학까지',date:$('#ddDate').value,init:true,touched:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay||TK;if(v){const o=applyP({t:v,d:false,date:dd,...(U.tdTag?{tag:U.tdTag}:{})},U.tdP||newP(),dd);U.tdDraft='';U.tdP=newP();U.tdPanel=false;quick(db=>db.todos.push(o));setTimeout(()=>$('#todoIn')?.focus(),30)}}
