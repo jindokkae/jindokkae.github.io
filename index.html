@@ -1918,8 +1918,8 @@ function vHome(){
   const EIC={exam:['doc','p'],task:['pen','w'],hol:['bell','g'],event:['cal','b']};
   const upCard=`<div class="card"><h2>${ic('cal',18)} 다가오는 일정<span class="right"><button class="hlink" data-a="gocal">전체 보기 →</button></span></h2>
     <div class="upgrid">${evs.map(e=>{const [i,c]=EIC[e.kind]||EIC.event;return `<button class="uev" data-a="day" data-x="${e.s}"><span class="ic ${c}">${ic(i,17)}</span><span class="ut"><b>${esc(e.label)}</b><small>${mdw(e.s)}${e.e&&e.e>e.s?'~'+mdw(e.e):''}${e.meta?' · '+esc(e.meta):''}</small></span></button>`}).join('')||'<p class="muted" style="margin:0">다가오는 일정이 없어요.</p>'}</div></div>`;
-  if(!U.tdDay||U.tdTK!==TK){U.tdDay=TK;U.tdTK=TK}const TD=U.tdDay,isT=TD===TK,nxt1=tdStep(TK,1);
-  const dayName=isT?'오늘':TD===addK(TK,1)?'내일':TD===addK(TK,-1)?'어제':TD===nxt1?`다음 수업일 ${mdw(TD)}`:mdw(TD);
+  if(!U.tdDay||U.tdTK!==TK){U.tdDay=TK;U.tdTK=TK}const TD=U.tdDay,isT=TD===TK;
+  const dayName=isT?'오늘':TD===addK(TK,1)?'내일':TD===addK(TK,-1)?'어제':mdw(TD);
   const autos=[]; /* 할 일에는 직접 적은 것만 보여 준다 (진도표 준비물 자동 항목 없음) */
   /* 마감일이 있는 할 일: 마감 7일 전부터(지나도 완료 전까지) 오늘 목록 맨 위에 고정 */
   const allTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>({...t,sid:sb.id,i,ref:TD})).filter(t=>!t.rep&&!(t.due&&!t.d&&(t.due<TD||ddayFrom(t.due,TD)>7)))),repTd=parts.flatMap(({sb})=>sb.db.todos.map((t,i)=>t.rep?tdInst(t,i,sb.id,TD):null).filter(Boolean));
