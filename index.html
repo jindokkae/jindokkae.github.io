@@ -3139,13 +3139,15 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
 /* PC 마우스: 진도표 미완료 칸을 같은 반의 다른 미완료 칸에 끌어다 놓으면 순서 맞바꿈 (포인터 이벤트 · 모든 브라우저) */
 let DRG=null,DRGSUP=false;
 const drgClean=()=>{document.querySelectorAll('.dragsrc,.droptgt,.dropon').forEach(x=>x.classList.remove('dragsrc','droptgt','dropon'));document.body.classList.remove('celldrag');$('#drgGhost')?.remove()};
-document.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;const td=e.target.closest&&e.target.closest('td.cell[data-drg]');if(!td||e.target.closest('input,textarea'))return;
+document.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'||e.button!==0)return;const td=e.target.closest&&e.target.closest('td.cell[data-drg]');if(!td||e.target.closest('input,textarea'))return;
   const [c,n]=td.dataset.x.split('|');DRG={td,c,n:+n,x:e.clientX,y:e.clientY,on:false,tg:null}});
 document.addEventListener('pointermove',e=>{if(!DRG)return;
-  if(!DRG.on){if(Math.hypot(e.clientX-DRG.x,e.clientY-DRG.y)<6)return;DRG.on=true;document.body.classList.add('celldrag');DRG.td.classList.add('dragsrc');
-    document.querySelectorAll(`td.cell[data-drg][data-x^="${DRG.c}|"]`).forEach(x=>{if(x!==DRG.td)x.classList.add('droptgt')});
+  if(!DRG.on){if(Math.hypot(e.clientX-DRG.x,e.clientY-DRG.y)<6)return;DRG.on=true;document.body.classList.add('celldrag');try{getSelection().removeAllRanges()}catch(_){}
     const g=document.createElement('div');g.id='drgGhost';g.className='drgghost';document.body.appendChild(g)}
-  e.preventDefault();const el=document.elementFromPoint(e.clientX,e.clientY),t=el&&el.closest&&el.closest('td.cell.droptgt');
+  e.preventDefault();
+  /* 화면이 다시 그려져도(동기화 등) 살아 있는 칸 기준으로 표시 */
+  document.querySelectorAll(`td.cell[data-drg][data-x^="${DRG.c}|"]`).forEach(x=>{const me=x.dataset.x===DRG.c+'|'+DRG.n;x.classList.toggle('dragsrc',me);x.classList.toggle('droptgt',!me)});
+  const el=document.elementFromPoint(e.clientX,e.clientY),t=el&&el.closest&&el.closest('td.cell.droptgt');
   document.querySelectorAll('td.dropon').forEach(x=>x!==t&&x.classList.remove('dropon'));if(t)t.classList.add('dropon');DRG.tg=t;
   const g=$('#drgGhost');if(g){g.style.left=(e.clientX+14)+'px';g.style.top=(e.clientY+12)+'px';g.textContent=t?`${DRG.n}차시 ↔ ${t.dataset.x.split('|')[1]}차시 맞바꾸기`:`${cn(DRG.c)} ${DRG.n}차시 · 같은 반 칸에 놓기`}});
 document.addEventListener('pointerup',e=>{if(!DRG)return;const d=DRG;DRG=null;if(!d.on)return;DRGSUP=true;setTimeout(()=>DRGSUP=false,50);drgClean();
