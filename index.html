@@ -212,6 +212,9 @@ tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0
 .ifk{grid-area:k;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}.ifk[data-k=pw]{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}.ifk[data-k=tel]{background:var(--accent-soft);color:var(--accent)}
 .ifl{grid-area:l;font-weight:700;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ifv{grid-area:v;font-size:13px;color:var(--fg);min-width:0;overflow-wrap:anywhere}.ifv.mask{color:var(--muted);letter-spacing:2px}
 .ifb{grid-area:b;display:flex;gap:2px}.ifb .tdb{width:30px;height:30px;display:inline-grid;place-items:center;text-decoration:none;color:var(--muted);border:0;border-radius:8px;background:none}.ifb .tdb:hover{background:var(--accent-soft);color:var(--accent)}.ifk svg{vertical-align:-1px}
+.ifk[data-k=acc]{background:color-mix(in srgb,#8a5cd6 14%,transparent);color:#8a5cd6}.ifsite{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}.ifsite:hover{color:var(--accent)}.ifsite svg{color:var(--accent)}
+.ifacc .ifv{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}.ifacc .ifv .mask{color:var(--muted);letter-spacing:2px}.ifn{flex-basis:100%;font-family:inherit;font-size:11px;color:var(--muted)}
+.ifcp{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 8px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;align-self:center}.ifcp:hover{border-color:var(--accent);color:var(--accent)}
 .ifform form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--accent);border-radius:10px;background:var(--surface)}.ifseg{align-self:flex-start}.ifpin{display:flex;gap:6px;align-items:center;font-size:13px}.ifpin input{width:auto}.ifacts{display:flex;gap:6px;align-items:center}
 .wkpdf{cursor:pointer;display:inline-flex;align-items:center;gap:5px}.wkroles{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px;font-size:12px}.wkcands li .tdtag{max-width:7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wkrs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.wkr{border:1px solid var(--line);border-radius:12px;background:var(--surface)}.wkr.open{border-color:var(--line-2)}
@@ -1927,21 +1930,28 @@ function odAct(kind,x){const [sid,ix]=x.split(':'),sb=STORE.subjects.find(k=>k.i
   if(kind==='done'){t.d=true;toast('완료했어요.')}else if(kind==='move'){delete t.due;t.date=TK;toast('오늘 할 일로 옮겼어요.')}else{sb.db.todos.splice(+ix,1);toast('삭제했어요.')}
   persist();render();openOverdue()}
 /* ---- 자주 찾는 정보: 특별실 비번·전화번호 등 (기기 연동으로 함께 동기화) ---- */
-const INFOK='jindokkae.infoopen',INFO_KIND={pw:'비번',tel:'전화',etc:'기타'};
+const INFOK='jindokkae.infoopen',INFO_KIND={acc:'계정',pw:'비번',tel:'전화',etc:'기타'};
 const infoList=()=>(STORE.info=STORE.info||[]);
 const infoOpen=()=>{if(U.infoOpen!=null)return U.infoOpen;try{return localStorage.getItem(INFOK)!=='0'}catch(e){return true}};
-function infoRow(x){const show=x.k!=='pw'||U.infoShow===x.id,val=show?esc(x.v):'••••••';
+function infoRow(x){const show=(x.k!=='pw'&&x.k!=='acc')||U.infoShow===x.id,val=show?esc(x.v):'••••••';
   if(U.infoEdit===x.id)return infoForm(x);
+  if(x.k==='acc'){const eye=x.v?`<button type="button" class="tdb" data-a="infoeye" data-x="${x.id}" title="${show?'비번 가리기':'비번 잠깐 보기'}" aria-label="${esc(x.label)} 비번 ${show?'가리기':'보기'}">${ic(show?'eyeoff':'eye',15)}</button>`:'';
+    return `<li class="ifrow ifacc"><span class="ifk" data-k="acc">${x.pin?ic('pin',11)+' ':''}계정</span><span class="ifl">${x.u?`<a href="${esc(x.u)}" target="_blank" rel="noopener noreferrer" class="ifsite" title="${esc(x.u)} 열기">${esc(x.label)} ${ic('link',13)}</a>`:esc(x.label)}</span>
+      <span class="ifv mono">${x.uid?`<span class="ifid">${esc(x.uid)}</span>`:''}${x.v?`<span class="${show?'':'mask'}">${val}</span>`:''}${x.n?`<small class="ifn">${esc(x.n)}</small>`:''}</span>
+      <span class="ifb">${x.uid?`<button type="button" class="ifcp" data-a="infocopy" data-x="${x.id}|id" title="아이디 복사">${ic('copy',12)} 아이디</button>`:''}${x.v?`<button type="button" class="ifcp" data-a="infocopy" data-x="${x.id}|pw" title="비번 복사">${ic('copy',12)} 비번</button>`:''}${eye}<button type="button" class="tdb" data-a="infoedit" data-x="${x.id}" title="수정" aria-label="${esc(x.label)} 수정">${ic('pen',15)}</button></span></li>`}
   return `<li class="ifrow"><span class="ifk" data-k="${x.k}">${x.pin?ic('pin',11)+' ':''}${INFO_KIND[x.k]||'기타'}</span><span class="ifl">${esc(x.label)}</span><span class="ifv ${show?'':'mask'} mono">${val}</span>
     <span class="ifb">${x.k==='pw'?`<button type="button" class="tdb" data-a="infoeye" data-x="${x.id}" title="${show?'가리기':'잠깐 보기'}" aria-label="${esc(x.label)} ${show?'가리기':'보기'}">${ic(show?'eyeoff':'eye',15)}</button>`:''}${x.k==='tel'?`<a class="tdb iftel" href="tel:${esc(String(x.v).replace(/[^0-9+]/g,''))}" title="전화 걸기" aria-label="${esc(x.label)} 전화 걸기">${ic('phone',15)}</a>`:''}<button type="button" class="tdb" data-a="infocopy" data-x="${x.id}" title="복사" aria-label="${esc(x.label)} 복사">${ic('copy',15)}</button><button type="button" class="tdb" data-a="infoedit" data-x="${x.id}" title="수정" aria-label="${esc(x.label)} 수정">${ic('pen',15)}</button></span></li>`}
 function infoForm(x){const n=!x||!x.id,k=(U.infoK||(x&&x.k)||'pw');
   return `<li class="ifform"><form id="infoForm" data-id="${n?'':x.id}"><div class="seg ifseg" role="group" aria-label="종류">${Object.entries(INFO_KIND).map(([kk,v])=>`<button type="button" data-a="infok" data-x="${kk}" aria-pressed="${k===kk}">${v}</button>`).join('')}</div>
-    <input id="ifLabel" class="inp" maxlength="30" placeholder="이름 (예: 과학실 비번, 고사본부)" value="${esc(U.ifD?U.ifD.l:n?'':x.label)}" autocomplete="off">
-    <input id="ifVal" class="inp mono" maxlength="80" placeholder="${k==='tel'?'번호 (예: 1234, 031-000-0000)':k==='pw'?'비밀번호':'내용'}" value="${esc(U.ifD?U.ifD.v:n?'':x.v)}" autocomplete="off" ${k==='tel'?'inputmode="tel"':''}>
+    <input id="ifLabel" class="inp" maxlength="30" placeholder="${k==='acc'?'이름 (예: 괴진학 사이트)':'이름 (예: 과학실 비번, 고사본부)'}" value="${esc(U.ifD?U.ifD.l:n?'':x.label)}" autocomplete="off">
+    ${k==='acc'?`<input id="ifUrl" class="inp mono" maxlength="200" placeholder="사이트 주소 (예: https://example.kr)" value="${esc(U.ifD&&U.ifD.u!=null?U.ifD.u:n?'':x.u||'')}" autocomplete="off" inputmode="url">
+    <input id="ifUid" class="inp mono" maxlength="60" placeholder="아이디" value="${esc(U.ifD&&U.ifD.i!=null?U.ifD.i:n?'':x.uid||'')}" autocomplete="off">`:''}
+    <input id="ifVal" class="inp mono" maxlength="80" placeholder="${k==='tel'?'번호 (예: 1234, 031-000-0000)':k==='pw'||k==='acc'?'비밀번호':'내용'}" value="${esc(U.ifD?U.ifD.v:n?'':x.v)}" autocomplete="off" ${k==='tel'?'inputmode="tel"':''}>
+    ${k==='acc'?`<input id="ifNote" class="inp" maxlength="60" placeholder="메모 (예: 접속 후 우측 상단 로그인)" value="${esc(U.ifD&&U.ifD.nt!=null?U.ifD.nt:n?'':x.n||'')}" autocomplete="off">`:''}
     <label class="ifpin"><input type="checkbox" id="ifPin" ${x&&x.pin?'checked':''}> 위에 고정</label>
     <div class="ifacts">${n?'':`<button type="button" class="btn sm bad" data-a="infodel" data-x="${x.id}">삭제</button>`}<span style="flex:1"></span><button type="button" class="btn sm" data-a="infocancel">취소</button><button class="btn sm pri">저장</button></div></form></li>`}
 function infoCard(){const all=infoList(),op=infoOpen(),q=(U.infoQ||'').trim().toLowerCase();
-  const items=all.filter(x=>!q||(x.label+' '+(x.k==='pw'?'':x.v)).toLowerCase().includes(q)).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0));
+  const items=all.filter(x=>!q||(x.label+' '+(x.k==='pw'||x.k==='acc'?'':x.v)+' '+(x.u||'')+' '+(x.uid||'')+' '+(x.n||'')).toLowerCase().includes(q)).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0));
   return `<div class="card" id="infocard"><h2 class="tdh"><span class="tdt" style="flex:none">${ic('key',18)} <span>자주 찾는 정보</span></span><span class="right"><button type="button" class="hlink" data-a="infoadd">+ 추가</button><button type="button" class="hlink" data-a="infofold" aria-expanded="${op}">${op?'접기 ▴':`펼치기 ▾${all.length?` (${all.length})`:''}`}</button></span></h2>
     ${op?`${all.length>6?`<input id="infoQ" class="inp ifq" placeholder="찾기" value="${esc(U.infoQ||'')}" autocomplete="off">`:''}
     <ul class="iflist">${U.infoEdit==='new'?infoForm(null):''}${items.map(infoRow).join('')||(U.infoEdit==='new'?'':`<li class="tdempty">${q?'찾는 항목이 없어요.':'특별실 비번, 고사본부 번호처럼 자주 찾는 정보를 모아 두세요.'}</li>`)}</ul>`:''}</div>`}
@@ -2975,10 +2985,10 @@ document.addEventListener('click',e=>{
    case 'infofold':U.infoOpen=!infoOpen();try{localStorage.setItem(INFOK,U.infoOpen?'1':'0')}catch(e){}if(!U.infoOpen)U.infoEdit=null;render();break;
    case 'infoedit':{U.ifD=null;const it=infoList().find(k=>k.id===x);U.infoEdit=x;U.infoK=it?it.k:'pw';render();setTimeout(()=>$('#ifVal')?.focus(),0);break}
    case 'infocancel':U.ifD=null;U.infoEdit=null;U.infoK=null;render();break;
-   case 'infok':{const p=$('#ifPin')?.checked;U.ifD={l:$('#ifLabel')?.value||'',v:$('#ifVal')?.value||''};U.infoK=x;render();if($('#ifPin'))$('#ifPin').checked=p;break}
+   case 'infok':{const p=$('#ifPin')?.checked,o0=U.ifD||{},gv=(id,k)=>{const e=$('#'+id);return e?e.value:o0[k]};U.ifD={l:$('#ifLabel')?.value||'',v:$('#ifVal')?.value||'',u:gv('ifUrl','u'),i:gv('ifUid','i'),nt:gv('ifNote','nt')};U.infoK=x;render();if($('#ifPin'))$('#ifPin').checked=p;break}
    case 'infodel':{const L0=infoList(),ix=L0.findIndex(k=>k.id===x);if(ix>=0){L0.splice(ix,1);U.infoEdit=null;persist();render();toast('삭제했어요.')}break}
    case 'infoeye':clearTimeout(INFO_T);U.infoShow=U.infoShow===x?null:x;render();if(U.infoShow)INFO_T=setTimeout(()=>{U.infoShow=null;render()},6000);break;
-   case 'infocopy':{const it=infoList().find(k=>k.id===x);if(it)infoCopy(it.v);break}
+   case 'infocopy':{const [iid,f]=x.split('|'),it=infoList().find(k=>k.id===iid);if(it)infoCopy(f==='id'?it.uid||'':it.v);break}
    case 'wkopen':U.wk=null;openWork();break;
    case 'wktab':openWork(x);break;
    case 'wkexam':{const [d0,tt]=x.split('|');U.wk.base=d0;if(!U.wk.name)U.wk.name=tt.replace(/\s*$/,'')+' 출제';openWork();break}
@@ -3278,7 +3288,7 @@ document.addEventListener('focusout',e=>{const tg=e.target;
   if(tg.id==='acNames'&&tg.value.trim()){acAdd(tg.value);tg.value=''}
 });
 document.addEventListener('input',e=>{const tg=e.target;
-  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.dataset&&tg.dataset.wf&&U.wk){const p=tg.dataset.wf;if(p==='name')U.wk.name=tg.value;else if(p==='pname')U.wk.pname=tg.value;else if(p==='text')U.wk.text=tg.value;else if(p==='st'&&tg.dataset.p==='t')U.wk.steps[+tg.dataset.i][0]=tg.value;return}if(tg.dataset&&tg.dataset.wc!=null&&tg.dataset.p==='t'&&U.wk){const c=U.wk.cands[+tg.dataset.wc];if(c)c.t=tg.value;return}if(tg.id==='ifLabel'||tg.id==='ifVal'){U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
+  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.dataset&&tg.dataset.wf&&U.wk){const p=tg.dataset.wf;if(p==='name')U.wk.name=tg.value;else if(p==='pname')U.wk.pname=tg.value;else if(p==='text')U.wk.text=tg.value;else if(p==='st'&&tg.dataset.p==='t')U.wk.steps[+tg.dataset.i][0]=tg.value;return}if(tg.dataset&&tg.dataset.wc!=null&&tg.dataset.p==='t'&&U.wk){const c=U.wk.cands[+tg.dataset.wc];if(c)c.t=tg.value;return}if(['ifLabel','ifVal','ifUrl','ifUid','ifNote'].includes(tg.id)){const o0=U.ifD||{},gv=(id,k)=>{const e=$('#'+id);return e?e.value:o0[k]};U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value,u:gv('ifUrl','u'),i:gv('ifUid','i'),nt:gv('ifNote','nt')};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
   if(tg.id==='acNames'){const v=tg.value;if(/[,，\s]/.test(v)){const parts=v.split(/[,，\s]/),rest=parts.pop();acAdd(parts.join(','));tg.value=rest}return}
   if(tg.classList.contains('ie')&&tg.tagName==='TEXTAREA')autosize(tg);
   if(tg.dataset&&tg.dataset.lf&&tg.dataset.n){const f=tg.dataset.lf,n=tg.dataset.n,v=tg.value;
@@ -3340,8 +3350,10 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
   if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=($('#tdEditIn')||{}).value.trim(),E=U.tdE;U.tdEdit=null;U.tdE=null;if(sb&&sb.db.todos[+ix]){const t=sb.db.todos[+ix];if(v&&E){t.t=v;if(E.tag)t.tag=E.tag;else delete t.tag;applyP(t,E.P,t.date||TK)}else if(!v)sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'방학까지',date:$('#ddDate').value,init:true,touched:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay||TK;if(v){const o=applyP({t:v,d:false,date:dd,...(U.tdTag?{tag:U.tdTag}:{})},U.tdP||newP(),dd);U.tdDraft='';U.tdP=newP();U.tdPanel=false;quick(db=>db.todos.push(o));setTimeout(()=>$('#todoIn')?.focus(),30)}}
-  if(id==='infoForm'){const lb=$('#ifLabel').value.trim(),v=$('#ifVal').value.trim();if(!lb||!v){toast('이름과 내용을 적어 주세요.');return}
-    const fid=e.target.dataset.id,L0=infoList(),o={k:U.infoK||'pw',label:lb,v,pin:$('#ifPin').checked};if(fid){const it=L0.find(k=>k.id===fid);if(it)Object.assign(it,o)}else L0.push({id:uid('i'),...o});U.infoEdit=null;U.infoK=null;U.ifD=null;persist();render();toast('저장했어요.');return}
+  if(id==='infoForm'){const lb=$('#ifLabel').value.trim(),v=$('#ifVal').value.trim(),kk=U.infoK||'pw',acc=kk==='acc';
+    let u=acc?($('#ifUrl').value||'').trim():'',ui=acc?($('#ifUid').value||'').trim():'',nt=acc?($('#ifNote').value||'').trim():'';if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
+    if(!lb||(acc?!(v||ui||u):!v)){toast(acc?'이름과 주소·아이디·비번 중 하나는 적어 주세요.':'이름과 내용을 적어 주세요.');return}
+    const fid=e.target.dataset.id,L0=infoList(),o={k:kk,label:lb,v,pin:$('#ifPin').checked,...(acc?{u,uid:ui,n:nt}:{u:undefined,uid:undefined,n:undefined})};if(fid){const it=L0.find(k=>k.id===fid);if(it)Object.assign(it,o)}else L0.push({id:uid('i'),...o});U.infoEdit=null;U.infoK=null;U.ifD=null;persist();render();toast('저장했어요.');return}
   if(id==='gapForm'){const v=$('#gapIn').value.trim();if(v&&U.gapX){const k=U.gapX.split('|')[0];DB.todos.push({t:v,d:false,date:k,gap:U.gapX});persist();render();openGap(U.gapX)}}
   if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v){const o=applyP({t:v,d:false,date:U.sel,...(U.ctTag?{tag:U.ctTag}:{})},U.ctP||newP(),U.sel);U.ctDraft='';U.ctP=newP();U.ctPanel=false;quick(db=>db.todos.push(o))}}
   if(id==='addClassForm'){acAdd($('#acNames').value);$('#acNames').value='';const names=U.acTags.slice(),lead=$('#acLead').value.trim();
