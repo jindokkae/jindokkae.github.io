@@ -201,6 +201,7 @@ button.tddue{border:0;cursor:pointer;font-family:inherit}button.tddue:hover{filt
 .plbox{margin:0 0 12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}.plrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px}.pllb{color:var(--muted);font-size:12px}.plwhen{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--fg);cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}.plwhen:hover{color:var(--accent)}.swtag{font-size:11px;font-weight:700;color:var(--accent)}.plsw{margin-left:auto;border:0;background:none;padding:2px 0;font:inherit;font-size:12px;font-weight:700;color:var(--accent);cursor:pointer}
 .swl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}.swhint{flex-basis:100%;font-size:11px;color:var(--muted)}.swc{display:inline-flex;align-items:baseline;gap:5px;padding:4px 9px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);font:inherit;font-size:12px;cursor:pointer}.swc:hover{border-color:var(--accent);color:var(--accent)}.swc span{color:var(--muted);font-size:11px}.swrs{flex-basis:100%;text-align:left;font-size:12px}
 
+tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0%,40%{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--accent) 14%,transparent)}100%{box-shadow:inset 0 0 0 999px transparent}}.nowbtn{margin-left:4px}
 .gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
@@ -1367,6 +1368,7 @@ const KEYS_HTML=()=>`<table class="keyt"><tbody>
 <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>이전 · 다음 주(캘린더는 월간일 때 달) · 홈은 오늘의 수업 이전 · 다음 수업일</td></tr>
 <tr><td><kbd>Shift</kbd>+<kbd>[</kbd> <kbd>]</kbd></td><td>홈의 할 일 이전 · 다음 날</td></tr>
 <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>캘린더에서 날짜 칸 이동 (좌우 하루 · 상하 일주일)</td></tr>
+<tr><td><kbd>N</kbd></td><td>진도표에서 지금 진도 위치로 이동</td></tr>
 <tr><td><kbd>?</kbd></td><td>이 단축키 안내 열기</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>창 닫기</td></tr></tbody></table><p class="muted" style="margin:8px 0 0;font-size:12px">입력칸에 글을 쓰는 중이거나 창이 열려 있을 때는 동작하지 않아요.</p>`;
 function openKeys(){modal(`<div class="tut"><div class="tuthd"><h3>키보드 단축키</h3></div>${KEYS_HTML()}<div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div></div>`)}
@@ -2139,7 +2141,7 @@ function vSheet(){
   /* 범위 칩을 누르면 그 범위의 차시만 보여준다. 시험 범위는 차시 색(차시별로 정한 색 > 자동 색) 기준, 나머지는 차시 번호 기준 */
   const inP=n=>{if(!cur)return true;if(cur.kind==='exam'&&BAS!=='exam')return !cur.empty0&&cur.from&&n>=cur.from&&n<=cur.to;if(cur.kind!=='exam')return !cur.from||(n>=cur.from&&n<=cur.to&&rgMem(cur,n));const les=DB.lessons[n-1];if(!les||les.col===0)return false;if(colOkB(les.col))return les.col===cur.k;return pcol[n]?.id===cur.id};
   if(cur)cur.empty=cur.kind==='exam'&&BAS==='exam'?!DB.lessons.some((l,i)=>inP(i+1)):(!cur.from||cur.from>DB.lessons.length);
-  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button><span class="basis" title="진도표 차시 색은 정기시험 또는 단원/파트 중 하나만 기준으로 써요"><span class="muted">색 기준</span><span class="seg" role="group" aria-label="색 기준"><button data-a="rgbasis" data-x="unit" aria-pressed="${BAS==='unit'}">단원/파트</button><button data-a="rgbasis" data-x="exam" aria-pressed="${BAS==='exam'}">정기시험</button></span></span></div>
+  const strip=`<div class="astrip"><span class="muted" style="font-size:12px;font-weight:700">범위</span><button class="achip all" data-a="period" data-x="all" aria-pressed="${!cur}"><span>전체</span></button>${pl.map((p,i)=>{const g=q=>q.kind==='exam'?0:q.kind==='task'?2:1;return (i&&g(p)!==g(pl[i-1])?'<span class="psep" aria-hidden="true"></span>':'')+pchip(p)}).join('')}<button class="btn sm" data-a="rgnew">+ 범위 추가</button><button class="btn sm nowbtn" data-a="jumpnow" title="지금 진도 위치로 이동 (단축키 N)">↓ 지금 진도로</button><span class="basis" title="진도표 차시 색은 정기시험 또는 단원/파트 중 하나만 기준으로 써요"><span class="muted">색 기준</span><span class="seg" role="group" aria-label="색 기준"><button data-a="rgbasis" data-x="unit" aria-pressed="${BAS==='unit'}">단원/파트</button><button data-a="rgbasis" data-x="exam" aria-pressed="${BAS==='exam'}">정기시험</button></span></span></div>
     ${cur&&cur.empty?`<div class="pinfo"><span class="warnbox">${cur.kind==='exam'?'이 시험 범위에 해당하는 차시가 아직 없어요. 차시 ⋯ 수업 정보에서 색을 정하거나 시간표를 확인해 보세요.':'이 범위의 차시가 없어요. 범위를 편집해서 차시를 다시 골라 주세요.'}</span></div>`:''}`;
   let body;
   if(U.sheetMode==='all'||!DB.classes.length){
@@ -2724,7 +2726,18 @@ async function tryDownload(name,text){await dlReady;
   try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:name.endsWith('.csv')?'text/csv':'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},800);toast('파일을 저장했어요.')}catch(e){toast("파일 저장에 실패했어요. '복사'를 쓰세요.")}}
 
 /* ---------- 이벤트 ---------- */
-const go=v=>{if(v==='tt'){v='cal';U.schedMode='tt'}U.view=v;closeM();neisMsg('');render();window.scrollTo(0,0)};
+const go=v=>{if(v==='tt'){v='cal';U.schedMode='tt'}const was=U.view;U.view=v;closeM();neisMsg('');render();window.scrollTo(0,0);if(v==='sheet'&&was!=='sheet')setTimeout(()=>jumpNow(false),30)};
+/* 진도표: 지금 진도 위치로 스크롤 — 전체 보기는 가장 늦은 반의 다음 차시, 반별 보기는 그 반의 다음 차시. 직전 2차시도 보이게 */
+function jumpNow(smooth=true){if(U.view!=='sheet'||!DB.classes.length)return;
+  const cls=U.sheetMode==='all'?DB.classes.map(c=>c.id):[U.sheetClass||DB.classes[0].id];
+  const n=Math.min(...cls.map(c=>nxtLesson(c)).filter(x=>x>=1));if(!isFinite(n))return;
+  const rowOf=m=>U.sheetMode==='all'?document.querySelector(`.sheet td.cell[data-x$="|${m}"]`)?.closest('tr'):document.querySelector(`.crow[data-x$="|${m}"]`);
+  let tg=null;for(let m=Math.max(1,n-2);m<=n&&!tg;m++)tg=rowOf(m);if(!tg){for(let m=n;m<=DB.lessons.length&&!tg;m++)tg=rowOf(m)}if(!tg)return;
+  const beh=smooth?'smooth':'auto',wrap=tg.closest('.sheet-wrap');
+  if(wrap&&wrap.scrollHeight>wrap.clientHeight+4){const th=wrap.querySelector('thead')?.offsetHeight||0;wrap.scrollTo({top:Math.max(0,tg.offsetTop-th-4),behavior:beh});
+    const r=wrap.getBoundingClientRect();if(r.top<0||r.top>innerHeight*.5)window.scrollTo({top:scrollY+r.top-90,behavior:beh})}
+  else{const mb=document.getElementById('mbar'),hd=(mb&&getComputedStyle(mb).display!=='none'?mb.offsetHeight:0)+(tg.closest('table')?.querySelector('thead')?.offsetHeight||0);window.scrollTo({top:Math.max(0,scrollY+tg.getBoundingClientRect().top-hd-8),behavior:beh})}
+  const nr=rowOf(n);if(nr){nr.classList.remove('nowflash');void nr.offsetWidth;nr.classList.add('nowflash');setTimeout(()=>nr.classList.remove('nowflash'),1600)}}
 function toggleRec(c,n){if(!L(n))return;const r=rec(DB,c,n);
   if(r&&r.done){mutate(`${cn(c)} ${n}차시 완료 취소`,db=>C.uncomplete(db,c,n),{refs:[lref(c,n)]});return}
   const d=suggestDateDb(DB,c,n);mutate(`${cn(c)} ${n}차시 완료 (${mdw(d)})`,db=>C.complete(db,c,n,d),{refs:[lref(c,n)],paw:true,flash:c+'|'+n,msg:`${cn(c)} ${n}차시 완료 · ${cheer()}`})}
@@ -2778,6 +2791,7 @@ document.addEventListener('click',e=>{
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;const f=db.rgBasis==='unit'?'ucol':'col';if(nS==='a')delete l[f];else l[f]=+nS},{silent:true});break}
    case 'swpick':{const [cc,a1,a2]=x.split('|');swapLessons(cc,+a1,+a2);break}
+   case 'jumpnow':jumpNow(true);break;
    case 'swreset':swapReset(x);break;
    case 'swtog':U.swOpen=!U.swOpen;render();break;
    case 'duego':{closeM();const inCal=U.view==='cal'&&U.schedMode==='cal';U.sel=x;U.view='cal';U.schedMode='cal';U.month={y:+x.slice(0,4),m:+x.slice(5,7)-1};U.week=mondayOf(x);if(!inCal)window.scrollTo(0,0);render();
@@ -3203,6 +3217,7 @@ document.addEventListener('keydown',e=>{const tg=e.target;
     e.preventDefault();
     if(t){fillDraft(t.c,t.n);render();const el=document.querySelector('[data-a=sel][data-x="'+t.c+'|'+t.n+'"]');if(el){el.scrollIntoView({block:'nearest',inline:'nearest'})}}
     return}
+  if(!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='n'||e.key==='N'||e.key==='ㅜ')&&U.view==='sheet'&&!$('#layer').innerHTML){e.preventDefault();jumpNow(true);return}
   if((e.ctrlKey||e.metaKey)&&!inField&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
   if((e.ctrlKey||e.metaKey)&&!inField&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
   if(e.key==='Enter'&&tg.matches('td.cell,.crow')){e.preventDefault();tg.click()}});
