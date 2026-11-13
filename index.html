@@ -204,6 +204,7 @@ button.tddue{border:0;cursor:pointer;font-family:inherit}button.tddue:hover{filt
 tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0%,40%{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--accent) 14%,transparent)}100%{box-shadow:inset 0 0 0 999px transparent}}.nowbtn{margin-left:4px}
 .odlink{display:block;margin:2px 0 10px;padding:0;border:0;background:none;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}.odlink b{color:var(--bad)}.odlink:hover{color:var(--fg);text-decoration:underline}
 .odl li{display:flex;align-items:center;gap:8px}.odl .odck{display:flex;flex:none}.odl .odtx{flex:1;min-width:0;overflow-wrap:anywhere}.odl .odtx small{display:block;font-size:11px;color:var(--bad)}.odl .btn{flex:none}
+.devnm small{display:block;margin-top:4px;font-size:11px;line-height:1.4}.devnm{margin:0 0 10px}
 .gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
@@ -1444,7 +1445,15 @@ async function unB64(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i
 async function packData(d){if(!CANZ)return d;try{const b=await gzB64(JSON.stringify(d));return {app:'jindokkae',v:d.v,z:'gzip',b}}catch(e){return d}}
 async function unpackData(d){if(!d||d.z!=='gzip')return d;if(!CANZ)throw Object.assign(new Error('nogz'),{nogz:true});return JSON.parse(await unB64(d.b))}
 const keyOf=d=>JSON.stringify({s:d.subjects,d:d.dday,y:d.yterms||{}});
-const devName=()=>{const u=navigator.userAgent;return /Android|iPhone|iPad|Mobile/i.test(u)?'모바일':'PC'};
+/* 이 기기 이름: 직접 정한 이름 > 자동 추측(운영체제·기기 종류, 홈 화면 앱이면 '(앱)') */
+const DEVK='jindokkae.devname';
+const devAuto=()=>{const u=navigator.userAgent||'',tp=navigator.maxTouchPoints||0;let n;
+  if(/iPad/.test(u)||(/Macintosh/.test(u)&&tp>1))n='iPad';else if(/iPhone|iPod/.test(u))n='iPhone';
+  else if(/Android/.test(u))n=/Mobile/.test(u)?'Android 폰':'Android 태블릿';
+  else if(/CrOS/.test(u))n='Chromebook';else if(/Windows/.test(u))n='Windows PC';else if(/Macintosh|Mac OS X/.test(u))n='Mac';
+  else if(/Mobile/i.test(u))n='모바일';else if(/Linux/.test(u))n='Linux PC';else n='PC';
+  try{if(isApp())n+='(앱)'}catch(e){}return n};
+const devName=()=>{try{const v=(localStorage.getItem(DEVK)||'').trim();if(v)return v.slice(0,20)}catch(e){}return devAuto()};
 const jwtMail=t=>{try{const p=JSON.parse(decodeURIComponent(escape(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))));return p.email||''}catch(e){return ''}};
 function syncHash(){const q=new URLSearchParams(location.hash.replace(/^#/,'')),qs=new URLSearchParams(location.search);
   if(q.get('access_token')&&q.get('refresh_token')){const at=q.get('access_token');
@@ -1536,7 +1545,8 @@ function syncCard(){const S=SYNC,on=S.on&&S.sess;if(!SYNC_OPEN&&!on&&!/[?&]sync=
   const st=S.err?`<span class="tag bad">${esc(S.err)}</span>`:S.busy?'<span class="tag info">맞추는 중…</span>':S.hold?'<span class="tag warn">선택이 필요해요</span>':S.dirty?'<span class="tag warn">올릴 내용이 있어요</span>':'<span class="tag ok">최신 상태</span>';
   return `<div class="card" id="syncCard" style="grid-column:1/-1">${head}
    <p style="margin:0 0 6px"><b>${esc(S.sess.email||'구글 계정')}</b>으로 연동 중 ${st}</p>
-   <p class="muted" style="font-size:12px;margin:0 0 10px">마지막으로 맞춘 시각 ${fmtT(S.last)||'아직 없음'} · 이 기기: ${devName()} · 다른 기기에서도 같은 구글 계정으로 로그인하면 돼요. 올라가는 것은 교과·학급·시간표·진도 기록뿐이에요.</p>
+   <label class="field devnm">이 기기 이름<span class="devrow"><input id="devNameIn" class="inp" maxlength="20" value="${esc((()=>{try{return localStorage.getItem(DEVK)||''}catch(e){return ''}})())}" placeholder="${esc(devAuto())} (자동)" autocomplete="off"></span><small class="muted">예: 교무실 PC, 내 폰. 다른 기기에서 "○○에서 저장한 최신 진도를 불러왔어요"처럼 보여요. 비워 두면 자동으로 정해요.</small></label>
+   <p class="muted" style="font-size:12px;margin:0 0 10px">마지막으로 맞춘 시각 ${fmtT(S.last)||'아직 없음'} · 다른 기기에서도 같은 구글 계정으로 로그인하면 돼요. 올라가는 것은 교과·학급·시간표·진도 기록뿐이에요.</p>
    <div class="acts left" style="flex-wrap:wrap"><button class="btn pri" data-a="syncnow">지금 맞추기</button><button class="btn" data-a="synchistopen">이전 버전 복구</button><button class="btn" data-a="syncoff">연동 끊기</button><button class="btn bad" data-a="syncwipe">서버 데이터 지우고 끊기</button></div></div>`}
 
 /* ================= 튜토리얼 (예시 데이터로 실제 화면을 보여주고, 끝나면 모두 되돌린다) ================= */
@@ -3062,6 +3072,7 @@ document.addEventListener('change',e=>{const tg=e.target;
   if(tg.id==='notifAfter'){NOTIF.after=tg.checked;saveNotif();schedRem(true);render();return}
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
   if(tg.dataset.pu){const P=tg.dataset.pu==='a'?(U.tdP=U.tdP||newP()):tg.dataset.pu==='c'?(U.ctP=U.ctP||newP()):U.tdE&&U.tdE.P;if(P){if(tg.dataset.pu==='c'){const i=$('#ctIn');if(i)U.ctDraft=i.value}else if(tg.dataset.pu==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else{const i=$('#tdEditIn');if(i&&U.tdE)U.tdE.text=i.value}P.until=tg.value||'';render()}return}
+  if(tg.id==='devNameIn'){const v=tg.value.trim().slice(0,20);try{v?localStorage.setItem(DEVK,v):localStorage.removeItem(DEVK)}catch(e){}toast(`이 기기 이름: ${devName()}`);return}
   if(tg.id==='sjFrom'){const c=$('#sjCopy');if(c)c.hidden=!tg.value;const sb=STORE.subjects.find(k=>k.id===tg.value);if(sb){const n=$('#sjName');if(n&&!n.value.trim())n.value=sb.subj||''}return}
   if(tg.dataset.gapset){const [sid,ix]=tg.dataset.gapset.split(':'),sb=STORE.subjects.find(k=>k.id===sid),t=sb&&sb.db.todos[+ix];if(t&&U.gapX){if(tg.checked)t.gap=U.gapX;else delete t.gap;persist();render();openGap(U.gapX)}return}
   if(tg.dataset.todo!==undefined&&tg.type==='checkbox'){const [sid,ix]=tg.dataset.todo.split(':'),sb=STORE.subjects.find(k=>k.id===sid);if(sb&&sb.db.todos[+ix]){const tt=sb.db.todos[+ix];if(tt.rep){const dk=tg.dataset.day||TK,a=new Set(tt.doneOn||[]);tg.checked?a.add(dk):a.delete(dk);tt.doneOn=[...a]}else tt.d=tg.checked;persist();render()}return}
