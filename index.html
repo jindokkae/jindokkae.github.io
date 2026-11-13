@@ -1095,6 +1095,8 @@ function setRec(db,c,n,val){const l=db.lessons[n-1];if(!l)return;db.records[c]=d
 /* 반별 차시 순서: 기본은 1,2,3… / db.swp[c]=[[차시id,차시id],…] 맞바꾸기를 차례로 적용 */
 function clsSeq(db,c){const a=db.lessons.map((l,i)=>i+1),sw=db.swp&&db.swp[c];if(!sw||!sw.length)return a;
   const ix={};db.lessons.forEach((l,i)=>ix[l.id]=i+1);sw.forEach(([x,y])=>{const i=a.indexOf(ix[x]),j=a.indexOf(ix[y]);if(ix[x]&&ix[y]&&i>=0&&j>=0)[a[i],a[j]]=[a[j],a[i]]});return a}
+/* 완료한 차시 수: 순서를 바꿔 먼저 끝낸 차시도 센다 (진도 현황·반 탭 표시용) */
+const doneN=(db,c)=>db.lessons.reduce((k,l,i)=>k+(rec(db,c,i+1)?.done?1:0),0);
 function nextN(db,c){const a=clsSeq(db,c);for(const n of a)if(!rec(db,c,n)?.done)return n;return db.lessons.length+1}
 function recDates(db,c){const m={};db.lessons.forEach((l,i)=>{const r=db.records[c]?.[l.id];if(r&&r.done&&r.date)(m[r.date]=m[r.date]||[]).push(i+1)});return m}
 const newLesson=()=>({id:uid('l'),topic:'',pages:'',content:'',note:'',materials:'',plan:''});
@@ -1801,9 +1803,9 @@ function homeSub(sb){
   const nAlert=Math.min(arows.length,4)+(arows.length>4?1:0);
   const auto=plan.map(s=>{const l=L(s.n);return l&&(l.note||l.materials)?{t:`${cn(s.c)}: ${[l.materials,l.note].filter(Boolean).join(' / ')}`}:null}).filter(Boolean);
   /* 교과 진도 현황: 가장 앞선 반 기준 */
-  const total=DB.lessons.length,lead=DB.classes.length?Math.max(...DB.classes.map(c=>SCH.nextN[c.id]-1)):0;
+  const total=DB.lessons.length,lead=DB.classes.length?Math.max(...DB.classes.map(c=>doneN(DB,c.id))):0;
   const prog=DB.classes.length&&total?{sbId:sb.id,icon:sb.icon,name:subjMain(sb),meta:subjMeta(sb),sq,done:lead,total,pct:Math.round(lead/total*100),nCheck:checks.length,
-    cls:DB.classes.map(c=>{const d=SCH.nextN[c.id]-1;return {name:cn(c.id),d,gap:lead-d,color:ccv(c.id)}})}:null;
+    cls:DB.classes.map(c=>{const d=doneN(DB,c.id);return {name:cn(c.id),d,gap:lead-d,color:ccv(c.id)}})}:null;
   /* 다음 수업 */
   let nx=null;for(let i=0;i<60&&!nx;i++){const k=addK(TK,i),f=(SCH.by[k]||[]).find(x=>x.status==='plan'&&!isPast(DB,k,x.p));if(f){const v0=rec(DB,f.c,SCH.nextN[f.c]),dg=!!(v0&&v0.doing&&!v0.done),fn=dg?SCH.nextN[f.c]:f.n,les=L(fn)||{};
     nx={date:k,p:f.p,key:f.key,sbId:sb.id,cn:cn(f.c),subj:subjMain(sb),n:fn,doing:dg||!!f.doing,topic:lname(fn),pages:les.pages||'',materials:les.materials||'',note:les.note||'',links:les.links||[],t1:PT(f.p),t2:endT(f.p),now:isNow(DB,k,f.p)}}}
@@ -2262,7 +2264,7 @@ function cellHtml(c,n){const v=rec(DB,c.id,n),nxt=nxtLesson(c.id)===n,pl=SCH.pla
   const doing=!v?.done&&!!v?.doing,sw=SCH.swpN?.[c.id]?.has(n)
   const right=doing?`<span class="dg mono">진행 중<small>${pl?`${md(pl.date)} (${wd(pl.date)})`:'&nbsp;'}</small></span>`:v?.done?`<span class="dt mono">${md(v.date)}<small>(${wd(v.date)})</small></span>`:pl?`<span class="${nxt?'nx':'pl'} mono">${md(pl.date)}<small>(${wd(pl.date)}) ${pl.p}교시</small></span>`:nxt?'<span class="nx">다음</span>':'';
   return `<td class="cell ${v?.done?'done':doing?'doing':nxt?'next':''} ${sel?'sel':also?'also':''} ${U.flash===c.id+'|'+n?'justdone':''}" style="--cc:${ccv(c.id)}" data-a="sel" data-x="${c.id}|${n}">${sw?`<span class="swm" title="이 반은 차시 순서를 바꿨어요" aria-label="순서 바꿈">⇅</span>`:''}${cf?`<span class="cf" title="일정 충돌">${sic('check',12)}</span>`:''}<div class="in"><button class="tog" data-a="tog" data-x="${c.id}|${n}" aria-label="${esc(c.name)} ${n}차시 ${v?.done?'완료 취소':doing?'진행 중 → 완료로 표시':'완료로 표시'}">${paw(20)}</button>${right}</div>${v?.print?'<span class="prt" title="프린트 배부함" aria-label="프린트 배부함"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>':''}${v?.memo?`<span class="fold" data-tip="${esc(v.memo)}"></span>`:''}</td>`}
-function clsHead(c,lead){const d=SCH.nextN[c.id]-1;const ex=nextExam(DB,c.id);const r=ex?examReach(DB,SCH,ex,c.id):null;
+function clsHead(c,lead){const d=doneN(DB,c.id);const ex=nextExam(DB,c.id);const r=ex?examReach(DB,SCH,ex,c.id):null;
   return `<th class="cls" style="--cc:${ccv(c.id)}"><div class="hd"><input class="ie" data-cf="name" data-c="${c.id}" value="${esc(c.name)}" placeholder="0-0" aria-label="학급 이름" size="5"><button class="rm" data-a="clsmenu" data-x="${c.id}" aria-label="${esc(c.name)} 관리" title="학급 관리">⋯</button></div>
   <div class="dtags">${clsDays(c.id)}</div>
 </th>`}
@@ -2312,7 +2314,7 @@ function periodSel(){if(U.periodSub!==STORE.cur){U.periodSub=STORE.cur;U.period=
 function vSheet(){
   const tabs=['2학기 수업'];
   const mode=`<span class="seg" role="group" aria-label="보기"><button data-a="mode" data-x="all" aria-pressed="${U.sheetMode==='all'}">전체 진도표</button><button data-a="mode" data-x="class" aria-pressed="${U.sheetMode==='class'}" ${DB.classes.length?'':'disabled'}>반별 진도표</button></span>`;
-  const lead=DB.classes.length?Math.max(...DB.classes.map(c=>SCH.nextN[c.id]-1)):0;
+  const lead=DB.classes.length?Math.max(...DB.classes.map(c=>doneN(DB,c.id))):0;
   const {pl,cur}=periodSel();
   const KL={exam:'정기시험',task:'수행평가',unit:'단원/파트'};
   const pchip=p=>{const st=rangeStat(p),dated=p.kind==='exam'||(p.kind==='task'&&!!p.date),past=dated&&(p.end||p.date)<TK,d=dated?dday(p.date):0;
@@ -2344,7 +2346,7 @@ function vSheet(){
     body=`<div class="sheet-wrap"><table class="sheet ${U.selRows.size?'hasSel':''}" style="--tpw:${U.tpW}px"><thead><tr><th class="sel0"><input type="checkbox" class="rchk" data-lid="all" ${allSel?'checked':''} aria-label="전체 선택·해제" title="전체 선택 / 해제"></th><th class="n">차시</th><th class="tp">수업 주제 · 내용<span class="rz" data-rz title="끌어서 열 너비 조절 (더블클릭: 기본값)"></span></th>${DB.classes.map(c=>clsHead(c,lead)).join('')}<th class="addc"><button class="btn sm pri" data-a="addclass">+ 학급</button></th></tr></thead>
       <tbody>${rows}${empty}<tr class="addrow"><td colspan="${4+DB.classes.length}"><div class="inner"><button class="btn sm" data-a="addrows" data-x="1">+ 차시 1개</button><button class="btn sm" data-a="addrows" data-x="5">+ 5개</button><button class="btn sm" data-a="addrows" data-x="10">+ 10개</button>${!DB.lessons.length?'<button class="btn sm" data-a="pasteask">엑셀에서 붙여넣기</button>':''}<span class="muted" style="font-size:12px">${cur&&!cur.empty?`${DB.lessons.filter((l,i)=>inP(i+1)).length}개 차시 표시 중 · `:''}총 ${DB.lessons.length}차시</span></div></td></tr></tbody></table></div>`;
   }else{if(!DB.classes.some(c=>c.id===U.sheetClass))U.sheetClass=DB.classes[0].id;const c=cobj(U.sheetClass);
-    body=`<div class="classtabs">${DB.classes.map(x=>`<button data-a="cls" data-x="${x.id}" aria-pressed="${x.id===U.sheetClass}"><span class="dot" style="background:${ccv(x.id)}"></span>${esc(cn(x.id))}<span class="mono muted" style="font-weight:500">${SCH.nextN[x.id]-1}</span></button>`).join('')}</div>
+    body=`<div class="classtabs">${DB.classes.map(x=>`<button data-a="cls" data-x="${x.id}" aria-pressed="${x.id===U.sheetClass}"><span class="dot" style="background:${ccv(x.id)}"></span>${esc(cn(x.id))}<span class="mono muted" style="font-weight:500">${doneN(DB,x.id)}</span></button>`).join('')}</div>
     <div class="clist">${DB.lessons.map((les,i)=>{const n=i+1;if(!inP(n))return '';const v=rec(DB,c.id,n),nxt=nxtLesson(c.id)===n,pl=SCH.plan[c.id]?.[n],sel=U.selCell?.c===c.id&&U.selCell.n===n;
       return `<div class="crow ${nxt?'next':''} ${sel?'sel':''} ${U.flash===c.id+'|'+n?'justdone':''} ${colOf(les,n)?'inper':''}" ${colOf(les,n)?`style="--pc:${colOf(les,n).c}"`:''} data-a="sel" data-x="${c.id}|${n}"><b class="mono">${n}차시</b><button class="tog ${v?.done?'on':v?.doing?'doing':''}" data-a="tog" data-x="${c.id}|${n}" aria-label="${n}차시 ${v?.done?'완료 취소':'완료로 표시'}">${paw(20)}</button><span style="min-width:0"><span>${esc(les.topic||'(주제 미입력)')}</span>${v?.memo?`<small style="color:var(--warn)">${esc(v.memo)}</small>`:les.note?`<small>${esc(les.note)}</small>`:''}</span><span class="dt2 mono" style="text-align:right;font-size:12px">${v?.done?mdw(v.date):pl?`<span class="${nxt?'nx':'pl'}">예정 ${mdw(pl.date)}</span>`:''}</span></div>`}).join('')||'<p class="muted">차시가 없어요. 전체 진도표에서 먼저 차시를 만드세요.</p>'}</div>`;
   }
