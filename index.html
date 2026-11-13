@@ -207,6 +207,12 @@ tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0
 .devnm small{display:block;margin-top:4px;font-size:11px;line-height:1.4}.devnm{margin:0 0 10px}
 .tdurl{display:inline-block;padding:0 6px;margin:0 1px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-size:.9em;font-weight:600;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:baseline}
 .tdlnk{flex:none;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;text-decoration:none;font-size:14px}.tdlnk:hover{background:var(--accent-soft)}
+.iflist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.ifq{margin:0 0 8px}
+.ifrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"k l b" "k v b";align-items:center;gap:0 10px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.ifk{grid-area:k;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}.ifk[data-k=pw]{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}.ifk[data-k=tel]{background:var(--accent-soft);color:var(--accent)}
+.ifl{grid-area:l;font-weight:700;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ifv{grid-area:v;font-size:13px;color:var(--fg);min-width:0;overflow-wrap:anywhere}.ifv.mask{color:var(--muted);letter-spacing:2px}
+.ifb{grid-area:b;display:flex;gap:2px}.ifb .tdb{width:30px;height:30px;display:inline-grid;place-items:center;text-decoration:none;font-size:14px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface)}
+.ifform form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--accent);border-radius:10px;background:var(--surface)}.ifseg{align-self:flex-start}.ifpin{display:flex;gap:6px;align-items:center;font-size:13px}.ifpin input{width:auto}.ifacts{display:flex;gap:6px;align-items:center}
 .gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
@@ -1298,7 +1304,7 @@ const predTxt=v=>v>DB.lessons.length?`준비된 ${DB.lessons.length}차시 모�
 
 /* ---- 저장·실행 취소 ---- */
 const curSub=()=>STORE.subjects.find(x=>x.id===STORE.cur);
-function persist(){if(TOUR)return;try{if(NOTIF.push&&(NOTIF.todoOn||NOTIF.nagOn))schedRem()}catch(e){}try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}try{schedRem()}catch(e){}try{syncDirty()}catch(e){}}
+function persist(){if(TOUR)return;try{if(NOTIF.push&&(NOTIF.todoOn||NOTIF.nagOn))schedRem()}catch(e){}try{const cs=curSub();if(cs)cs.db=DB;localStorage.setItem(SUBK,JSON.stringify({subjects:STORE.subjects,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},info:STORE.info||[],log:LOG.slice(-300),alg:ALGS}));SAVE={ok:true,t:stamp()}}catch(e){SAVE={ok:false,t:stamp()}}try{schedRem()}catch(e){}try{syncDirty()}catch(e){}}
 function persistNeis(){try{localStorage.setItem(NEISK,JSON.stringify(NEIS));localStorage.setItem(MEALK,JSON.stringify(MEALS))}catch(e){}}
 function logAdd(label,refs){LOG.push({t:stamp(),label,refs:refs||[]});if(LOG.length>300)LOG.shift()}
 function boot(){try{const u=JSON.parse(localStorage.getItem('jindokkae.ui')||'{}');if(u.tpW>=120&&u.tpW<=560)U.tpW=u.tpW}catch(e){}
@@ -1309,7 +1315,7 @@ function boot(){try{const u=JSON.parse(localStorage.getItem('jindokkae.ui')||'{}
     const sub={id:uid('s'),name:'내 교과',db:fresh?emptyDB(semNow(),shiftTerms(DEFAULT_TERMS,yearNow()-BASE_YEAR)):old.db};if(!fresh){LOG=old.log||[];ALGS=old.alg||[]}
     if(fresh){sub.sem=semNow();sub.year=yearNow()}
     STORE={subjects:[sub],cur:sub.id}}
-  STORE.subjects.forEach(x=>ensureSub(x));STORE.dday=normDday((j&&j.dday)||STORE.dday);STORE.yterms=(j&&j.yterms)||STORE.yterms||{};seedYT();
+  STORE.subjects.forEach(x=>ensureSub(x));STORE.dday=normDday((j&&j.dday)||STORE.dday);STORE.yterms=(j&&j.yterms)||STORE.yterms||{};STORE.info=(j&&Array.isArray(j.info)&&j.info)||STORE.info||[];seedYT();
   DB=curSub().db;ddInit();persist();
   try{NEIS={...NEIS,...JSON.parse(localStorage.getItem(NEISK)||'{}')};MEALS=JSON.parse(localStorage.getItem(MEALK)||'{}')}catch(e){}
   if(!U.sheetClass&&DB.classes[0])U.sheetClass=DB.classes[0].id}
@@ -1374,6 +1380,7 @@ const KEYS_HTML=()=>`<table class="keyt"><tbody>
 <tr><td><kbd>Shift</kbd>+<kbd>[</kbd> <kbd>]</kbd></td><td>홈의 할 일 이전 · 다음 날</td></tr>
 <tr><td><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd></td><td>캘린더에서 날짜 칸 이동 (좌우 하루 · 상하 일주일)</td></tr>
 <tr><td><kbd>N</kbd></td><td>진도표에서 지금 진도 위치로 이동</td></tr>
+<tr><td><kbd>K</kbd></td><td>홈의 자주 찾는 정보(비번·전화번호) 열기</td></tr>
 <tr><td><kbd>?</kbd></td><td>이 단축키 안내 열기</td></tr>
 <tr><td><kbd>Esc</kbd></td><td>창 닫기</td></tr></tbody></table><p class="muted" style="margin:8px 0 0;font-size:12px">입력칸에 글을 쓰는 중이거나 창이 열려 있을 때는 동작하지 않아요.</p>`;
 function openKeys(){modal(`<div class="tut"><div class="tuthd"><h3>키보드 단축키</h3></div>${KEYS_HTML()}<div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div></div>`)}
@@ -1435,8 +1442,8 @@ let SYNC={on:false,sess:null,base:null,dirty:false,last:'',err:'',busy:false,hol
 const syncSave=()=>{try{localStorage.setItem(SYNCK,JSON.stringify({on:SYNC.on,sess:SYNC.sess,base:SYNC.base,dirty:SYNC.dirty,last:SYNC.last}))}catch(e){}try{chipSync()}catch(e){}};
 const syncLoad=()=>{try{const j=JSON.parse(localStorage.getItem(SYNCK)||'null');if(j)Object.assign(SYNC,{on:!!j.on,sess:j.sess||null,base:j.base||null,dirty:!!j.dirty,last:j.last||''})}catch(e){}};
 const syncOn=()=>SYNC.on&&!!SYNC.sess&&!TOUR;
-const syncKey=()=>JSON.stringify({s:STORE.subjects.map(x=>x.id===STORE.cur?{...x,db:DB}:x),d:STORE.dday,y:STORE.yterms||{}});
-const syncPayload=()=>{const cs=curSub();if(cs)cs.db=DB;return {app:'jindokkae',v:5,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},subjects:STORE.subjects,alg:ALGS,log:LOG.slice(-100)}};
+const syncKey=()=>JSON.stringify({s:STORE.subjects.map(x=>x.id===STORE.cur?{...x,db:DB}:x),d:STORE.dday,y:STORE.yterms||{},i:STORE.info||[]});
+const syncPayload=()=>{const cs=curSub();if(cs)cs.db=DB;return {app:'jindokkae',v:5,cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},info:STORE.info||[],subjects:STORE.subjects,alg:ALGS,log:LOG.slice(-100)}};
 /* 연동 데이터 압축: gzip → base64 로 jsonb 안에 담는다 ({z:'gzip',b:'...'}).
    예전 형식(압축 안 한 JSON)도 그대로 읽는다. 압축을 못 하는 브라우저는 예전 형식으로 올린다 */
 const CANZ=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
@@ -1446,7 +1453,7 @@ async function unB64(b){const bin=atob(b),u=new Uint8Array(bin.length);for(let i
   return await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('gzip'))).text()}
 async function packData(d){if(!CANZ)return d;try{const b=await gzB64(JSON.stringify(d));return {app:'jindokkae',v:d.v,z:'gzip',b}}catch(e){return d}}
 async function unpackData(d){if(!d||d.z!=='gzip')return d;if(!CANZ)throw Object.assign(new Error('nogz'),{nogz:true});return JSON.parse(await unB64(d.b))}
-const keyOf=d=>JSON.stringify({s:d.subjects,d:d.dday,y:d.yterms||{}});
+const keyOf=d=>JSON.stringify({s:d.subjects,d:d.dday,y:d.yterms||{},i:d.info||[]});
 /* 이 기기 이름: 직접 정한 이름 > 자동 추측(운영체제·기기 종류, 홈 화면 앱이면 '(앱)') */
 const DEVK='jindokkae.devname';
 const devAuto=()=>{const u=navigator.userAgent||'',tp=navigator.maxTouchPoints||0;let n;
@@ -1479,7 +1486,7 @@ const validRemote=d=>d&&Array.isArray(d.subjects)&&d.subjects.length&&d.subjects
 function syncApply(row,markDirty){const d=row.data;if(!validRemote(d)){toast('서버 데이터를 읽을 수 없어요.');return false}
   try{localStorage.setItem('jindokkae.syncbak',JSON.stringify({t:stamp(),data:syncPayload()}))}catch(e){}
   SYNC_APPLY=true;try{const keepCur=STORE.cur;
-    STORE={subjects:clone(d.subjects),cur:d.subjects.some(k=>k.id===keepCur)?keepCur:(d.subjects.some(k=>k.id===d.cur)?d.cur:d.subjects[0].id),dday:normDday(d.dday),yterms:d.yterms||{}};
+    STORE={subjects:clone(d.subjects),cur:d.subjects.some(k=>k.id===keepCur)?keepCur:(d.subjects.some(k=>k.id===d.cur)?d.cur:d.subjects[0].id),dday:normDday(d.dday),yterms:d.yterms||{},info:Array.isArray(d.info)?clone(d.info):(STORE.info||[])};
     STORE.subjects.forEach(x=>ensureSub(x));ddInit();HIST={};UNDO=[];REDO=[];DB=curSub().db;ALGS=d.alg||ALGS;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;U.periodSub=null;
     persist();SYNC_HASH=syncKey()}finally{SYNC_APPLY=false}
   SYNC.base=row.updated_at||SYNC.base;SYNC.dirty=!!markDirty;SYNC.last=new Date().toISOString();SYNC.err='';SYNC.hold=null;syncSave();closeM();render();return true}
@@ -1853,8 +1860,8 @@ function needRec(){let hit=null;
     if(first)first.scrollIntoView({block:'center',behavior:'smooth'});else toast('진도표에 아직 없는 차시예요. 차시를 먼저 추가해 주세요.');
     setTimeout(()=>document.querySelectorAll('.blink').forEach(e=>e.classList.remove('blink')),1200)},120)}
 /* ---- 홈 카드 배치 (이 기기에만 저장) ---- */
-const HOMEK='jindokkae.home',HOME_DEF=['today','next','up','|','prog','todo','meal'];
-const HOME_NAMES={today:'오늘의 수업',next:'다음 수업',up:'다가오는 일정',prog:'교과별 진도 현황',todo:'오늘 할 일',meal:'오늘 급식'};
+const HOMEK='jindokkae.home',HOME_DEF=['today','next','up','|','prog','todo','meal','info'];
+const HOME_NAMES={today:'오늘의 수업',next:'다음 수업',up:'다가오는 일정',prog:'교과별 진도 현황',todo:'오늘 할 일',meal:'오늘 급식',info:'자주 찾는 정보'};
 function homeLayout(){let v=null;try{v=JSON.parse(localStorage.getItem(HOMEK)||'null')}catch(e){}
   let o=Array.isArray(v?.o)?v.o.filter(x=>x==='|'||HOME_DEF.includes(x)):[];o=o.filter((x,i)=>o.indexOf(x)===i);
   if(!o.includes('|'))o=[...HOME_DEF];HOME_DEF.forEach(x=>{if(!o.includes(x))o.push(x)});
@@ -1900,6 +1907,28 @@ function openOverdue(){const L0=overdueTodos();if(!L0.length){closeM();return}
 function odAct(kind,x){const [sid,ix]=x.split(':'),sb=STORE.subjects.find(k=>k.id===sid),t=sb&&sb.db.todos[+ix];if(!t)return;
   if(kind==='done'){t.d=true;toast('완료했어요.')}else if(kind==='move'){delete t.due;t.date=TK;toast('오늘 할 일로 옮겼어요.')}else{sb.db.todos.splice(+ix,1);toast('삭제했어요.')}
   persist();render();openOverdue()}
+/* ---- 자주 찾는 정보: 특별실 비번·전화번호 등 (기기 연동으로 함께 동기화) ---- */
+const INFOK='jindokkae.infoopen',INFO_KIND={pw:'비번',tel:'전화',etc:'기타'};
+const infoList=()=>(STORE.info=STORE.info||[]);
+const infoOpen=()=>{if(U.infoOpen!=null)return U.infoOpen;try{return localStorage.getItem(INFOK)!=='0'}catch(e){return true}};
+function infoRow(x){const show=x.k!=='pw'||U.infoShow===x.id,val=show?esc(x.v):'••••••';
+  if(U.infoEdit===x.id)return infoForm(x);
+  return `<li class="ifrow"><span class="ifk" data-k="${x.k}">${x.pin?'📌 ':''}${INFO_KIND[x.k]||'기타'}</span><span class="ifl">${esc(x.label)}</span><span class="ifv ${show?'':'mask'} mono">${val}</span>
+    <span class="ifb">${x.k==='pw'?`<button type="button" class="tdb" data-a="infoeye" data-x="${x.id}" title="${show?'가리기':'잠깐 보기'}" aria-label="${esc(x.label)} ${show?'가리기':'보기'}">${show?'🙈':'👁'}</button>`:''}${x.k==='tel'?`<a class="tdb iftel" href="tel:${esc(String(x.v).replace(/[^0-9+]/g,''))}" title="전화 걸기" aria-label="${esc(x.label)} 전화 걸기">📞</a>`:''}<button type="button" class="tdb" data-a="infocopy" data-x="${x.id}" title="복사" aria-label="${esc(x.label)} 복사">📋</button><button type="button" class="tdb" data-a="infoedit" data-x="${x.id}" title="수정" aria-label="${esc(x.label)} 수정">✎</button></span></li>`}
+function infoForm(x){const n=!x||!x.id,k=(U.infoK||(x&&x.k)||'pw');
+  return `<li class="ifform"><form id="infoForm" data-id="${n?'':x.id}"><div class="seg ifseg" role="group" aria-label="종류">${Object.entries(INFO_KIND).map(([kk,v])=>`<button type="button" data-a="infok" data-x="${kk}" aria-pressed="${k===kk}">${v}</button>`).join('')}</div>
+    <input id="ifLabel" class="inp" maxlength="30" placeholder="이름 (예: 과학실 비번, 고사본부)" value="${esc(U.ifD?U.ifD.l:n?'':x.label)}" autocomplete="off">
+    <input id="ifVal" class="inp mono" maxlength="80" placeholder="${k==='tel'?'번호 (예: 1234, 031-000-0000)':k==='pw'?'비밀번호':'내용'}" value="${esc(U.ifD?U.ifD.v:n?'':x.v)}" autocomplete="off" ${k==='tel'?'inputmode="tel"':''}>
+    <label class="ifpin"><input type="checkbox" id="ifPin" ${x&&x.pin?'checked':''}> 위에 고정</label>
+    <div class="ifacts">${n?'':`<button type="button" class="btn sm bad" data-a="infodel" data-x="${x.id}">삭제</button>`}<span style="flex:1"></span><button type="button" class="btn sm" data-a="infocancel">취소</button><button class="btn sm pri">저장</button></div></form></li>`}
+function infoCard(){const all=infoList(),op=infoOpen(),q=(U.infoQ||'').trim().toLowerCase();
+  const items=all.filter(x=>!q||(x.label+' '+(x.k==='pw'?'':x.v)).toLowerCase().includes(q)).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0));
+  return `<div class="card" id="infocard"><h2 class="tdh"><span class="tdt" style="flex:none">🔑 <span>자주 찾는 정보</span></span><span class="right"><button type="button" class="hlink" data-a="infoadd">+ 추가</button><button type="button" class="hlink" data-a="infofold" aria-expanded="${op}">${op?'접기 ▴':`펼치기 ▾${all.length?` (${all.length})`:''}`}</button></span></h2>
+    ${op?`${all.length>6?`<input id="infoQ" class="inp ifq" placeholder="찾기" value="${esc(U.infoQ||'')}" autocomplete="off">`:''}
+    <ul class="iflist">${U.infoEdit==='new'?infoForm(null):''}${items.map(infoRow).join('')||(U.infoEdit==='new'?'':`<li class="tdempty">${q?'찾는 항목이 없어요.':'특별실 비번, 고사본부 번호처럼 자주 찾는 정보를 모아 두세요.'}</li>`)}</ul>`:''}</div>`}
+function infoCopy(v){const ok=()=>toast('복사했어요.');try{navigator.clipboard.writeText(v).then(ok,()=>fb())}catch(e){fb()}
+  function fb(){const t=document.createElement('textarea');t.value=v;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');ok()}catch(e){toast('복사하지 못했어요.')}t.remove()}}
+let INFO_T=null;
 function vHome(){
   const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
   const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
@@ -1977,7 +2006,7 @@ function vHome(){
       ${isT&&overdueTodos().length?`<button type="button" class="odlink" data-a="odopen">마감 지난 미완료 <b>${overdueTodos().length}개</b> 보기 ›</button>`:''}
       <form id="todoForm" class="tdform"><input id="todoIn" class="inp" value="${esc(U.tdDraft||'')}" placeholder="${isT?'':esc(dayName)+' '}할 일을 적고 Enter" aria-label="할 일 추가" autocomplete="off"><button type="button" class="btn tddb ${pSum(U.tdP||newP())?'on':''}" data-a="tdpanel" aria-pressed="${!!U.tdPanel}" title="반복 · 마감 정하기 (선택)" aria-label="반복 · 마감 정하기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3M3 11V9a4 4 0 0 1 4-4h13M7 22l-3-3 3-3M21 13v2a4 4 0 0 1-4 4H4"/></svg></button><button class="btn pri">추가</button><div class="tdtags" role="group" aria-label="분류">${TDTAGS.map(g=>`<button type="button" class="tdtc" data-t="${g}" data-a="tdtag" data-x="${g}" aria-pressed="${U.tdTag===g}">${g}</button>`).join('')}${pSum(U.tdP||newP())?`<button type="button" class="tdsum" data-a="tdpanel" title="반복 · 마감 설정 열기">↻ ${esc(pSum(U.tdP||newP()))}</button>`:''}</div>${U.tdPanel?pickHtml(U.tdP||(U.tdP=newP()),'a'):''}</form></div>`;
   /* 배치는 사용자가 '홈 화면 편집'에서 바꾼다 (기기마다 따로 저장). 모바일은 왼쪽 열 → 오른쪽 열 순서로 한 줄 */
-  const CARDS={today:todayCard,next:nextCard,up:upCard,prog:withCls.length?progCard:'',todo:todoCard,meal:mealCard()};
+  const CARDS={today:todayCard,next:nextCard,up:upCard,prog:withCls.length?progCard:'',todo:todoCard,meal:mealCard(),info:infoCard()};
   const L=homeLayout(),ed=!!U.homeEdit,vis=id=>CARDS[id]&&(ed||TOUR||GUIDE||!L.hide.includes(id));
   const cols=[[],[]];let ci=0;L.o.forEach(id=>{if(id==='|'){ci=1;return}if(vis(id))cols[ci].push(id)});
   const wrap=(id,i,arr)=>{const h=CARDS[id];if(!ed)return h;const hid=L.hide.includes(id),flat=[...cols[0],...cols[1]],k=flat.indexOf(id);
@@ -2400,7 +2429,7 @@ async function importSchedule(){if(!NEIS.school)return;U.neis.busy=true;neisMsg(
   catch(e){U.neis.busy=false;neisMsg(e.msg,true);render()}}
 
 /* ---------- 설정 ---------- */
-function backupText(){const cs=curSub();if(cs)cs.db=DB;return JSON.stringify({app:'jindokkae',v:5,exported:stamp(),cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},subjects:STORE.subjects,log:LOG.slice(-300)})}
+function backupText(){const cs=curSub();if(cs)cs.db=DB;return JSON.stringify({app:'jindokkae',v:5,exported:stamp(),cur:STORE.cur,dday:STORE.dday,yterms:STORE.yterms||{},info:STORE.info||[],subjects:STORE.subjects,log:LOG.slice(-300)})}
 function sheetTSV(){const h=['차시','수업 주제','교과서','수업 내용','비고',...DB.classes.flatMap(c=>[c.name+' 수업여부',c.name+' 수업날짜',c.name+' 프린트',c.name+' 비고'])];
   const rows=DB.lessons.map((l,i)=>[(i+1)+'차시',l.topic,l.pages,l.content,l.note,...DB.classes.flatMap(c=>{const r=rec(DB,c.id,i+1);return [r?.done?'O':r?.doing?'진행중':'',r?.done?mdw(r.date):'',r?.print?'O':'',r?.memo||'']})]);
   return [h,...rows].map(r=>r.map(v=>String(v??'').replace(/[\t\n]/g,' ')).join('\t')).join('\n')}
@@ -2823,6 +2852,14 @@ document.addEventListener('click',e=>{
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;const f=db.rgBasis==='unit'?'ucol':'col';if(nS==='a')delete l[f];else l[f]=+nS},{silent:true});break}
    case 'swpick':{const [cc,a1,a2]=x.split('|');swapLessons(cc,+a1,+a2);break}
+   case 'infoadd':U.ifD=null;U.infoOpen=true;try{localStorage.setItem(INFOK,'1')}catch(e){}U.infoEdit='new';U.infoK='pw';render();setTimeout(()=>$('#ifLabel')?.focus(),0);break;
+   case 'infofold':U.infoOpen=!infoOpen();try{localStorage.setItem(INFOK,U.infoOpen?'1':'0')}catch(e){}if(!U.infoOpen)U.infoEdit=null;render();break;
+   case 'infoedit':{U.ifD=null;const it=infoList().find(k=>k.id===x);U.infoEdit=x;U.infoK=it?it.k:'pw';render();setTimeout(()=>$('#ifVal')?.focus(),0);break}
+   case 'infocancel':U.ifD=null;U.infoEdit=null;U.infoK=null;render();break;
+   case 'infok':{const p=$('#ifPin')?.checked;U.ifD={l:$('#ifLabel')?.value||'',v:$('#ifVal')?.value||''};U.infoK=x;render();if($('#ifPin'))$('#ifPin').checked=p;break}
+   case 'infodel':{const L0=infoList(),ix=L0.findIndex(k=>k.id===x);if(ix>=0){L0.splice(ix,1);U.infoEdit=null;persist();render();toast('삭제했어요.')}break}
+   case 'infoeye':clearTimeout(INFO_T);U.infoShow=U.infoShow===x?null:x;render();if(U.infoShow)INFO_T=setTimeout(()=>{U.infoShow=null;render()},6000);break;
+   case 'infocopy':{const it=infoList().find(k=>k.id===x);if(it)infoCopy(it.v);break}
    case 'odopen':openOverdue();break;
    case 'oddone':odAct('done',x);break;
    case 'odmove':odAct('move',x);break;
@@ -3054,7 +3091,7 @@ document.addEventListener('click',e=>{
    case 'tsv':copyText(sheetTSV());break;
    case 'csv':tryDownload(`jindokkae-진도표-${TK}.csv`,sheetCSV());break;
    case 'imppaste':openImport($('#impTa').value);break;
-   case 'impgo':{const I=U.imp;if(I.all){STORE={subjects:clone(I.all.subjects),cur:I.all.subjects.some(k=>k.id===I.all.cur)?I.all.cur:I.all.subjects[0].id,dday:normDday(I.all.dday),yterms:I.all.yterms||{}};STORE.subjects.forEach(x=>ensureSub(x));ddInit();HIST={};UNDO=[];REDO=[];DB=curSub().db;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;persist();closeM();render();toast('백업을 불러왔어요.');break}mutate('백업 불러오기',db=>{Object.keys(db).forEach(k=>delete db[k]);Object.assign(db,clone(I.db));ensureSub(curSub(),db)});break}
+   case 'impgo':{const I=U.imp;if(I.all){STORE={subjects:clone(I.all.subjects),cur:I.all.subjects.some(k=>k.id===I.all.cur)?I.all.cur:I.all.subjects[0].id,dday:normDday(I.all.dday),yterms:I.all.yterms||{},info:Array.isArray(I.all.info)?clone(I.all.info):(STORE.info||[])};STORE.subjects.forEach(x=>ensureSub(x));ddInit();HIST={};UNDO=[];REDO=[];DB=curSub().db;U.selCell=U.draft=U.selRow=null;U.sheetClass=DB.classes[0]?.id||null;persist();closeM();render();toast('백업을 불러왔어요.');break}mutate('백업 불러오기',db=>{Object.keys(db).forEach(k=>delete db[k]);Object.assign(db,clone(I.db));ensureSub(curSub(),db)});break}
    case 'resetask':modal(`<h3>이 교과의 모든 기록을 지울까요?</h3><p class="warnbox">'${esc(curSub().name)}' 교과의 학급·차시·기록·시간표·평가 일정이 모두 지워져요. 먼저 백업을 받아 두는 게 안전해요. 지운 뒤에도 이 창을 닫기 전까지는 '되돌리기'로 돌릴 수 있어요.</p><div class="acts"><button class="btn" data-a="close">취소</button><button class="btn badfill" data-a="resetgo">모두 지우기</button></div>`);break;
    case 'resetgo':U.selCell=null;U.draft=null;mutate('모든 기록 지우기',db=>{const s=emptyDB();Object.keys(db).forEach(k=>delete db[k]);Object.assign(db,s)});break;
   }
@@ -3101,7 +3138,7 @@ document.addEventListener('focusout',e=>{const tg=e.target;
   if(tg.id==='acNames'&&tg.value.trim()){acAdd(tg.value);tg.value=''}
 });
 document.addEventListener('input',e=>{const tg=e.target;
-  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
+  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.id==='ifLabel'||tg.id==='ifVal'){U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
   if(tg.id==='acNames'){const v=tg.value;if(/[,，\s]/.test(v)){const parts=v.split(/[,，\s]/),rest=parts.pop();acAdd(parts.join(','));tg.value=rest}return}
   if(tg.classList.contains('ie')&&tg.tagName==='TEXTAREA')autosize(tg);
   if(tg.dataset&&tg.dataset.lf&&tg.dataset.n){const f=tg.dataset.lf,n=tg.dataset.n,v=tg.value;
@@ -3163,6 +3200,8 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
   if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=($('#tdEditIn')||{}).value.trim(),E=U.tdE;U.tdEdit=null;U.tdE=null;if(sb&&sb.db.todos[+ix]){const t=sb.db.todos[+ix];if(v&&E){t.t=v;if(E.tag)t.tag=E.tag;else delete t.tag;applyP(t,E.P,t.date||TK)}else if(!v)sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'방학까지',date:$('#ddDate').value,init:true,touched:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay||TK;if(v){const o=applyP({t:v,d:false,date:dd,...(U.tdTag?{tag:U.tdTag}:{})},U.tdP||newP(),dd);U.tdDraft='';U.tdP=newP();U.tdPanel=false;quick(db=>db.todos.push(o));setTimeout(()=>$('#todoIn')?.focus(),30)}}
+  if(id==='infoForm'){const lb=$('#ifLabel').value.trim(),v=$('#ifVal').value.trim();if(!lb||!v){toast('이름과 내용을 적어 주세요.');return}
+    const fid=e.target.dataset.id,L0=infoList(),o={k:U.infoK||'pw',label:lb,v,pin:$('#ifPin').checked};if(fid){const it=L0.find(k=>k.id===fid);if(it)Object.assign(it,o)}else L0.push({id:uid('i'),...o});U.infoEdit=null;U.infoK=null;U.ifD=null;persist();render();toast('저장했어요.');return}
   if(id==='gapForm'){const v=$('#gapIn').value.trim();if(v&&U.gapX){const k=U.gapX.split('|')[0];DB.todos.push({t:v,d:false,date:k,gap:U.gapX});persist();render();openGap(U.gapX)}}
   if(id==='calTodo'){const v=$('#ctIn').value.trim();if(v){const o=applyP({t:v,d:false,date:U.sel,...(U.ctTag?{tag:U.ctTag}:{})},U.ctP||newP(),U.sel);U.ctDraft='';U.ctP=newP();U.ctPanel=false;quick(db=>db.todos.push(o))}}
   if(id==='addClassForm'){acAdd($('#acNames').value);$('#acNames').value='';const names=U.acTags.slice(),lead=$('#acLead').value.trim();
@@ -3254,6 +3293,7 @@ document.addEventListener('keydown',e=>{const tg=e.target;
     e.preventDefault();
     if(t){fillDraft(t.c,t.n);render();const el=document.querySelector('[data-a=sel][data-x="'+t.c+'|'+t.n+'"]');if(el){el.scrollIntoView({block:'nearest',inline:'nearest'})}}
     return}
+  if(!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='k'||e.key==='K'||e.key==='ㅏ')&&!$('#layer').innerHTML&&!TOUR){e.preventDefault();U.infoOpen=true;try{localStorage.setItem(INFOK,'1')}catch(_){}if(U.view!=='home')go('home');else render();setTimeout(()=>{const c=$('#infocard');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.classList.add('flashc');setTimeout(()=>c.classList.remove('flashc'),1200);$('#infoQ')?.focus()}},60);return}
   if(!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='n'||e.key==='N'||e.key==='ㅜ')&&U.view==='sheet'&&!$('#layer').innerHTML){e.preventDefault();jumpNow(true);return}
   if((e.ctrlKey||e.metaKey)&&!inField&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
   if((e.ctrlKey||e.metaKey)&&!inField&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
