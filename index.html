@@ -202,6 +202,8 @@ button.tddue{border:0;cursor:pointer;font-family:inherit}button.tddue:hover{filt
 .swl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}.swhint{flex-basis:100%;font-size:11px;color:var(--muted)}.swc{display:inline-flex;align-items:baseline;gap:5px;padding:4px 9px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);font:inherit;font-size:12px;cursor:pointer}.swc:hover{border-color:var(--accent);color:var(--accent)}.swc span{color:var(--muted);font-size:11px}.swrs{flex-basis:100%;text-align:left;font-size:12px}
 
 tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0%,40%{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--accent) 14%,transparent)}100%{box-shadow:inset 0 0 0 999px transparent}}.nowbtn{margin-left:4px}
+.odlink{display:block;margin:2px 0 10px;padding:0;border:0;background:none;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}.odlink b{color:var(--bad)}.odlink:hover{color:var(--fg);text-decoration:underline}
+.odl li{display:flex;align-items:center;gap:8px}.odl .odck{display:flex;flex:none}.odl .odtx{flex:1;min-width:0;overflow-wrap:anywhere}.odl .odtx small{display:block;font-size:11px;color:var(--bad)}.odl .btn{flex:none}
 .gapfoot{display:flex;justify-content:flex-end;margin-top:6px}.gaptog{font-size:12px;font-weight:600;padding:2px 4px;border:0;background:none;color:var(--muted);cursor:pointer;white-space:nowrap}.gaptog:hover{color:var(--accent)}
 .tdlnks{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
 .todo li.auto{background:var(--warn-soft);border-color:transparent;font-size:13px}
@@ -1869,6 +1871,15 @@ function openGap(x){const [k,a,b]=x.split('|'),key=x;U.gapX=x;
   <ul class="todo gapl">${cand.map(c=>`<li class="${c.t.d?'d':''}"><label style="display:flex;gap:10px;align-items:center;flex:1;min-width:0;cursor:pointer"><input type="checkbox" data-gapset="${c.sid}:${c.i}" ${c.on?'checked':''}>${c.t.tag?`<span class="tdtag" data-t="${esc(c.t.tag)}">${esc(c.t.tag)}</span>`:''}<span class="tdtx" style="text-decoration:none">${esc(c.t.t)}</span>${c.t.gap&&!c.on?`<span class="tag gray" title="다른 공강에 배정됨">${gapLab(c.t.gap)}</span>`:''}</label></li>`).join('')||'<li class="tdempty">이날 할 일이 없어요. 아래에 적어 보세요</li>'}</ul>
   <form id="gapForm" class="tdform"><input id="gapIn" class="inp" placeholder="이 공강에 할 일을 적고 Enter" aria-label="이 공강에 할 일 추가" autocomplete="off"><button class="btn pri">추가</button></form>
   <div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div>`);setTimeout(()=>$('#gapIn')?.focus(),30)}
+/* ---- 마감 지난 미완료 할 일 (목록에서는 숨기고 여기서 모아 봄) ---- */
+function overdueTodos(){const out=[];todoSubs().forEach(sb=>(sb.db.todos||[]).forEach((t,i)=>{if(!t.rep&&!t.d&&t.due&&t.due<TK)out.push({...t,sid:sb.id,i})}));return out.sort((a,b)=>a.due<b.due?1:a.due>b.due?-1:0)}
+function openOverdue(){const L0=overdueTodos();if(!L0.length){closeM();return}
+  modal(`<h3>${ic('checkc',18)} 마감 지난 미완료 할 일</h3><p class="sub">마감일이 지나서 할 일 목록에서 숨겨진 항목이에요. 끝냈으면 체크하고, 계속 할 일이면 오늘로 옮기세요.</p>
+  <ul class="todo odl">${L0.map(t=>{const k=t.sid+':'+t.i,ago=-ddayFrom(t.due,TK);return `<li><label class="odck"><input type="checkbox" data-a="oddone" data-x="${k}" aria-label="${esc(t.t)} 완료"></label>${t.tag?`<span class="tdtag" data-t="${esc(t.tag)}">${esc(t.tag)}</span>`:''}<span class="odtx">${esc(t.t)}<small>${mdw(t.due)} 마감 · ${ago}일 지남</small></span><button type="button" class="btn sm" data-a="odmove" data-x="${k}" title="마감을 지우고 오늘 할 일로 옮겨요">오늘로</button><button type="button" class="tdb" data-a="oddel" data-x="${k}" title="삭제" aria-label="${esc(t.t)} 삭제">✕</button></li>`}).join('')}</ul>
+  <div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div>`)}
+function odAct(kind,x){const [sid,ix]=x.split(':'),sb=STORE.subjects.find(k=>k.id===sid),t=sb&&sb.db.todos[+ix];if(!t)return;
+  if(kind==='done'){t.d=true;toast('완료했어요.')}else if(kind==='move'){delete t.due;t.date=TK;toast('오늘 할 일로 옮겼어요.')}else{sb.db.todos.splice(+ix,1);toast('삭제했어요.')}
+  persist();render();openOverdue()}
 function vHome(){
   const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
   const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
@@ -1943,6 +1954,7 @@ function vHome(){
   const openN=todos.filter(t=>!t.d).length+pins.length,allDone=!pins.length&&todos.length>0&&todos.every(t=>t.d),anyTd=todos.length+pins.length>0;
   const todoCard=`<div class="card" id="todocard"><h2 class="tdh"><button type="button" class="tdnav" data-a="tdday" data-x="-1" aria-label="이전 수업일">‹</button><span class="tdt">${ic('checkc',18)} <span>${dayName} 할 일</span></span><button type="button" class="tdnav" data-a="tdday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${isT?'':`<button class="hlink" data-a="tdday" data-x="0">오늘로</button>`}${anyTd?`<span class="tag ${allDone?'ok':'info'}">${allDone?'모두 완료':openN+'개 남음'}</span>`:''}</span></h2>${hasTag?`<div class="tdflt" role="group" aria-label="분류 보기"><button type="button" class="tdtc" data-a="tdflt" data-x="" aria-pressed="${!fl}">전체</button>${TDTAGS.map(g=>`<button type="button" class="tdtc" data-t="${g}" data-a="tdflt" data-x="${g}" aria-pressed="${fl===g}">${g}</button>`).join('')}</div>`:''}<ul class="todo">${pins.map(t=>todoLi(t.sid,t.i,t,'tp')).join('')}${autos.map(a=>`<li class="auto"><span class="tag warn">진도표</span><span style="flex:1;min-width:0">${esc(a.t)}${a.links.length?`<span class="tdlnks">${a.links.map(u=>lnkChip(u)).join('')}</span>`:''}</span></li>`).join('')}
       ${doneLast(todos).map(t=>todoLi(t.sid,t.i,t,'td')).join('')||(autos.length||pins.length?'':`<li class="tdempty">${dayName} 할 일이 없어요. 아래에 적어 보세요</li>`)}</ul>
+      ${isT&&overdueTodos().length?`<button type="button" class="odlink" data-a="odopen">마감 지난 미완료 <b>${overdueTodos().length}개</b> 보기 ›</button>`:''}
       <form id="todoForm" class="tdform"><input id="todoIn" class="inp" value="${esc(U.tdDraft||'')}" placeholder="${isT?'':esc(dayName)+' '}할 일을 적고 Enter" aria-label="할 일 추가" autocomplete="off"><button type="button" class="btn tddb ${pSum(U.tdP||newP())?'on':''}" data-a="tdpanel" aria-pressed="${!!U.tdPanel}" title="반복 · 마감 정하기 (선택)" aria-label="반복 · 마감 정하기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2l3 3-3 3M3 11V9a4 4 0 0 1 4-4h13M7 22l-3-3 3-3M21 13v2a4 4 0 0 1-4 4H4"/></svg></button><button class="btn pri">추가</button><div class="tdtags" role="group" aria-label="분류">${TDTAGS.map(g=>`<button type="button" class="tdtc" data-t="${g}" data-a="tdtag" data-x="${g}" aria-pressed="${U.tdTag===g}">${g}</button>`).join('')}${pSum(U.tdP||newP())?`<button type="button" class="tdsum" data-a="tdpanel" title="반복 · 마감 설정 열기">↻ ${esc(pSum(U.tdP||newP()))}</button>`:''}</div>${U.tdPanel?pickHtml(U.tdP||(U.tdP=newP()),'a'):''}</form></div>`;
   /* 배치는 사용자가 '홈 화면 편집'에서 바꾼다 (기기마다 따로 저장). 모바일은 왼쪽 열 → 오른쪽 열 순서로 한 줄 */
   const CARDS={today:todayCard,next:nextCard,up:upCard,prog:withCls.length?progCard:'',todo:todoCard,meal:mealCard()};
@@ -2791,6 +2803,10 @@ document.addEventListener('click',e=>{
    case 'gottedit':U.schedMode='tt';U.view='cal';render();window.scrollTo(0,0);openTTEdit();break;
    case 'lcol':{const ln=+c;mutate(`${ln}차시 색 변경`,db=>{const l=db.lessons[ln-1];if(!l)return false;const f=db.rgBasis==='unit'?'ucol':'col';if(nS==='a')delete l[f];else l[f]=+nS},{silent:true});break}
    case 'swpick':{const [cc,a1,a2]=x.split('|');swapLessons(cc,+a1,+a2);break}
+   case 'odopen':openOverdue();break;
+   case 'oddone':odAct('done',x);break;
+   case 'odmove':odAct('move',x);break;
+   case 'oddel':odAct('del',x);break;
    case 'jumpnow':jumpNow(true);break;
    case 'swreset':swapReset(x);break;
    case 'swtog':U.swOpen=!U.swOpen;render();break;
