@@ -216,6 +216,16 @@ tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0
 .ifacc .ifv{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline}.ifacc .ifv .mask{color:var(--muted);letter-spacing:2px}.ifn{flex-basis:100%;font-family:inherit;font-size:11px;color:var(--muted)}
 .ifcp{display:inline-flex;align-items:center;gap:3px;height:26px;padding:0 8px;border:1px solid var(--line-2);border-radius:999px;background:var(--surface);font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;align-self:center}.ifcp:hover{border-color:var(--accent);color:var(--accent)}
 .ifform form{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--accent);border-radius:10px;background:var(--surface)}.ifseg{align-self:flex-start}.ifpin{display:flex;gap:6px;align-items:center;font-size:13px}.ifpin input{width:auto}.ifacts{display:flex;gap:6px;align-items:center}
+.wkhead{display:flex;align-items:center;gap:10px}.wkhead h3{margin:0}.wkhead .hlink{flex:none}
+.wkopts{display:flex;flex-direction:column;gap:8px;margin-top:6px}.wkopt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font:inherit;text-align:left;cursor:pointer;color:var(--fg)}.wkopt:hover{border-color:var(--accent);background:var(--accent-soft)}.wkopt>span:nth-child(2){flex:1;display:flex;flex-direction:column}.wkopt small{color:var(--muted);font-size:12px}.wkopt>svg{color:var(--muted)}
+.wkdrop{display:block;margin-top:8px;border:2px dashed var(--line-2);border-radius:12px;padding:4px}.wkdrop.over{border-color:var(--accent);background:var(--accent-soft)}.wkdrop textarea{border:0;background:none;width:100%;resize:vertical;min-height:150px}.wkdrop.busy{opacity:.6}
+.wkpaste-acts{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.wkitems{list-style:none;padding:0;margin:8px 0 0;border-top:1px solid var(--line)}.wkitems li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}.wkitems li.off .wkin{color:var(--muted);text-decoration:line-through}.wkitems li>input[type=checkbox]{width:auto;flex:none}
+.wkit{flex:1;min-width:0;display:flex;align-items:center;gap:6px}.wkin{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;padding:4px 2px;border-bottom:1px dashed transparent;color:var(--fg)}.wkin:focus{outline:none;border-bottom-color:var(--accent)}.wkit .tdtag{max-width:6em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wkdate{flex:none;display:flex;align-items:center;gap:6px}.wkdate small{font-size:11px;color:var(--muted)}.wkdi{border:1px solid var(--line-2);border-radius:8px;background:var(--surface);font:inherit;font-size:12px;padding:3px 6px;width:128px;color:var(--fg)}.wkdi.late{color:var(--bad)}
+.wkitems li.wkadd{border-bottom:0;padding-top:8px}.wkmore{margin-top:10px;font-size:13px}.wkmore summary{cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:6px}.wkmore .hlink{margin-top:6px}.wkgo{margin-top:12px;position:sticky;bottom:-1px;background:var(--surface);padding-top:8px}
+.wkdate small{white-space:nowrap}.wkitems .tdb{flex:none;border:0;background:none;width:24px;height:24px;display:inline-grid;place-items:center;color:var(--muted);padding:0}.wkitems .tdb:hover{color:var(--bad)}
+@media (max-width:520px){.wkdi{width:112px;padding:3px 4px}.wkdate{gap:4px}.wkit .tdtag{display:none}}
 .wkpdf{cursor:pointer;display:inline-flex;align-items:center;gap:5px}.wkroles{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px;font-size:12px}.wkcands li .tdtag{max-width:7em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wkrs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.wkr{border:1px solid var(--line);border-radius:12px;background:var(--surface)}.wkr.open{border-color:var(--line-2)}
 .wkrh{display:grid;grid-template-columns:minmax(0,auto) minmax(40px,1fr) auto;grid-template-areas:"n b c" "x x x";gap:4px 10px;align-items:center;width:100%;padding:10px 12px;border:0;background:none;font:inherit;text-align:left;cursor:pointer;color:var(--fg)}
@@ -2032,34 +2042,45 @@ async function wkPdfLoad(file){const W=U.wk;W.busy=true;openWork();
     for(let p=1;p<=Math.min(doc.numPages,6);p++){const pg=await doc.getPage(p),tc=await pg.getTextContent();
       const items=tc.items.filter(i=>i.str!=null).map(i=>({s:i.str,x:i.transform[4],y:i.transform[5],h:Math.abs(i.transform[3])||i.height||10}));
       const r=calItemsToEntries(items,+TK.slice(0,4),+TK.slice(5,7));all=all.concat(r.entries);if(!title)title=r.title}
-    W.cands=all;W.parsed=true;W.pdfName=file.name;W.roles=[...new Set(all.flatMap(c=>c.role?c.role.split(/\s*[,·]\s*/):[]).filter(Boolean))];W.myRoles=[];
-    if(!W.pname&&title)W.pname=title.replace(/일정|입력 및 점검/g,'').replace(/\s+/g,' ').trim().slice(0,20);
-    if(!all.length)toast('달력 모양 표를 찾지 못했어요. 글자를 복사해 붙여넣어 보세요.')}
-  catch(e){console.warn(e);toast('PDF를 읽지 못했어요. 스캔한 이미지 PDF는 읽을 수 없어요.')}
-  W.busy=false;openWork()}
-function openWork(tab){U.wk=U.wk||{};const W=U.wk;if(tab)W.tab=tab;if(W.tab==='list'||!W.tab)W.tab='tpl';
-  if(!W.tpl){const t=wtplAll()[0];W.tpl=t.id;W.steps=t.steps.map(x=>[...x]);W.name='';W.base=''}
-  const tp=wtplAll().find(x=>x.id===W.tpl)||wtplAll()[0],exams=(DB.assess||[]).filter(a=>a.type==='exam'&&a.start&&a.start>=TK);
-  const tabs=`<div class="seg wktabs" role="tablist">${[['tpl','템플릿으로'],['paste','공문 (붙여넣기·PDF)']].map(([k,v])=>`<button type="button" data-a="wktab" data-x="${k}" aria-pressed="${W.tab===k}">${v}</button>`).join('')}</div>`;
-  let body='';
-  if(W.tab==='tpl'){const dt=o=>W.base?addK(W.base,+o||0):'';
-    body=`<div class="wkrow"><label class="field">템플릿<select id="wkTpl" class="inp">${wtplAll().map(t=>`<option value="${t.id}" ${t.id===W.tpl?'selected':''}>${esc(t.name)}${WTPL_DEF.some(d=>d.id===t.id)?'':' (내 템플릿)'}</option>`).join('')}</select></label>
-      <label class="field">묶음 이름<input id="wkName" class="inp" data-wf="name" maxlength="20" placeholder="예: 2차 정기시험 출제" value="${esc(W.name||'')}"></label></div>
-      <label class="field">${esc(tp.base||'기준일')}<input type="date" id="wkBase" class="inp" value="${W.base||''}"></label>
-      ${tp.id==='exam'&&exams.length?`<div class="wkchips">${exams.map(a=>`<button type="button" class="swc" data-a="wkexam" data-x="${a.start}|${esc(a.title||'정기시험')}"><b>${esc(a.title||'정기시험')}</b><span>${md(a.start)}(${wd(a.start)})</span></button>`).join('')}</div>`:''}
-      <ol class="wksteps">${W.steps.map((st,i)=>`<li><input class="inp" data-wf="st" data-i="${i}" data-p="t" value="${esc(st[0])}" aria-label="단계 이름"><span class="wkoff">D<input class="inp mono" type="number" data-wf="st" data-i="${i}" data-p="o" value="${st[1]}" aria-label="기준일에서 며칠" step="1"></span><span class="wkdt mono" ${W.base&&dt(st[1])<TK?'style="color:var(--bad)" title="이미 지난 날짜예요"':''}>${W.base?mdw(dt(st[1])):'—'}</span><button type="button" class="tdb" data-a="wkstdel" data-x="${i}" aria-label="단계 삭제">✕</button></li>`).join('')}</ol>
-      <button type="button" class="hlink" data-a="wkstadd">+ 단계 추가</button>
-      <label class="ifpin" style="margin-top:8px"><input type="checkbox" id="wkSaveTpl"> 이 단계 구성을 '내 템플릿'으로 저장</label>
-      <div class="acts" style="margin-top:12px">${STORE.wtpl?.some(t=>t.id===W.tpl)?`<button type="button" class="btn sm bad" data-a="wktpldel">이 템플릿 삭제</button><span style="flex:1"></span>`:''}<button class="btn" data-a="close">닫기</button><button class="btn pri" data-a="wkmake" ${W.base?'':'disabled'}>할 일에 넣기</button></div>`}
-  else if(W.tab==='paste'){const C=W.cands||[];
-    body=`<label class="field">교무부·연구부 쪽지나 공문 내용을 붙여넣으세요<textarea id="wkText" class="inp" rows="6" data-wf="text" placeholder="예)\n- 11/20(금)까지 세특 입력\n- 11월 27일 교과 협의회 점검\n- 12.4 최종 마감">${esc(W.text||'')}</textarea></label>
-      <div class="acts left"><button type="button" class="btn sm" data-a="wkparse">날짜 찾기</button><span class="muted" style="font-size:12px">또는</span><label class="btn sm wkpdf">${ic('doc',14)} 달력표 PDF 불러오기<input type="file" id="wkPdf" accept="application/pdf,.pdf" hidden></label>${W.busy?'<span class="muted" style="font-size:12px">PDF 읽는 중…</span>':''}</div>
-      ${W.pdfName?`<p class="muted" style="font-size:12px;margin:4px 0 0">${esc(W.pdfName)}에서 ${C.length}개 일정을 찾았어요. 날짜와 내용을 확인해 주세요.</p>`:''}
-      ${C.length?`<label class="field">묶음 이름<input class="inp" data-wf="pname" maxlength="20" placeholder="예: 2학기 생기부" value="${esc(W.pname||'')}"></label>
-      ${(W.roles||[]).length?`<div class="wkroles"><span class="muted">내 역할만</span>${W.roles.map(r=>`<button type="button" class="tdtc" data-a="wkrole" data-x="${esc(r)}" aria-pressed="${(W.myRoles||[]).includes(r)}">${esc(r)}</button>`).join('')}<span class="muted" style="font-size:11px">고르면 그 역할과 역할 표시가 없는 일정만 남겨요</span></div>`:''}
-      <ul class="wkcands">${C.map((c,i)=>`<li><input type="checkbox" data-wc="${i}" data-p="on" ${c.on?'checked':''} aria-label="포함">${c.role?`<span class="tdtag" title="${esc(c.role)}">${esc(c.role)}</span>`:''}<input class="inp" data-wc="${i}" data-p="t" value="${esc(c.t)}" aria-label="단계 이름"><input type="date" class="inp" data-wc="${i}" data-p="date" value="${c.date}" aria-label="마감일"></li>`).join('')}</ul>`:W.parsed?'<p class="muted">날짜가 들어간 줄을 찾지 못했어요. 11/20, 11.20, 11월 20일처럼 적힌 줄을 찾아요.</p>':''}
-      <div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button><button class="btn pri" data-a="wkpaste" ${C.some(c=>c.on)?'':'disabled'}>할 일에 넣기</button></div>`}
-  modal(`<h3>${ic('cal',18)} 새 업무 일정 묶음</h3><p class="sub">단계마다 마감 있는 할 일이 되어 홈의 할 일·업무 일정에 D-day로 떠요.</p>${tabs}<div class="wkbody">${body}</div>`)}
+    W.busy=false;if(!all.length){toast('달력 모양 표를 찾지 못했어요. 글자를 복사해 붙여넣어 보세요.');openWork();return}
+    wkFromCands(all,title?title.replace(/일정|입력 및 점검/g,'').replace(/\s+/g,' ').trim().slice(0,20):'',file.name)}
+  catch(e){console.warn(e);W.busy=false;toast('PDF를 읽지 못했어요. 스캔한 이미지 PDF는 읽을 수 없어요.');openWork()}}
+/* 공문(붙여넣기·PDF)에서 찾은 일정 → 확인 화면 */
+function wkFromCands(all,name,from){const W=U.wk;W.src='paste';W.step='review';W.tpl='';W.base='';W.from=from||'';
+  W.items=all.map(c=>({on:c.on!==false,t:c.t,date:c.date,role:c.role||''}));W.roles=[...new Set(all.flatMap(c=>c.role?c.role.split(/\s*[,·]\s*/):[]).filter(Boolean))];W.myRoles=[];
+  if(!W.name)W.name=name||'';openWork()}
+function wkPickTpl(id){const W=U.wk,t=wtplAll().find(k=>k.id===id);if(!t)return;W.src='tpl';W.tpl=t.id;W.step='review';W.base='';W.name='';W.roles=[];W.from='';
+  W.items=t.steps.map(([tt,o])=>({on:true,t:tt,off:+o||0,date:''}));openWork()}
+const wkRedate=W=>{W.items.forEach(it=>{if(W.base&&it.off!=null)it.date=addK(W.base,it.off)})};
+function openWork(){U.wk=U.wk||{};const W=U.wk;W.step=W.step||'pick';
+  const head=t=>`<div class="wkhead">${W.step!=='pick'?`<button type="button" class="hlink" data-a="wkback">‹ 뒤로</button>`:''}<h3>${ic('cal',18)} ${t}</h3></div>`;
+  let html='';
+  if(W.step==='pick'){const mine=STORE.wtpl||[];const opt=(a,x,ico,t,sub)=>`<button type="button" class="wkopt" data-a="${a}" data-x="${x}"><span class="ic b">${ic(ico,18)}</span><span><b>${t}</b><small>${sub}</small></span>${ic('chev',16)}</button>`;
+    html=head('새 업무 일정')+`<p class="sub">단계마다 마감 있는 할 일이 되어 D-day로 알려 줘요.</p><div class="wkopts">
+      ${WTPL_DEF.map(t=>opt('wkpick',t.id,t.id==='exam'?'doc':'pen',esc(t.name),`${t.base} 기준 ${t.steps.length}단계`)).join('')}
+      ${mine.map(t=>opt('wkpick',t.id,'star',esc(t.name),`내 템플릿 · ${t.steps.length}단계`)).join('')}
+      ${opt('wkgopaste','','doc','공문으로 만들기','쪽지·공문 붙여넣기 또는 달력표 PDF')}</div>
+      <div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div>`}
+  else if(W.step==='paste'){
+    html=head('공문으로 만들기')+`<label class="wkdrop ${W.busy?'busy':''}" id="wkDrop"><textarea id="wkText" class="inp" rows="7" placeholder="쪽지·공문 내용을 여기에 붙여넣거나&#10;달력표 PDF를 끌어다 놓으세요&#10;&#10;예) 11/20(금)까지 세특 입력&#10;    11월 27일 교과 협의회 점검">${esc(W.text||'')}</textarea></label>
+      <div class="wkpaste-acts">${W.busy?'<span class="muted">PDF 읽는 중…</span>':`<label class="btn sm wkpdf">${ic('doc',14)} PDF 고르기<input type="file" id="wkPdf" accept="application/pdf,.pdf" hidden></label>`}${W.miss?'<span class="muted" style="font-size:12px">날짜가 있는 줄을 못 찾았어요. 11/20, 11.20, 11월 20일처럼 적힌 줄을 찾아요.</span>':''}<span style="flex:1"></span><button type="button" class="btn sm" data-a="wkparse">날짜 찾기</button></div>
+      <div class="acts" style="margin-top:12px"><button class="btn" data-a="close">닫기</button></div>`}
+  else{const tp=W.src==='tpl'?wtplAll().find(x=>x.id===W.tpl):null,exams=tp&&tp.id==='exam'?(DB.assess||[]).filter(a=>a.type==='exam'&&a.start&&a.start>=TK):[];
+    const on=W.items.filter(it=>it.on&&it.t.trim()),ready=on.length&&on.every(it=>it.date);
+    html=head(tp?esc(tp.name):'공문으로 만들기')+`${W.from?`<p class="sub">${esc(W.from)}에서 ${W.items.length}개 일정을 찾았어요. 날짜와 내용을 확인해 주세요.</p>`:''}
+      <div class="wkrow"><label class="field">묶음 이름<input id="wkName" class="inp" data-wf="name" maxlength="20" placeholder="${tp?'예: 2차 정기시험 출제':'예: 2학기 생기부'}" value="${esc(W.name||'')}"></label>
+      ${tp?`<label class="field">${esc(tp.base||'기준일')}<input type="date" id="wkBase" class="inp" value="${W.base||''}"></label>`:''}</div>
+      ${exams.length?`<div class="wkchips">${exams.map(a=>`<button type="button" class="swc" data-a="wkexam" data-x="${a.start}|${esc(a.title||'정기시험')}" aria-pressed="${W.base===a.start}"><b>${esc(a.title||'정기시험')}</b><span>${md(a.start)}(${wd(a.start)})</span></button>`).join('')}</div>`:''}
+      ${(W.roles||[]).length?`<div class="wkroles"><span class="muted">내 역할만</span>${W.roles.map(r=>`<button type="button" class="tdtc" data-a="wkrole" data-x="${esc(r)}" aria-pressed="${(W.myRoles||[]).includes(r)}">${esc(r)}</button>`).join('')}</div>`:''}
+      <ul class="wkitems">${W.items.map((it,i)=>`<li class="${it.on?'':'off'}"><input type="checkbox" data-wi="${i}" data-p="on" ${it.on?'checked':''} aria-label="포함">
+        <span class="wkit"><input class="wkin" data-wi="${i}" data-p="t" value="${esc(it.t)}" aria-label="단계 이름">${it.role?`<span class="tdtag">${esc(it.role)}</span>`:''}</span>
+        <span class="wkdate">${it.off!=null&&W.base?`<small class="mono">${it.off===0?'D-day':it.off<0?'D'+it.off:'D+'+it.off}</small>`:''}<input type="date" class="wkdi ${it.date&&it.date<TK?'late':''}" data-wi="${i}" data-p="date" value="${it.date||''}" aria-label="날짜"></span>
+        <button type="button" class="tdb" data-a="wkidel" data-x="${i}" aria-label="단계 빼기">✕</button></li>`).join('')}
+        <li class="wkadd"><button type="button" class="hlink" data-a="wkiadd">+ 단계 추가</button></li></ul>
+      ${tp&&!W.base?'<p class="muted" style="font-size:12px;margin:6px 0 0">기준일을 정하면 단계 날짜가 채워져요.</p>':''}
+      <details class="wkmore"><summary>⋯ 더 보기</summary><label class="ifpin"><input type="checkbox" id="wkSaveTpl" ${W.saveTpl?'checked':''}> 이 단계 구성을 '내 템플릿'으로 저장</label>${tp&&(STORE.wtpl||[]).some(t=>t.id===tp.id)?`<button type="button" class="hlink bad" data-a="wktpldel">이 템플릿 삭제</button>`:''}</details>
+      <div class="acts wkgo"><button class="btn" data-a="close">닫기</button><button class="btn pri" data-a="wkmake" ${ready?'':'disabled'}>${on.length?`${on.length}개 단계를 할 일에 넣기`:'할 일에 넣기'}</button></div>`}
+  modal(html)}
 function vHome(){
   const nowSubs=STORE.subjects.filter(sb=>sb.year===yearNow()&&sb.sem===semNow());
   const parts=(nowSubs.length?nowSubs:STORE.subjects).map(sb=>({sb,h:withSub(sb,()=>homeSub(sb))}));
@@ -2992,19 +3013,21 @@ document.addEventListener('click',e=>{
    case 'infoeye':clearTimeout(INFO_T);U.infoShow=U.infoShow===x?null:x;render();if(U.infoShow)INFO_T=setTimeout(()=>{U.infoShow=null;render()},6000);break;
    case 'infocopy':{const [iid,f]=x.split('|'),it=infoList().find(k=>k.id===iid);if(it)infoCopy(f==='id'?it.uid||'':it.v);break}
    case 'wkopen':U.wk=null;openWork();break;
-   case 'wktab':openWork(x);break;
-   case 'wkexam':{const [d0,tt]=x.split('|');U.wk.base=d0;if(!U.wk.name)U.wk.name=tt.replace(/\s*$/,'')+' 출제';openWork();break}
-   case 'wkstadd':U.wk.steps.push(['새 단계',-1]);openWork();break;
-   case 'wkstdel':U.wk.steps.splice(+x,1);openWork();break;
-   case 'wkmake':{const W=U.wk,tp=wtplAll().find(t=>t.id===W.tpl),nm=(W.name||'').trim()||(tp?tp.name:'업무');if(!W.base){toast('기준일을 정해 주세요.');break}
-     const st=W.steps.filter(x=>String(x[0]).trim()).map(x=>({t:String(x[0]).trim(),off:+x[1]||0,date:addK(W.base,+x[1]||0)}));
-     if($('#wkSaveTpl')?.checked){(STORE.wtpl=STORE.wtpl||[]).push({id:uid('t'),name:nm,base:tp?.base||'기준일',steps:W.steps.map(x=>[String(x[0]).trim(),+x[1]||0]).filter(x=>x[0])})}
-     if(wkCreate(nm,st,W.base,W.tpl)){U.wk=null;U.wkOpen=worksL().slice(-1)[0]?.id;closeM();render();setTimeout(()=>$('#workcard')?.scrollIntoView({behavior:'smooth',block:'center'}),60)}break}
-   case 'wktpldel':{const ix=(STORE.wtpl||[]).findIndex(t=>t.id===U.wk.tpl);if(ix>=0){STORE.wtpl.splice(ix,1);persist();U.wk.tpl=null;openWork();toast('템플릿을 지웠어요.')}break}
-   case 'wkparse':{const W=U.wk;W.text=$('#wkText').value;W.cands=parseWorkText(W.text);W.parsed=true;openWork();break}
-   case 'wkpaste':{const W=U.wk,st=(W.cands||[]).filter(c=>c.on&&c.t.trim()&&c.date).map(c=>({t:c.t.trim(),date:c.date}));if(wkCreate((W.pname||'').trim()||'업무 일정',st,'','paste')){U.wk=null;U.wkOpen=worksL().slice(-1)[0]?.id;closeM();render();setTimeout(()=>$('#workcard')?.scrollIntoView({behavior:'smooth',block:'center'}),60)}break}
+   case 'wkpick':wkPickTpl(x);break;
+   case 'wkgopaste':U.wk.step='paste';U.wk.miss=false;openWork();setTimeout(()=>$('#wkText')?.focus(),30);break;
+   case 'wkback':{const W=U.wk;W.step=W.step==='review'&&W.src==='paste'?'paste':'pick';openWork();break}
+   case 'wkparse':{const W=U.wk;W.text=$('#wkText').value;const c=parseWorkText(W.text);if(c.length)wkFromCands(c,'');else{W.miss=true;openWork()}break}
+   case 'wkexam':{const [d0,tt]=x.split('|'),W=U.wk;W.base=d0;if(!W.name)W.name=tt.trim()+' 출제';wkRedate(W);openWork();break}
+   case 'wkrole':{const W=U.wk,R=W.myRoles=W.myRoles||[],ix=R.indexOf(x);ix>=0?R.splice(ix,1):R.push(x);W.items.forEach(c=>{const rs=c.role?c.role.split(/\s*[,·]\s*/):[];c.on=!SKIPW.test(c.t)&&(!R.length||!rs.length||rs.some(r=>R.includes(r)))});openWork();break}
+   case 'wkidel':U.wk.items.splice(+x,1);openWork();break;
+   case 'wkiadd':{const W=U.wk;W.items.push({on:true,t:'',date:W.base||'',...(W.src==='tpl'?{off:0}:{})});openWork();setTimeout(()=>{const a=document.querySelectorAll('.wkin');a[a.length-1]?.focus()},30);break}
+   case 'wkmake':{const W=U.wk,tp=W.src==='tpl'?wtplAll().find(t=>t.id===W.tpl):null,nm=(W.name||'').trim()||(tp?tp.name:'업무 일정');
+     const on=W.items.filter(it=>it.on&&it.t.trim()&&it.date);if(!on.length)break;
+     if($('#wkSaveTpl')?.checked){const base=W.base||on[on.length-1].date;(STORE.wtpl=STORE.wtpl||[]).push({id:uid('t'),name:nm,base:tp?.base||'기준일',steps:on.map(it=>[it.t.trim(),it.off!=null&&W.base?it.off:Math.round((D(it.date)-D(base))/864e5)])})}
+     const st=on.map(it=>({t:it.t.trim(),date:it.date,...(tp&&W.base&&it.off!=null?{off:it.off}:{})}));
+     if(wkCreate(nm,st,tp?W.base:'',tp?W.tpl:'paste')){U.wk=null;U.wkOpen=worksL().slice(-1)[0]?.id;closeM();render();setTimeout(()=>$('#workcard')?.scrollIntoView({behavior:'smooth',block:'center'}),60)}break}
+   case 'wktpldel':{const ix=(STORE.wtpl||[]).findIndex(t=>t.id===U.wk.tpl);if(ix>=0){STORE.wtpl.splice(ix,1);persist();U.wk={step:'pick'};openWork();toast('템플릿을 지웠어요.')}break}
    case 'wkdel':{const w=worksL().find(k=>k.id===x);if(!w)break;todoSubs().forEach(sb=>{sb.db.todos=(sb.db.todos||[]).filter(t=>t.wk!==x)});DB=curSub().db;STORE.works=worksL().filter(k=>k.id!==x);U.wkOpen=null;persist();render();toast(`'${w.name}' 묶음을 지웠어요.`);break}
-   case 'wkrole':{const W=U.wk,R=W.myRoles=W.myRoles||[],ix=R.indexOf(x);ix>=0?R.splice(ix,1):R.push(x);W.cands.forEach(c=>{const rs=c.role?c.role.split(/\s*[,·]\s*/):[];c.on=!SKIPW.test(c.t)&&(!R.length||!rs.length||rs.some(r=>R.includes(r)))});openWork();break}
    case 'wktog':U.wkOpen=U.wkOpen===x?null:x;render();break;
    case 'odopen':openOverdue();break;
    case 'oddone':odAct('done',x);break;
@@ -3266,10 +3289,8 @@ document.addEventListener('change',e=>{const tg=e.target;
   if(tg.id==='notifDelay'){NOTIF.delay=+tg.value||3;saveNotif();schedRem(true);return}
   if(tg.dataset.pu){const P=tg.dataset.pu==='a'?(U.tdP=U.tdP||newP()):tg.dataset.pu==='c'?(U.ctP=U.ctP||newP()):U.tdE&&U.tdE.P;if(P){if(tg.dataset.pu==='c'){const i=$('#ctIn');if(i)U.ctDraft=i.value}else if(tg.dataset.pu==='a'){const i=$('#todoIn');if(i)U.tdDraft=i.value}else{const i=$('#tdEditIn');if(i&&U.tdE)U.tdE.text=i.value}P.until=tg.value||'';render()}return}
   if(tg.id==='wkPdf'){const f=tg.files&&tg.files[0];if(f)setTimeout(()=>wkPdfLoad(f),0);return}
-  if(tg.id==='wkTpl'){const t=wtplAll().find(k=>k.id===tg.value);if(t){U.wk.tpl=t.id;U.wk.steps=t.steps.map(x=>[...x])}setTimeout(()=>openWork(),0);return}
-  if(tg.id==='wkBase'){U.wk.base=tg.value;setTimeout(()=>openWork(),0);return}
-  if(tg.dataset.wf==='st'&&tg.dataset.p==='o'){U.wk.steps[+tg.dataset.i][1]=+tg.value||0;setTimeout(()=>openWork(),0);return}
-  if(tg.dataset.wc!=null){const c=U.wk.cands[+tg.dataset.wc];if(c){if(tg.dataset.p==='on'){c.on=tg.checked;openWork()}else c[tg.dataset.p]=tg.value}return}
+  if(tg.id==='wkBase'){U.wk.base=tg.value;wkRedate(U.wk);setTimeout(()=>openWork(),0);return}
+  if(tg.dataset.wi!=null&&U.wk){const W=U.wk,it=W.items[+tg.dataset.wi];if(it){const f=tg.dataset.p;if(f==='on'){it.on=tg.checked;setTimeout(()=>openWork(),0)}else if(f==='date'){it.date=tg.value;if(it.off!=null&&W.base&&tg.value)it.off=Math.round((D(tg.value)-D(W.base))/864e5);setTimeout(()=>openWork(),0)}else it.t=tg.value}return}
   if(tg.dataset.wkbase){const w=worksL().find(k=>k.id===tg.dataset.wkbase);if(w&&tg.value){const old=w.base;w.base=tg.value;let n=0;wkTodos(w.id).forEach(({t})=>{if(!t.d&&t.off!=null){t.due=t.date=addK(tg.value,t.off);n++}});persist();setTimeout(()=>render(),0);toast(`남은 ${n}단계 날짜를 옮겼어요.`)}return}
   if(tg.id==='devNameIn'){const v=tg.value.trim().slice(0,20);try{v?localStorage.setItem(DEVK,v):localStorage.removeItem(DEVK)}catch(e){}toast(`이 기기 이름: ${devName()}`);return}
   if(tg.id==='sjFrom'){const c=$('#sjCopy');if(c)c.hidden=!tg.value;const sb=STORE.subjects.find(k=>k.id===tg.value);if(sb){const n=$('#sjName');if(n&&!n.value.trim())n.value=sb.subj||''}return}
@@ -3290,7 +3311,7 @@ document.addEventListener('focusout',e=>{const tg=e.target;
   if(tg.id==='acNames'&&tg.value.trim()){acAdd(tg.value);tg.value=''}
 });
 document.addEventListener('input',e=>{const tg=e.target;
-  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.dataset&&tg.dataset.wf&&U.wk){const p=tg.dataset.wf;if(p==='name')U.wk.name=tg.value;else if(p==='pname')U.wk.pname=tg.value;else if(p==='text')U.wk.text=tg.value;else if(p==='st'&&tg.dataset.p==='t')U.wk.steps[+tg.dataset.i][0]=tg.value;return}if(tg.dataset&&tg.dataset.wc!=null&&tg.dataset.p==='t'&&U.wk){const c=U.wk.cands[+tg.dataset.wc];if(c)c.t=tg.value;return}if(['ifLabel','ifVal','ifUrl','ifUid','ifNote'].includes(tg.id)){const o0=U.ifD||{},gv=(id,k)=>{const e=$('#'+id);return e?e.value:o0[k]};U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value,u:gv('ifUrl','u'),i:gv('ifUid','i'),nt:gv('ifNote','nt')};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
+  if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.dataset&&tg.dataset.wf==='name'&&U.wk){U.wk.name=tg.value;return}if(tg.id==='wkText'&&U.wk){U.wk.text=tg.value;return}if(tg.dataset&&tg.dataset.wi!=null&&tg.dataset.p==='t'&&U.wk){const it=U.wk.items[+tg.dataset.wi];if(it)it.t=tg.value;const b=document.querySelector('[data-a=wkmake]');return}if(['ifLabel','ifVal','ifUrl','ifUid','ifNote'].includes(tg.id)){const o0=U.ifD||{},gv=(id,k)=>{const e=$('#'+id);return e?e.value:o0[k]};U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value,u:gv('ifUrl','u'),i:gv('ifUid','i'),nt:gv('ifNote','nt')};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
   if(tg.id==='acNames'){const v=tg.value;if(/[,，\s]/.test(v)){const parts=v.split(/[,，\s]/),rest=parts.pop();acAdd(parts.join(','));tg.value=rest}return}
   if(tg.classList.contains('ie')&&tg.tagName==='TEXTAREA')autosize(tg);
   if(tg.dataset&&tg.dataset.lf&&tg.dataset.n){const f=tg.dataset.lf,n=tg.dataset.n,v=tg.value;
@@ -3378,6 +3399,11 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
     if((v?.memo||'')===memo){closeM();return}
     mutate(`${cn(c)} ${n}차시 메모 저장`,db=>C.setRecord(db,c,+n,v?{...v,memo}:(memo?{done:false,date:'',memo,actual:''}:null)),{refs:[lref(c,+n)]})}
 });
+/* 공문 화면: 붙여넣는 즉시 날짜 찾기, PDF 끌어다 놓기 */
+document.addEventListener('paste',e=>{if(e.target&&e.target.id==='wkText'&&U.wk){setTimeout(()=>{const W=U.wk;W.text=$('#wkText').value;const c=parseWorkText(W.text);if(c.length)wkFromCands(c,'');else{W.miss=true;openWork();$('#wkText')?.focus()}},0)}});
+document.addEventListener('dragover',e=>{const d=e.target.closest&&e.target.closest('#wkDrop');if(d){e.preventDefault();d.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const d=e.target.closest&&e.target.closest('#wkDrop');if(d)d.classList.remove('over')});
+document.addEventListener('drop',e=>{const d=e.target.closest&&e.target.closest('#wkDrop');if(!d)return;const f=[...(e.dataTransfer?.files||[])].find(f=>/pdf$/i.test(f.name)||f.type==='application/pdf');if(f){e.preventDefault();wkPdfLoad(f)}});
 let tdPdIn=false;document.addEventListener('pointerdown',e=>{tdPdIn=!!(e.target.closest&&e.target.closest('li.tdedit'))},true);
 document.addEventListener('click',e=>{if(U.tdEdit&&!tdPdIn&&!(e.target.closest&&e.target.closest('li.tdedit,[data-a=tdedit]'))){U.tdEdit=null;U.tdE=null;render()}tdPdIn=false;if(U.tdMenu&&!(e.target.closest&&e.target.closest('[data-a=tdmenu],[data-a=tdedit],[data-a=tddel]'))){U.tdMenu=null;render()}if(!(e.target.closest&&e.target.closest('.tt thead th')))document.querySelectorAll('.tt thead th.arm').forEach(t=>t.classList.remove('arm'));document.querySelectorAll('details.semdd[open]').forEach(d=>{if(!d.contains(e.target))d.removeAttribute('open')})});
 /* 할 일 박스: 휴대폰에서 좌우로 밀면 날짜 넘기기 */
