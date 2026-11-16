@@ -2757,7 +2757,7 @@ function dayEvLabels(k){const out=[];allEvents(DB).forEach(e=>{if(!inRange(k,e)|
 /* 이 수업 칸을 다시 학사일정 결손으로 돌릴 수 있는지: 취소해 둔 자동 결손이 있거나, 그날 학력평가 일정이 있으면 */
 function autoAbsLab(s){const old=DB.exc.find(e=>e.type==='absence'&&!e.nop&&e.state!=='active'&&e.src==='자동(학사일정)'&&e.date===s.date&&e.c===s.c&&e.p===s.p);if(old)return old.reason;
   const me=allEvents(DB).find(e=>inRange(s.date,e)&&MOCK_RE.test(e.label||'')&&!e.off&&!e.gx);return me?String(me.label).slice(0,18):''}
-function openAbsence(k,pre=[],reason='',hint=''){if(!reason)reason=dayEvLabels(k)[0]||'교내 일정';U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
+function openAbsence(k,pre=[],reason='',hint=''){if(!reason||!REASONS.includes(reason))reason='교내 일정';U.abs={date:k,keys:new Set(pre),reason,note:'',revert:false,hint};drawAbsence()}
 function absPreview(){const a=U.abs;const list=[...a.keys].map(x=>SCH.key[x]).filter(Boolean);
   if(!list.length)return '<span class="empty">결손 처리할 수업을 고르세요.</span>';
   const extra=list.map((s,i)=>({id:'tmp'+i,type:'absence',date:s.date,c:s.c,p:s.p,state:'active'}));
@@ -2769,7 +2769,7 @@ function drawAbsence(){const a=U.abs;const ss=(SCH.by[a.date]||[]).filter(s=>['p
   modal(`<h3>${mdw(a.date)} 결손 · 진도 없음 처리</h3>${a.hint?`<p class="note">${a.hint}</p>`:''}
   <div style="display:flex;justify-content:space-between;align-items:center"><h4>빠지는 수업</h4>${ss.length>1?`<button class="btn sm" data-a="absall">${ss.every(s=>a.keys.has(s.key))?'전체 해제':'전체 선택'}</button>`:''}</div>
   <div class="others">${ss.map(s=>`<label><input type="checkbox" data-abs="${s.key}" ${a.keys.has(s.key)?'checked':''}><span class="dot" style="background:${ccv(s.c)}"></span>${s.p}교시 ${esc(cn(s.c))}<span class="cur">${STM[s.status][0]}${s.n?` · ${s.n}차시`:''}</span></label>`).join('')||'<p class="muted">이날 처리할 수업이 없어요.</p>'}</div>
-  <h4>사유</h4><div class="seg" style="flex-wrap:wrap">${[...dayEvLabels(a.date),...REASONS].map(r=>`<button data-a="absr" data-x="${r}" aria-pressed="${a.reason===r}">${r}</button>`).join('')}</div>
+  <h4>사유</h4><div class="seg" style="flex-wrap:wrap">${REASONS.map(r=>`<button data-a="absr" data-x="${r}" aria-pressed="${a.reason===r}">${r}</button>`).join('')}</div>
   <label class="field">메모 (선택)<input id="absNote" value="${esc(a.note)}" placeholder="예: 교과 연수 출장, 영상 시청 수업"></label>
   ${hasDone?`<label class="chk"><input type="checkbox" id="absRev" ${a.revert?'checked':''}><span>이미 완료로 기록된 수업은 기록도 미완료로 되돌리기 <span class="muted">(체크하지 않으면 완료 기록은 그대로 둬요)</span></span></label>`:''}
   <h4>미리보기</h4><div class="pv" id="absPv">${absPreview()}</div>
