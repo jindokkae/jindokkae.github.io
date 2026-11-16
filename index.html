@@ -2029,7 +2029,7 @@ const mTime=ts=>{if(!ts)return '';const d=new Date(ts),k=key(d);return k===TK?`$
 function memoCard(){const M=memosL(),J=jjAll();const now=new Date(),t=now.getHours()*60+now.getMinutes();
   if(!U.memoTab)U.memoTab=(t<10*60||t>=15*60)&&jjLeft(TK)?'jj':(t<9*60+30?'jj':'memo');
   if(!U.jjDay||U.jjTK!==TK){U.jjDay=TK;U.jjTK=TK}const tab=U.memoTab,left=jjLeft(TK);
-  const tabs=`<div class="seg mtabs" role="tablist"><button type="button" data-a="mtab" data-x="jj" aria-pressed="${tab==='jj'}">조회·종례${left?` <span class="mbadge">${left}</span>`:''}</button><button type="button" data-a="mtab" data-x="memo" aria-pressed="${tab==='memo'}">메모${M.length?` <span class="mcnt">${M.length}</span>`:''}</button></div>`;
+  const tabs=`<div class="seg mtabs" role="tablist"><button type="button" data-a="mtab" data-x="memo" aria-pressed="${tab==='memo'}">메모${M.length?` <span class="mcnt">${M.length}</span>`:''}</button><button type="button" data-a="mtab" data-x="jj" aria-pressed="${tab==='jj'}">조회·종례${left?` <span class="mbadge">${left}</span>`:''}</button></div>`;
   let body='',right='';
   if(tab==='memo'){right=`<button type="button" class="hlink" data-a="mnew">+ 새 메모</button>`;const q=(U.memoQ||'').trim().toLowerCase();
     const list=M.filter(m=>!q||String(m.txt||'').toLowerCase().includes(q)).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.ts||0)-(a.ts||0));
