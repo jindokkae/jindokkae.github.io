@@ -252,8 +252,10 @@ tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0
 .mnote.edit{grid-column:1/-1;max-height:none;cursor:default;padding:8px 10px 8px 12px;border-color:var(--mh)}.mnote.edit textarea{width:100%;min-height:90px;border:0;background:none;resize:none;font:inherit;color:inherit;outline:none}
 .mbar{display:flex;align-items:center;gap:6px;padding-top:6px;border-top:1px solid var(--line)}.mdot{width:16px;height:16px;border-radius:50%;border:2px solid transparent;background:var(--mh);padding:0;cursor:pointer;box-shadow:0 0 0 1px var(--line-2)}
 .mdot[data-c=y]{--mh:#ecc94b}.mdot[data-c=g]{--mh:#6cc283}.mdot[data-c=p]{--mh:#ec8fb2}.mdot[data-c=b]{--mh:#6fa5ea}.mdot[data-c=v]{--mh:#a68cec}.mdot[aria-pressed=true]{box-shadow:0 0 0 2px var(--fg)}.mbar .tdb{color:var(--muted);border:0;background:none}.mbar .tdb[aria-pressed=true]{color:var(--fg)}
-.jjnav{display:flex;align-items:center;gap:8px;margin-bottom:8px}.jjnav b{min-width:5.5em;text-align:center}.jjsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;font-size:12px}
-.jjsec h4{margin:8px 0 4px;font-size:12px;color:var(--muted)}.jjl{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}.jjl li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}.jjl li input[type=checkbox]{width:auto;flex:none}
+.jjnav{display:flex;align-items:center;gap:8px;margin-bottom:8px}.jjd{min-width:7.5em;text-align:center;font-size:14px}.jjd .muted{font-size:13px}.jjbigb{border:0;background:none;color:var(--muted);width:30px;height:30px;display:inline-grid;place-items:center}.jjbigb:hover{color:var(--accent)}
+.jjhint{font-size:12px;color:var(--muted);margin:0 0 8px}.jjsug{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;font-size:12px}
+.jjsec{margin-top:6px;padding:8px 10px 10px;border:1px solid var(--line);border-radius:12px}.jjsec.now{border-left:3px solid var(--accent)}.jjsec h4{display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:13px;color:var(--fg)}.jjsec h4 svg{color:var(--muted)}.jjsec.now h4 svg{color:var(--accent)}.jjcnt{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted)}.jjcnt.ok{color:var(--good,#2f9e5b)}
+.jjform{display:flex;align-items:center;gap:6px;margin-top:6px;padding:3px 3px 3px 10px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface)}.jjform:focus-within{border-color:var(--accent)}.jjplus{color:var(--muted);display:inline-grid}.jjform .jjnew{border:0!important;padding:5px 0}.jjform .btn{flex:none}.jjl{list-style:none;margin:0;padding:0}.jjl:empty{display:none}.jjl li:last-child{border-bottom:0}.jjl li{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line)}.jjl li input[type=checkbox]{width:auto;flex:none}
 .jjt,.jjnew{flex:1;min-width:0;border:0;background:none;font:inherit;font-size:14px;padding:3px 2px;color:var(--fg)}.jjt:focus,.jjnew:focus{outline:none;border-bottom:1px solid var(--accent)}.jjl li.d .jjt{text-decoration:line-through;color:var(--muted)}.jjl li.mv .jjt{color:var(--muted)}.jjmv{font-size:11px;white-space:nowrap}.jjl .tdb{border:0;background:none;color:var(--muted)}.jjl li.jjadd{border-bottom:0}
 #jjbig{position:fixed;inset:0;z-index:300;background:#111;color:#fff;overflow:auto}.jjbin{max-width:1100px;margin:0 auto;padding:4vh 5vw}.jjbin header{display:flex;justify-content:space-between;align-items:center;font-size:clamp(20px,3vw,34px);margin-bottom:2vh}.jjbin header button{background:none;border:1px solid #666;color:#ccc;border-radius:10px;padding:6px 14px;font:inherit;font-size:16px;cursor:pointer}
 .jjbin h2{font-size:clamp(22px,3.4vw,40px);color:#ffd54f;margin:3vh 0 1vh}.jjbin ol{font-size:clamp(24px,4vw,52px);line-height:1.45;padding-left:1.4em;margin:0}.jjbin li.d{opacity:.4;text-decoration:line-through}
@@ -1406,6 +1408,8 @@ const SJI={
  bulb:['탐구','<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'],
  star:['기타','<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>']};
 const sjic=(k,sz=15)=>{const e=SJI[k];return e&&e[1]?`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${e[1]}</svg>`:ic('book',sz)};
+ICON.moon='<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>';
+ICON.expand='<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
 ICON.plus='<path d="M12 5v14M5 12h14"/>';
 ICON.trash='<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/>';
 ICON.key='<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.7 12.3 20 3M16 7l3 3M14 9l2 2"/>';
@@ -2032,7 +2036,7 @@ const mTime=ts=>{if(!ts)return '';const d=new Date(ts),k=key(d),m=Math.floor((Da
 function memoCard(){const M=memosL(),J=jjAll();const now=new Date(),t=now.getHours()*60+now.getMinutes();
   if(!U.memoTab)U.memoTab=(t<10*60||t>=15*60)&&jjLeft(TK)?'jj':(t<9*60+30?'jj':'memo');
   if(!U.jjDay||U.jjTK!==TK){U.jjDay=TK;U.jjTK=TK}const tab=U.memoTab,left=jjLeft(TK);
-  const tabs=`<div class="seg mtabs" role="tablist" aria-label="메모 보기"><button type="button" data-a="mtab" data-x="memo" aria-pressed="${tab==='memo'}">메모${M.length?` <span class="mcnt">${M.length}</span>`:''}</button><button type="button" data-a="mtab" data-x="jj" aria-pressed="${tab==='jj'}">조회·종례${left?` <span class="mbadge">${left}</span>`:''}</button></div>`;
+  const tabs=`<div class="seg mtabs" role="tablist" aria-label="메모 보기"><button type="button" data-a="mtab" data-x="memo" aria-pressed="${tab==='memo'}">메모</button><button type="button" data-a="mtab" data-x="jj" aria-pressed="${tab==='jj'}">조회·종례${left?` <span class="mbadge">${left}</span>`:''}</button></div>`;
   let body='',right='';
   if(tab==='memo'){const q=(U.memoQ||'').trim().toLowerCase();
     const list=M.filter(m=>!q||String(m.txt||'').toLowerCase().includes(q)).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.ts||0)-(a.ts||0));
@@ -2040,12 +2044,19 @@ function memoCard(){const M=memosL(),J=jjAll();const now=new Date(),t=now.getHou
     <div class="mgrid">${list.map(m=>U.memoEdit===m.id?`<div class="mnote edit" data-c="${m.color||'y'}"><textarea id="memoTa" data-mid="${m.id}" placeholder="메모를 적으세요…&#10;- 글머리표   [ ] 체크 항목">${esc(m.txt||'')}</textarea>
       <div class="mbar">${Object.keys(MCOL).map(c=>`<button type="button" class="mdot" data-c="${c}" data-a="mcol" data-x="${m.id}|${c}" aria-pressed="${(m.color||'y')===c}" aria-label="${MCOL[c]}"></button>`).join('')}<span style="flex:1"></span><button type="button" class="tdb" data-a="mpin" data-x="${m.id}" title="${m.pin?'고정 풀기':'위에 고정'}" aria-pressed="${!!m.pin}">${ic('pin',14)}</button><button type="button" class="tdb" data-a="mdel" data-x="${m.id}" title="삭제">${ic('trash',14)}</button><button type="button" class="btn sm" data-a="mdone">완료</button></div></div>`
       :`<div class="mnote" data-c="${m.color||'y'}" data-a="medit" data-x="${m.id}" role="button" tabindex="0">${m.pin?`<span class="mpin">${ic('pin',11)}</span>`:''}<div class="mbody">${mLineHtml(m.id,m.txt)||'<span class="muted">빈 메모</span>'}</div><small class="mts">${mTime(m.ts)}</small></div>`).join('')}${q?'':`<button type="button" class="mnote madd" data-a="mnew" aria-label="새 메모">${ic('plus',18)}<span>${M.length?'새 메모':'떠오르는 걸 바로 적어 두세요'}</span></button>`}</div>`}
-  else{const k=U.jjDay;jjEnsure(k);const r=J[k]||{am:[],pm:[]},sugs=k>=TK?jjSugs(k):[];
-    const sec=(key,lab)=>`<div class="jjsec"><h4>${lab}</h4><ul class="jjl">${(r[key]||[]).map((x,i)=>`<li class="${x.d?'d':''} ${x.mv?'mv':''}"><input type="checkbox" data-jj="${key}|${i}" ${x.d?'checked':''} ${x.mv?'disabled':''} aria-label="전달함"><input class="jjt" data-jjt="${key}|${i}" value="${esc(x.t)}" aria-label="전달 사항">${x.carry?`<span class="tdtag" title="${mdw(x.carry)}에 못 전한 것">이월</span>`:''}${x.mv?`<span class="muted jjmv">→ ${md(x.mv)}</span>`:''}<button type="button" class="tdb" data-a="jjdel" data-x="${key}|${i}" aria-label="삭제">✕</button></li>`).join('')}
-      <li class="jjadd"><input class="jjnew" data-jjnew="${key}" placeholder="${lab} 전달 사항 적고 Enter" autocomplete="off"></li></ul></div>`;
-    body=`<div class="jjnav"><button class="btn sm tdnav" data-a="jjday" data-x="-1" aria-label="이전 날">‹</button><b>${k===TK?'오늘':k===addK(TK,1)?'내일':k===addK(TK,-1)?'어제':mdw(k)}</b>${k!==TK?`<button type="button" class="hlink" data-a="jjday" data-x="0">오늘로</button>`:''}<button class="btn sm tdnav" data-a="jjday" data-x="1" aria-label="다음 날">›</button><span style="flex:1"></span><button type="button" class="hlink" data-a="jjbig" title="교실 화면에 크게 띄우기">크게 보기</button></div>
-      ${sugs.length?`<div class="jjsug"><span class="muted">넣을 거리</span>${sugs.map(x=>`<button type="button" class="swc" data-a="jjsug" data-x="${x.sec}|${esc(x.t)}" title="${x.sec==='am'?'조회':'종례'}에 넣기">+ ${esc(x.t)}</button>`).join('')}</div>`:''}
-      ${sec('am','조회')}${sec('pm','종례')}`}
+  else{const k=U.jjDay;jjEnsure(k);const r=J[k]||{am:[],pm:[]},sugs=k>=TK?jjSugs(k):[],nowT=new Date().getHours()*60+new Date().getMinutes();
+    const cur=k!==TK?'':nowT>=14*60?'pm':'am',empty=!jjItems(k).some(x=>String(x.t||'').trim());
+    const prevK=empty&&k>=TK?Object.keys(J).filter(x=>x<k&&jjItems(x).some(y=>String(y.t||'').trim())).sort().pop():null;
+    const sec=(key,lab,ico)=>{const a=(r[key]||[]).map((x,i)=>({x,i})).filter(o=>String(o.x.t||'').trim()||!o.x.d),live=a.filter(o=>!o.x.mv),dn=live.filter(o=>o.x.d).length;
+      a.sort((p,q)=>(p.x.d||p.x.mv?1:0)-(q.x.d||q.x.mv?1:0)||p.i-q.i);
+      return `<div class="jjsec ${cur===key?'now':''}"><h4>${ic(ico,14)} ${lab}${live.length?`<span class="jjcnt ${dn===live.length?'ok':''}">${dn===live.length?'✓ 모두 전달':`${dn}/${live.length}`}</span>`:''}</h4>
+      <ul class="jjl">${a.map(({x,i})=>`<li class="${x.d?'d':''} ${x.mv?'mv':''}"><input type="checkbox" data-jj="${key}|${i}" ${x.d?'checked':''} ${x.mv?'disabled':''} aria-label="전달함"><input class="jjt" data-jjt="${key}|${i}" value="${esc(x.t)}" aria-label="전달 사항">${x.carry?`<span class="tdtag" title="${mdw(x.carry)}에 못 전한 것">이월</span>`:''}${x.mv?`<span class="muted jjmv">→ ${md(x.mv)}</span>`:''}<button type="button" class="tdb" data-a="jjdel" data-x="${key}|${i}" aria-label="삭제">✕</button></li>`).join('')}</ul>
+      <form class="jjform" data-jjsec="${key}"><span class="jjplus">${ic('plus',14)}</span><input class="jjnew" data-jjnew="${key}" placeholder="${lab} 때 전할 것" autocomplete="off" aria-label="${lab} 전달 사항 추가"><button class="btn sm">추가</button></form></div>`};
+    const dl=k===TK?'오늘':k===addK(TK,1)?'내일':k===addK(TK,-1)?'어제':'';
+    body=`<div class="jjnav"><button class="btn sm tdnav" data-a="jjday" data-x="-1" aria-label="이전 날">‹</button><span class="jjd">${dl?`<b>${dl}</b> `:''}<span class="muted">${mdw(k)}</span></span><button class="btn sm tdnav" data-a="jjday" data-x="1" aria-label="다음 날">›</button>${k!==TK?`<button type="button" class="hlink" data-a="jjday" data-x="0">오늘로</button>`:''}<span style="flex:1"></span><button type="button" class="tdb jjbigb" data-a="jjbig" title="교실 화면에 크게 보기" aria-label="크게 보기">${ic('expand',16)}</button></div>
+      ${empty?`<p class="jjhint">전할 걸 적고, 전했으면 체크하세요. 못 전한 건 다음 날 조회로 넘어가요.</p>`:''}
+      ${sugs.length||prevK?`<div class="jjsug"><span class="muted">넣을 거리</span>${sugs.map(x=>`<button type="button" class="swc" data-a="jjsug" data-x="${x.sec}|${esc(x.t)}" title="${x.sec==='am'?'조회':'종례'}에 넣기">+ ${esc(x.t)}</button>`).join('')}${prevK?`<button type="button" class="swc" data-a="jjcopy" data-x="${prevK}" title="${mdw(prevK)} 조회·종례 내용을 그대로 가져와요">+ ${md(prevK)} 내용 가져오기</button>`:''}</div>`:''}
+      ${cur==='pm'?sec('pm','종례','moon')+sec('am','조회','sun'):sec('am','조회','sun')+sec('pm','종례','moon')}`}
   return `<div class="card" id="memocard"><h2 class="tdh"><span class="tdt" style="flex:none">${ic('pen',18)} <span>메모</span></span><span class="right">${tabs}</span></h2>${body}</div>`}
 function jjBig(){const k=U.jjDay||TK,r=jjAll()[k]||{am:[],pm:[]},L0=(a)=>(a||[]).filter(x=>String(x.t||'').trim()&&!x.mv);
   const sec=(lab,a)=>L0(a).length?`<section><h2>${lab}</h2><ol>${L0(a).map(x=>`<li class="${x.d?'d':''}">${esc(tdPlain(x.t))}</li>`).join('')}</ol></section>`:'';
@@ -3089,6 +3100,7 @@ document.addEventListener('click',e=>{
    case 'jjdel':{const [sec,i]=x.split('|'),r=jjAll()[U.jjDay];if(r&&r[sec]){r[sec].splice(+i,1);persist();render()}break}
    case 'jjsug':{const ix=x.indexOf('|'),sec=x.slice(0,ix),t=x.slice(ix+1),J=jjAll(),k=U.jjDay;J[k]=J[k]||{am:[],pm:[]};(J[k][sec]=J[k][sec]||[]).push({id:uid('j'),t,d:false});persist();render();break}
    case 'jjbig':jjBig();break;
+   case 'jjcopy':{const J=jjAll(),src=J[x],k=U.jjDay;if(!src)break;J[k]=J[k]||{am:[],pm:[]};['am','pm'].forEach(sc=>(src[sc]||[]).filter(y=>String(y.t||'').trim()).forEach(y=>J[k][sc].push({id:uid('j'),t:y.t,d:false})));persist();render();toast(`${md(x)} 내용을 가져왔어요.`);break}
    case 'jjbigx':{try{document.fullscreenElement&&document.exitFullscreen()}catch(e){}$('#jjbig')?.remove();break}
    case 'wkopen':U.wk=null;openWork();break;
    case 'wkpick':wkPickTpl(x);break;
@@ -3452,6 +3464,7 @@ document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
   if(e.target.dataset&&e.target.dataset.tdform){const [sid,ix]=e.target.dataset.tdform.split(':'),sb=STORE.subjects.find(k=>k.id===sid),v=($('#tdEditIn')||{}).value.trim(),E=U.tdE;U.tdEdit=null;U.tdE=null;if(sb&&sb.db.todos[+ix]){const t=sb.db.todos[+ix];if(v&&E){t.t=v;if(E.tag)t.tag=E.tag;else delete t.tag;applyP(t,E.P,t.date||TK)}else if(!v)sb.db.todos.splice(+ix,1);persist()}render();return}
   if(id==='ddForm'){STORE.dday=normDday({label:$('#ddLabel').value.trim()||'방학까지',date:$('#ddDate').value,init:true,touched:true});persist();closeM();render();return}
   if(id==='todoForm'){const v=$('#todoIn').value.trim(),dd=U.tdDay||TK;if(v){const o=applyP({t:v,d:false,date:dd,...(U.tdTag?{tag:U.tdTag}:{})},U.tdP||newP(),dd);U.tdDraft='';U.tdP=newP();U.tdPanel=false;quick(db=>db.todos.push(o));setTimeout(()=>$('#todoIn')?.focus(),30)}}
+  if(e.target.classList&&e.target.classList.contains('jjform')){const sec=e.target.dataset.jjsec,inp=e.target.querySelector('.jjnew'),v=inp.value.trim();if(!v)return;const J=jjAll(),k=U.jjDay;J[k]=J[k]||{am:[],pm:[]};(J[k][sec]=J[k][sec]||[]).push({id:uid('j'),t:v,d:false});persist();render();setTimeout(()=>$(`[data-jjnew="${sec}"]`)?.focus(),0);return}
   if(id==='infoForm'){const lb=$('#ifLabel').value.trim(),v=$('#ifVal').value.trim(),kk=U.infoK||'pw',acc=kk==='acc';
     let u=acc?($('#ifUrl').value||'').trim():'',ui=acc?($('#ifUid').value||'').trim():'',nt=acc?($('#ifNote').value||'').trim():'';if(u&&!/^https?:\/\//i.test(u))u='https://'+u;
     if(!lb||(acc?!(v||ui||u):!v)){toast(acc?'이름과 주소·아이디·비번 중 하나는 적어 주세요.':'이름과 내용을 적어 주세요.');return}
@@ -3553,7 +3566,6 @@ document.addEventListener('keydown',e=>{const tg=e.target;
     e.preventDefault();
     if(t){fillDraft(t.c,t.n);render();const el=document.querySelector('[data-a=sel][data-x="'+t.c+'|'+t.n+'"]');if(el){el.scrollIntoView({block:'nearest',inline:'nearest'})}}
     return}
-  if(tg.dataset&&tg.dataset.jjnew&&e.key==='Enter'&&!e.isComposing){e.preventDefault();const v=tg.value.trim();if(!v)return;const sec=tg.dataset.jjnew,J=jjAll(),k=U.jjDay;J[k]=J[k]||{am:[],pm:[]};(J[k][sec]=J[k][sec]||[]).push({id:uid('j'),t:v,d:false});persist();render();setTimeout(()=>$(`[data-jjnew="${sec}"]`)?.focus(),0);return}
   if(tg.classList&&tg.classList.contains('mnote')&&(e.key==='Enter'||e.key===' ')&&!tg.classList.contains('edit')){e.preventDefault();tg.click();return}
   if(tg.id==='memoTa'&&e.key==='Escape'){e.preventDefault();memoClose();return}
   if(!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&(e.key==='m'||e.key==='M'||e.key==='ㅡ')&&!$('#layer').innerHTML&&!TOUR){e.preventDefault();if(U.view!=='home')go('home');memoNew();setTimeout(()=>$('#memocard')?.scrollIntoView({behavior:'smooth',block:'center'}),60);return}
