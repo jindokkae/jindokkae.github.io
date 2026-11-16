@@ -863,6 +863,9 @@ body.guiding #main{margin-bottom:var(--gpad,0px)}
 .lgap .gp{flex:none;font-weight:700;min-width:58px}.lgap .gl{flex:none}.lgap .gt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg);font-weight:600}.lgap .ga{margin-left:auto;flex:none;color:var(--accent);font-weight:700}.lgap.has{border-left-color:var(--accent)}
 .lgap+.lrow,.lrow+.lgap+.lrow{margin-top:5px}.gapl{max-height:46vh;overflow:auto;margin-bottom:8px}
 .lrow{min-height:67px}
+.lrow.dead{min-height:0;background:var(--surface-2);border-left-width:3px}.lrow.dead .tm{padding:5px 8px 5px 11px;background:none}.lrow.dead .tm b{font-size:12.5px;color:var(--muted);font-weight:700}
+.lrow.dead .bd{padding:5px 10px;gap:8px;font-size:13px;color:var(--muted)}.lrow.dead .dc{text-decoration:line-through;color:var(--muted);font-size:13px;flex:none}.lrow.dead .tp{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lrow.dead .rt{padding:0 10px;display:flex;align-items:center}.lrow.dead .rt .tag{font-size:11px}.lrow.dead:hover{box-shadow:none}
 .lrow:hover{border-color:var(--st);box-shadow:0 2px 10px rgba(30,50,100,.08)}
 .lrow.check{--st:var(--warn);background:color-mix(in srgb,var(--warn) 7%,var(--surface))}
 .lrow.done{--st:var(--ok)}
@@ -1828,6 +1831,8 @@ function homeSub(sb){
     const sub2=s.status==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:s.status==='moved'?moveDest(s):esc(lname(n));
     const pawb=dead?'':s.status==='done'?`<button class="tog on" data-a="uncomplete" data-x="${s.c}|${s.n}" title="완료 취소" aria-label="${esc(cn(s.c))} ${s.p}교시 완료 취소">${paw(20)}</button>`
       :`<button class="tog ${k==='doing'?'doing':''}" data-a="done" data-x="${s.key}" title="${k==='doing'?'진행 중인 수업을 완료로 기록':'수업 완료로 기록'}" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
+    if(dead)return {p:s.p,dead,html:`<div class="lrow ${k} dead" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0" title="${s.p}교시 ${PT(s.p)}~${endT(s.p)}">
+      <div class="tm"><b>${s.p}교시</b></div><div class="bd"><b class="dc">${esc(cn(s.c))}</b><span class="tp">${sub2}</span></div><div class="rt"><span class="tag ${tg}">${lab}</span></div></div>`};
     return {p:s.p,dead,html:`<div class="lrow ${k}" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0">
       <div class="tm"><b>${s.p}교시</b><span class="mono">${PT(s.p)}~${endT(s.p)}</span></div>
       <div class="bd"><span class="sq" title="${esc(cn(s.c))}">${sjic(sb.icon,15)}</span><div class="tx"><span class="l1"><b>${esc(cn(s.c))}</b><small>${esc(subjMain(sb))}${dead?'':` · ${n}차시`}</small>${dead?'':taskTagOf(s.c,n)}${s.movedIn?`<span class="tag gray">${sic('moved',11)} ${s.from.p}교시에서 교환</span>`:''}</span><span class="tp">${sub2}</span></div></div>
@@ -1947,7 +1952,7 @@ function gapLine(k,ps){const a=ps[0],b=ps[ps.length-1],e=toMin(PT(b))+PDUR(DB),e
   return `<div class="lgap ${open.length?'has':''}" data-a="gapopen" data-x="${k}|${a}|${b}" role="button" tabindex="0" title="공강 ${PT(a)}~${end} · 눌러서 할 일 배정"><span class="gp mono">${a===b?a:a+'~'+b}교시</span><span class="gl">공강</span>${nm?`<span class="gt">${nm}</span>`:''}<span class="ga">${tds.length?'편집':'할 일 배정 +'}</span></div>`}
 const gapHidden=()=>{try{return localStorage.getItem('jd.gapHide')==='1'}catch(e){return false}};
 function withGaps(rows,k){if(gapHidden()||!rows.some(r=>!r.dead))return rows.map(r=>r.html).join('');
-  const gs=freeGroups(rows),items=[...rows.map(r=>({p:r.p,o:0,h:r.html})),...gs.map(ps=>({p:ps[0],o:1,h:gapLine(k,ps)}))];
+  const gs=freeGroups(rows),items=[...rows.map(r=>({p:r.p,o:0,h:r.html})),...gs.map(ps=>({p:ps[0],o:-1,h:gapLine(k,ps)}))];
   return items.sort((x,y)=>x.p-y.p||x.o-y.o).map(x=>x.h).join('')}
 function openGap(x){const [k,a,b]=x.split('|'),key=x;U.gapX=x;
   const cand=[];todoSubs().forEach(sb=>(sb.db.todos||[]).forEach((t,i)=>{if(t.rep)return;const on=t.gap===key;
