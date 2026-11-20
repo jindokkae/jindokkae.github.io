@@ -1840,7 +1840,7 @@ function homeSub(sb){
     const sub2=s.status==='absent'?`${esc(excOf(s)?.reason||'')} ${esc(excOf(s)?.note||'')}`:s.status==='moved'?moveDest(s):esc(lname(n));
     const pawb=dead?'':s.status==='done'?`<button class="tog on" data-a="uncomplete" data-x="${s.c}|${s.n}" title="완료 취소" aria-label="${esc(cn(s.c))} ${s.p}교시 완료 취소">${paw(20)}</button>`
       :`<button class="tog ${k==='doing'?'doing':''}" data-a="done" data-x="${s.key}" title="${k==='doing'?'진행 중인 수업을 완료로 기록':'수업 완료로 기록'}" aria-label="${esc(cn(s.c))} ${s.p}교시 수업 완료로 기록">${paw(20)}</button>`;
-    if(dead)return {p:s.p,dead,away:s.status==='moved',html:`<div class="lrow ${k} dead" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0" title="${s.p}교시 ${PT(s.p)}~${endT(s.p)}">
+    if(dead)return {p:s.p,dead,away:s.status==='moved'||(s.status==='absent'&&!['복무','휴업'].includes(excOf(s)?.reason||'')),html:`<div class="lrow ${k} dead" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0" title="${s.p}교시 ${PT(s.p)}~${endT(s.p)}">
       <div class="tm"><b>${s.p}교시</b></div><div class="bd"><b class="dc">${esc(cn(s.c))}</b><span class="tp">${sub2}</span></div><div class="rt"><span class="tag lg ${tg}">${lab}</span></div></div>`};
     return {p:s.p,dead,html:`<div class="lrow ${k}" style="--cc:${ccv(s.c)}" data-sub="${sb.id}" data-a="sess" data-x="${s.key}" role="button" tabindex="0">
       <div class="tm"><b>${s.p}교시</b><span class="mono">${PT(s.p)}~${endT(s.p)}</span></div>
@@ -1954,13 +1954,13 @@ function homeDrop(id,target,after,col){const L=homeLayout(),o=L.o;if(id===target
 /* ---- 공강: 오늘의 수업 사이에 얇은 한 줄 (연속 공강은 묶음) + 할 일 배정 ---- */
 const gapLab=g=>{const [,a,b]=String(g).split('|');return esc(!b||a===b?a:a+'~'+b)+'교시'};
 function gapTodos(k,p){const key=k+'|'+p+'|',out=[];todoSubs().forEach(sb=>(sb.db.todos||[]).forEach((t,i)=>{if(!t.rep&&t.gap&&t.gap.startsWith(key))out.push({...t,sid:sb.id,i})}));return out}
-function freeGroups(rows){/* 교환으로 옮겨 간 시간만 비는 시간. 결손(행사·출장·자습 감독 등)은 공강으로 치지 않음 */const busy=new Set(rows.filter(r=>!r.away).map(r=>r.p)),ps=[1,2,3,4,5,6,7].filter(p=>PT(p)&&!busy.has(p)),g=[];
+function freeGroups(rows){/* 수업이 없는 시간 = 공강. 교환으로 빠졌거나 결손된 시간도 포함(복무=출장·연가, 휴업처럼 학교에 없는 결손은 제외) */const busy=new Set(rows.filter(r=>!r.away).map(r=>r.p)),ps=[1,2,3,4,5,6,7].filter(p=>PT(p)&&!busy.has(p)),g=[];
   ps.forEach(p=>{const l=g[g.length-1];/* 점심시간처럼 20분 넘게 비면 따로 묶음 */if(l&&l[l.length-1]===p-1&&toMin(PT(p))-(toMin(PT(p-1))+PDUR(DB))<=20)l.push(p);else g.push([p])});return g}
 function gapLine(k,ps){const a=ps[0],b=ps[ps.length-1],e=toMin(PT(b))+PDUR(DB),end=pad(Math.floor(e/60))+':'+pad(e%60);
   const tds=gapTodos(k,a),open=tds.filter(t=>!t.d),nm=open.length?esc(open.map(t=>tdPlain(t.t)).join(', ')):tds.length?`할 일 ${tds.length}개 완료`:'';
   return `<div class="lgap ${open.length?'has':''}" data-a="gapopen" data-x="${k}|${a}|${b}" role="button" tabindex="0" title="공강 ${PT(a)}~${end} · 눌러서 할 일 배정"><span class="gp mono">${a===b?a:a+'~'+b}교시</span><span class="gl">공강</span>${nm?`<span class="gt">${nm}</span>`:''}<span class="ga">${tds.length?'편집':'할 일 배정 +'}</span></div>`}
 const gapHidden=()=>{try{return localStorage.getItem('jd.gapHide')==='1'}catch(e){return false}};
-function withGaps(rows,k){if(gapHidden()||!rows.some(r=>!r.dead))return rows.map(r=>r.html).join('');
+function withGaps(rows,k){if(gapHidden()||!rows.some(r=>!r.dead||r.away))return rows.map(r=>r.html).join('');
   const gs=freeGroups(rows),items=[...rows.map(r=>({p:r.p,o:0,h:r.html})),...gs.map(ps=>({p:ps[0],o:-1,h:gapLine(k,ps)}))];
   return items.sort((x,y)=>x.p-y.p||x.o-y.o).map(x=>x.h).join('')}
 function openGap(x){const [k,a,b]=x.split('|'),key=x;U.gapX=x;
@@ -2239,7 +2239,7 @@ function vHome(){
   const nxAll=withCls.map(p=>p.h.nx).filter(Boolean).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:a.p-b.p)[0];
   const LD=U.lsDay||TK,lsT=LD===TK,lsName=lsT?'오늘':LD===addK(TK,1)?'내일':LD===addK(TK,-1)?'어제':mdw(LD);
   const emptyDay=!lsT?`<p class="muted" style="margin:0">${mdw(LD)}에는 수업이 없어요.</p>`:nxAll?`<p class="muted" style="margin:0">오늘은 수업이 없어요. 다음 수업은 <b>${mdw(nxAll.date)} ${nxAll.p}교시</b>예요.</p>`:'<p class="muted" style="margin:0">오늘은 수업이 없어요.</p>';
-  const todayCard=withCls.length?`<div class="card" id="todaycard"><h2 class="tdh"><button type="button" class="tdnav" data-a="lsday" data-x="-1" aria-label="이전 수업일">‹</button><span class="tdt">${ic('cal',18)} <span>${lsName}의 수업</span></span><button type="button" class="tdnav" data-a="lsday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${lsT?'':`<button class="hlink" data-a="lsday" data-x="0">오늘로</button>`}<button class="hlink" data-a="gott" aria-label="전체 보기"><span class="mobhide2">전체 보기 </span><span class="mobshow2">전체 </span>→</button></span></h2>${rows.length?withGaps(rows,LD):emptyDay}${rows.some(r=>!r.dead)&&freeGroups(rows).length?`<div class="gapfoot"><button type="button" class="gaptog" data-a="gaptog" aria-pressed="${!gapHidden()}">${gapHidden()?'공강 보기 ▾':'공강 숨기기 ▴'}</button></div>`:''}</div>`:'';
+  const todayCard=withCls.length?`<div class="card" id="todaycard"><h2 class="tdh"><button type="button" class="tdnav" data-a="lsday" data-x="-1" aria-label="이전 수업일">‹</button><span class="tdt">${ic('cal',18)} <span>${lsName}의 수업</span></span><button type="button" class="tdnav" data-a="lsday" data-x="1" aria-label="다음 수업일">›</button><span class="right">${lsT?'':`<button class="hlink" data-a="lsday" data-x="0">오늘로</button>`}<button class="hlink" data-a="gott" aria-label="전체 보기"><span class="mobhide2">전체 보기 </span><span class="mobshow2">전체 </span>→</button></span></h2>${rows.length?withGaps(rows,LD):emptyDay}${rows.some(r=>!r.dead||r.away)&&freeGroups(rows).length?`<div class="gapfoot"><button type="button" class="gaptog" data-a="gaptog" aria-pressed="${!gapHidden()}">${gapHidden()?'공강 보기 ▾':'공강 숨기기 ▴'}</button></div>`:''}</div>`:'';
   const noCls=withCls.length?parts.filter(p=>!p.h.hasCls):[];
   const alertsCard=(parts.some(p=>p.h.alerts)||noCls.length)?`<div class="card" id="alertcard" style="border-color:var(--warn)"><h2>${ic('warn',18)} 확인이 필요해요</h2>
     ${noCls.map(({sb})=>`<div class="hempty2" data-sub="${sb.id}"><span><b>${esc(subjMain(sb))}</b> <span class="muted">${esc(subjMeta(sb))}</span> 교과는 아직 학급이 없어요.</span><button class="btn sm pri" data-a="addclass">학급 추가</button></div>`).join('')}
