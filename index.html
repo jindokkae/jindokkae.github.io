@@ -251,7 +251,7 @@ tr.nowflash>td,.crow.nowflash{animation:nowfl 1.5s ease-out 1}@keyframes nowfl{0
 .mcb{flex:none;width:14px;height:14px;margin-top:3px;border:1.5px solid var(--muted);border-radius:3px;background:none;padding:0;cursor:pointer}.mcb[aria-pressed=true]{background:var(--mh);border-color:var(--mh)}
 .mnote.edit{grid-column:1/-1;max-height:none;cursor:default;padding:8px 10px 8px 12px;border-color:var(--mh)}.mfmt{display:flex;gap:2px;margin:-2px 0 4px;padding-bottom:4px;border-bottom:1px solid var(--line)}.mfmt button{min-width:30px;height:28px;border:0;border-radius:7px;background:none;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:1px;font:inherit}.mfmt button:hover{background:color-mix(in srgb,var(--mh) 25%,transparent);color:var(--fg)}
 #memoEd{min-height:90px;max-height:360px;overflow:auto;outline:none;padding:4px 2px;cursor:text}#memoEd:empty:before{content:attr(data-ph);color:var(--muted)}
-.mrich h3{font-size:16px;font-weight:800;margin:2px 0;line-height:1.35}.mrich ul{margin:2px 0;padding-left:18px}.mrich div,.mrich p{margin:0;overflow-wrap:anywhere}
+.mrich h3{font-size:16px;font-weight:800;margin:2px 0;line-height:1.35}.mrich ul,.mrich ol{margin:2px 0;padding-left:20px}.mfmt button.on{background:var(--accent-soft);color:var(--accent)}.mrich div,.mrich p{margin:0;overflow-wrap:anywhere}
 .mck{display:inline-block;width:14px;height:14px;margin:0 4px -2px 0;border:1.5px solid var(--muted);border-radius:3px;cursor:pointer;vertical-align:baseline;user-select:none}.mck{position:relative}.mck[data-on="1"]{background:var(--mh);border-color:var(--mh)}.mck[data-on="1"]:after{content:'';position:absolute;left:3.5px;top:0.5px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
 .mrich div:has(> .mck[data-on="1"]){text-decoration:line-through;opacity:.6}
 .mbar{display:flex;align-items:center;gap:6px;padding-top:6px;border-top:1px solid var(--line)}.mdot{width:16px;height:16px;border-radius:50%;border:2px solid transparent;background:var(--mh);padding:0;cursor:pointer;box-shadow:0 0 0 1px var(--line-2)}
@@ -2069,7 +2069,7 @@ function memoClean(html){/* template은 화면 밖(inert)에서 파싱 — 스�
   walk(d);const o=document.createElement('div');o.appendChild(d);return o.innerHTML}
 const memoHtml=m=>m.html!=null?memoClean(m.html):String(m.txt||'').split('\n').map(l=>{const c=l.match(/^\s*\[( |x|X)\]\s?(.*)$/);if(c)return `<div><span class="mck" contenteditable="false" data-on="${c[1]===' '?0:1}"></span> ${esc(c[2])}</div>`;
   const b=l.match(/^\s*[-•]\s+(.*)$/);if(b)return `<div>• ${esc(b[1])}</div>`;return l.trim()?`<div>${esc(l)}</div>`:'<div><br></div>'}).join('');
-const memoText=html=>{const T=document.createElement('template');T.innerHTML=html;const d=T.content;d.querySelectorAll('div,p,h3,li,br').forEach(e=>e.insertAdjacentText(e.tagName==='BR'?'afterend':'beforebegin','\n'));return (d.textContent||'').replace(/\n{2,}/g,'\n').trim()};
+const memoText=html=>{const T=document.createElement('template');T.innerHTML=html;const d=T.content;d.querySelectorAll('div,p,h3,li,br').forEach(e=>e.insertAdjacentText(e.tagName==='BR'?'afterend':'beforebegin','\n'));return (d.textContent||'').replace(/\u200b/g,'').replace(/\n{2,}/g,'\n').trim()};
 const mTime=ts=>{if(!ts)return '';const d=new Date(ts),k=key(d),m=Math.floor((Date.now()-ts)/6e4);if(k===TK){if(m<1)return '방금';if(m<60)return m+'분 전';return Math.floor(m/60)+'시간 전'}return k===addK(TK,-1)?'어제':md(k)};
 function memoCard(){const M=memosL(),J=jjAll();const now=new Date(),t=now.getHours()*60+now.getMinutes();
   if(!U.memoTab)U.memoTab=(t<10*60||t>=15*60)&&jjLeft(TK)?'jj':(t<9*60+30?'jj':'memo');
@@ -2079,7 +2079,7 @@ function memoCard(){const M=memosL(),J=jjAll();const now=new Date(),t=now.getHou
   if(tab==='memo'){const q=(U.memoQ||'').trim().toLowerCase();
     const list=M.filter(m=>!q||String(m.txt||'').toLowerCase().includes(q)).sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||(b.ts||0)-(a.ts||0));
     body=`${M.length>6?`<input id="memoQ" class="inp mq" placeholder="메모 검색" value="${esc(U.memoQ||'')}" autocomplete="off">`:''}
-    <div class="mgrid">${list.map(m=>U.memoEdit===m.id?`<div class="mnote edit" data-c="${m.color||'y'}"><div class="mfmt" role="toolbar" aria-label="서식"><button type="button" data-a="mf" data-x="bold" title="굵게 (Ctrl+B)" aria-label="굵게"><b>B</b></button><button type="button" data-a="mf" data-x="big" title="큰 글씨" aria-label="큰 글씨"><span style="font-size:15px;font-weight:700">가</span><span style="font-size:10px">+</span></button><button type="button" data-a="mf" data-x="check" title="체크 항목" aria-label="체크 항목">${ic('ckbox',15)}</button><button type="button" data-a="mf" data-x="list" title="글머리표 목록" aria-label="목록">${ic('list',15)}</button></div>
+    <div class="mgrid">${list.map(m=>U.memoEdit===m.id?`<div class="mnote edit" data-c="${m.color||'y'}"><div class="mfmt" role="toolbar" aria-label="서식"><button type="button" data-a="mf" data-x="bold" title="굵게 (Ctrl+B)" aria-label="굵게" aria-pressed="false"><b>B</b></button><button type="button" data-a="mf" data-x="big" title="큰 글씨 (줄 앞에 # + 스페이스)" aria-label="큰 글씨" aria-pressed="false"><span style="font-size:15px;font-weight:700">가</span><span style="font-size:10px">+</span></button><button type="button" data-a="mf" data-x="check" title="체크 항목 (줄 앞에 [] + 스페이스)" aria-label="체크 항목" aria-pressed="false">${ic('ckbox',15)}</button><button type="button" data-a="mf" data-x="list" title="글머리표 목록 (줄 앞에 - 또는 * + 스페이스, 번호는 1. + 스페이스)" aria-label="목록" aria-pressed="false">${ic('list',15)}</button></div>
       <div id="memoEd" class="mrich" contenteditable="true" data-mid="${m.id}" data-ph="메모를 적으세요…" role="textbox" aria-multiline="true" aria-label="메모 내용">${memoHtml(m)}</div>
       <div class="mbar">${Object.keys(MCOL).map(c=>`<button type="button" class="mdot" data-c="${c}" data-a="mcol" data-x="${m.id}|${c}" aria-pressed="${(m.color||'y')===c}" aria-label="${MCOL[c]}"></button>`).join('')}<span style="flex:1"></span><button type="button" class="tdb" data-a="mpin" data-x="${m.id}" title="${m.pin?'고정 풀기':'위에 고정'}" aria-pressed="${!!m.pin}">${ic('pin',14)}</button><button type="button" class="tdb" data-a="mdel" data-x="${m.id}" title="삭제">${ic('trash',14)}</button><button type="button" class="btn sm" data-a="mdone">완료</button></div></div>`
       :`<div class="mnote" data-c="${m.color||'y'}" data-a="medit" data-x="${m.id}" role="button" tabindex="0">${m.pin?`<span class="mpin">${ic('pin',11)}</span>`:''}<div class="mbody mrich" data-mid="${m.id}">${String(m.txt||'').trim()?memoHtml(m):'<span class="muted">빈 메모</span>'}</div><small class="mts">${mTime(m.ts)}</small></div>`).join('')}${q?'':`<button type="button" class="mnote madd" data-a="mnew" aria-label="새 메모">${ic('plus',18)}<span>${M.length?'새 메모':'떠오르는 걸 바로 적어 두세요'}</span></button>`}</div>`}
@@ -2110,6 +2110,50 @@ function memoFocusEnd(){const e=$('#memoEd');if(!e)return;e.focus();try{const r=
 function memoSync(){const e=$('#memoEd');if(!e)return;const m=memosL().find(k=>k.id===e.dataset.mid);if(!m)return;m.html=memoClean(e.innerHTML);m.txt=memoText(m.html);m.ts=Date.now();memoSave()}
 function memoBlock(e){const s=getSelection();if(!s.rangeCount)return null;let n=s.anchorNode;if(!e.contains(n))return null;
   while(n&&n.parentNode!==e)n=n.parentNode;if(!n)return null;if(n.nodeType===3||n.tagName==='B'||n.tagName==='SPAN'||n.tagName==='BR'){const d=document.createElement('div');n.parentNode.insertBefore(d,n);d.appendChild(n);n=d;const r=document.createRange();r.selectNodeContents(n);r.collapse(false);s.removeAllRanges();s.addRange(r)}return n}
+/* 커서가 있는 줄(메모 편집칸의 바로 아래 칸). 글자가 맨몸으로 있으면 커서를 지키며 줄로 감쌈 */
+function memoLine(e){const s=getSelection();if(!s.rangeCount)return null;const an=s.anchorNode,ao=s.anchorOffset;if(!an||!e.contains(an))return null;
+  const BL=/^(DIV|P|H3|LI|UL|OL)$/,IN=x=>x&&(x.nodeType===3||(x.nodeType===1&&!BL.test(x.tagName)));
+  let n=an.nodeType===1&&an!==e&&BL.test(an.tagName)?an:(an.nodeType===1&&an!==e?an:an.parentNode);
+  if(an.nodeType===1&&an.childNodes[ao]&&IN(an.childNodes[ao])&&(an===e||[...an.childNodes].some(c=>c.nodeType===1&&BL.test(c.tagName))))n=an;
+  while(n&&n!==e&&!/^(DIV|P|H3|LI)$/.test(n.tagName))n=n.parentNode;if(!n)return null;
+  /* 줄 안에 다른 줄(목록 등)이 섞여 있으면 커서가 있는 글자 묶음만 새 줄로 감쌈 */
+  const P=n,mixed=P===e||[...P.childNodes].some(c=>c.nodeType===1&&BL.test(c.tagName));if(!mixed)return n;
+  let a=an;if(a===P)a=P.childNodes[ao]||P.childNodes[ao-1];while(a&&a.parentNode!==P)a=a.parentNode;if(!a||!IN(a))return a&&a.nodeType===1?a:null;
+  while(IN(a.previousSibling)&&a.previousSibling.nodeName!=='BR')a=a.previousSibling;
+  const d=document.createElement('div');P.insertBefore(d,a);let c=a;while(c&&IN(c)){const nx=c.nextSibling,br=c.nodeName==='BR';d.appendChild(c);c=nx;if(br)break}
+  try{s.collapse(an===P?d:an,an===P?0:ao)}catch(_){}return d}
+function memoLineRO(e){const s=getSelection();let n=s.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;while(n&&n!==e&&!/^(DIV|P|H3|LI)$/.test(n.tagName))n=n.parentNode;return n&&n!==e?n:null}
+const mckOf=b=>b&&b.firstElementChild&&b.firstElementChild.classList.contains('mck')?b.firstElementChild:(b&&b.querySelector?b.querySelector(':scope > .mck'):null);
+/* 줄 시작부터 커서까지의 글자(체크박스 제외) */
+function memoBefore(b){const s=getSelection();if(!s.rangeCount)return '';const r=document.createRange();r.setStart(b,0);try{r.setEnd(s.anchorNode,s.anchorOffset)}catch(_){return ''}return r.toString()}
+function memoCaret(n,o){const r=document.createRange();r.setStart(n,o);r.collapse(true);const s=getSelection();s.removeAllRanges();s.addRange(r)}
+function memoAddCk(b){const sp=document.createElement('span');sp.className='mck';sp.setAttribute('contenteditable','false');sp.setAttribute('data-on','0');const t=document.createTextNode('\u200b');b.insertBefore(t,b.firstChild);b.insertBefore(sp,t);return t}
+function memoDropCk(b){const c=mckOf(b);if(!c)return;const t=c.nextSibling;c.remove();if(t&&t.nodeType===3){t.textContent=t.textContent.replace(/^[\s \u200b]+/,'');if(!b.textContent.replace(/\u200b/g,''))b.innerHTML='<br>';memoCaret(t.textContent?t:b,0)}else{if(!b.textContent&&!b.querySelector('br'))b.innerHTML='<br>';memoCaret(b,0)}}
+/* Enter: 체크 줄 이어 가기 / 빈 체크 줄이면 빠져나가기.  Backspace: 줄 맨 앞이면 체크박스만 빼기 */
+document.addEventListener('beforeinput',ev=>{const e=ev.target&&ev.target.id==='memoEd'?ev.target:null;if(!e)return;
+  if(ev.inputType==='insertParagraph'){const b=memoLine(e);if(!b||!mckOf(b))return;ev.preventDefault();
+    if(!b.textContent.replace(/[\s \u200b]/g,'')){memoDropCk(b);memoSync();memoTbar();return}
+    const s=getSelection(),r=document.createRange();r.setStart(s.anchorNode,s.anchorOffset);r.setEnd(b,b.childNodes.length);const frag=r.extractContents();
+    const d=document.createElement('div');d.appendChild(frag);d.querySelectorAll('.mck').forEach(x=>x.remove());const fc=d.firstChild;if(fc&&fc.nodeType===3)fc.textContent=fc.textContent.replace(/^[\s ]+/,'');
+    if(!b.textContent.replace(/[\s ]/g,'')&&!b.querySelector('br'))b.appendChild(document.createElement('br'));
+    b.after(d);const t=memoAddCk(d);memoCaret(t,1);memoSync();memoTbar();return}
+  if(ev.inputType==='deleteContentBackward'){const s=getSelection();if(!s.isCollapsed)return;const b=memoLine(e);if(!b||!mckOf(b))return;
+    if(memoBefore(b).replace(/[\s \u200b]/g,'')===''){ev.preventDefault();memoDropCk(b);memoSync();memoTbar()}}
+},true);
+/* 줄 앞에 '- ', '* ', '1. ', '[] ', '# ' 을 치면 서식으로 바꿈 */
+function memoAuto(ev,e){if(ev.inputType!=='insertText'||!/^[  ]$/.test(ev.data||''))return false;const b=memoLine(e);if(!b||b.tagName==='UL'||b.tagName==='OL'||mckOf(b))return false;
+  const pre=memoBefore(b),m=pre.match(/^(-|\*|•|1\.|\[ ?\]|\[x\]|#)[  ]$/i);if(!m)return false;
+  const s=getSelection(),r=document.createRange();r.setStart(b,0);r.setEnd(s.anchorNode,s.anchorOffset);s.removeAllRanges();s.addRange(r);document.execCommand('delete');
+  const k=m[1];if(k==='-'||k==='*'||k==='•')document.execCommand('insertUnorderedList');else if(k==='1.')document.execCommand('insertOrderedList');
+  else if(k==='#'){if(b.tagName!=='H3')document.execCommand('formatBlock',false,'h3')}
+  else{const nb=memoLine(e)||b;if(!nb.textContent)nb.innerHTML='';const t=memoAddCk(nb);if(/x/i.test(k))mckOf(nb).setAttribute('data-on','1');if(!nb.lastChild||nb.lastChild===t){}memoCaret(t,1)}
+  return true}
+/* 커서 위치의 서식을 버튼에 표시 */
+function memoTbar(){const e=$('#memoEd'),bar=e&&e.closest('.mnote')?.querySelector('.mfmt');if(!bar)return;const s=getSelection();const inE=s.rangeCount&&e.contains(s.anchorNode);
+  const an=inE?(s.anchorNode.nodeType===1?s.anchorNode:s.anchorNode.parentElement):null;
+  const ln=inE?memoLineRO(e):null,big=!!(ln&&ln.tagName==='H3'),st={bold:inE&&!big&&document.queryCommandState('bold'),big,check:!!(ln&&mckOf(ln)),list:!!(an&&an.closest('ul,ol')&&e.contains(an.closest('ul,ol')))};
+  bar.querySelectorAll('[data-a=mf]').forEach(x=>{const on=!!st[x.dataset.x];x.classList.toggle('on',on);x.setAttribute('aria-pressed',on)})}
+document.addEventListener('selectionchange',()=>{if($('#memoEd'))memoTbar()});
 function memoFmt(k){const e=$('#memoEd');if(!e)return;e.focus();
   if(k==='bold')document.execCommand('bold');
   else if(k==='list')document.execCommand('insertUnorderedList');
@@ -2117,7 +2161,7 @@ function memoFmt(k){const e=$('#memoEd');if(!e)return;e.focus();
   else if(k==='check'){let b=memoBlock(e);if(!b){e.insertAdjacentHTML('beforeend','<div><br></div>');b=e.lastChild}const c=b.querySelector&&b.querySelector('.mck');
     if(c)c.remove();else{const sp=document.createElement('span');sp.className='mck';sp.setAttribute('contenteditable','false');sp.setAttribute('data-on','0');b.insertBefore(document.createTextNode(' '),b.firstChild);b.insertBefore(sp,b.firstChild)}
     const r=document.createRange();r.selectNodeContents(b);r.collapse(false);const s=getSelection();s.removeAllRanges();s.addRange(r)}
-  memoSync()}
+  memoSync();memoTbar()}
 function workCard(){const L0=worksL().map(w=>{const td=wkTodos(w.id),dn=td.filter(x=>x.t.d).length;return {w,td,dn,fin:td.length>0&&dn===td.length}}).filter(x=>x.td.length);
   const act=L0.filter(x=>!x.fin).sort((a,b)=>{const na=a.td.find(x=>!x.t.d),nb=b.td.find(x=>!x.t.d);return (na?.t.due||'')<(nb?.t.due||'')?-1:1}),fin=L0.filter(x=>x.fin);
   const row=({w,td,dn,fin})=>{const nx=td.find(x=>!x.t.d),op=U.wkOpen===w.id,pct=Math.round(dn/td.length*100);
@@ -3460,7 +3504,7 @@ document.addEventListener('focusout',e=>{const tg=e.target;
   if(tg.id==='acNames'&&tg.value.trim()){acAdd(tg.value);tg.value=''}
 });
 document.addEventListener('input',e=>{const tg=e.target;
-  if(tg.id==='memoEd'){memoSync();return}if(tg.dataset&&tg.dataset.jjt){const [sec,i]=tg.dataset.jjt.split('|'),r=jjAll()[U.jjDay];if(r&&r[sec]&&r[sec][+i]){r[sec][+i].t=tg.value;memoSave()}return}if(tg.id==='memoQ'){U.memoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#memoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.dataset&&tg.dataset.wf==='name'&&U.wk){U.wk.name=tg.value;return}if(tg.id==='wkText'&&U.wk){U.wk.text=tg.value;return}if(tg.dataset&&tg.dataset.wi!=null&&tg.dataset.p==='t'&&U.wk){const it=U.wk.items[+tg.dataset.wi];if(it)it.t=tg.value;const b=document.querySelector('[data-a=wkmake]');return}if(['ifLabel','ifVal','ifUrl','ifUid','ifNote'].includes(tg.id)){const o0=U.ifD||{},gv=(id,k)=>{const e=$('#'+id);return e?e.value:o0[k]};U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value,u:gv('ifUrl','u'),i:gv('ifUid','i'),nt:gv('ifNote','nt')};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
+  if(tg.id==='memoEd'){memoAuto(e,tg);memoSync();memoTbar();return}if(tg.dataset&&tg.dataset.jjt){const [sec,i]=tg.dataset.jjt.split('|'),r=jjAll()[U.jjDay];if(r&&r[sec]&&r[sec][+i]){r[sec][+i].t=tg.value;memoSave()}return}if(tg.id==='memoQ'){U.memoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#memoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='todoIn'){U.tdDraft=tg.value;return}if(tg.id==='ctIn'){U.ctDraft=tg.value;return}if(tg.dataset&&tg.dataset.wf==='name'&&U.wk){U.wk.name=tg.value;return}if(tg.id==='wkText'&&U.wk){U.wk.text=tg.value;return}if(tg.dataset&&tg.dataset.wi!=null&&tg.dataset.p==='t'&&U.wk){const it=U.wk.items[+tg.dataset.wi];if(it)it.t=tg.value;const b=document.querySelector('[data-a=wkmake]');return}if(['ifLabel','ifVal','ifUrl','ifUid','ifNote'].includes(tg.id)){const o0=U.ifD||{},gv=(id,k)=>{const e=$('#'+id);return e?e.value:o0[k]};U.ifD={l:$('#ifLabel').value,v:$('#ifVal').value,u:gv('ifUrl','u'),i:gv('ifUid','i'),nt:gv('ifNote','nt')};return}if(tg.id==='infoQ'){U.infoQ=tg.value;const p=tg.selectionStart;render();const e2=$('#infoQ');if(e2){e2.focus();e2.setSelectionRange(p,p)}return}if(tg.id==='tdEditIn'&&U.tdE){U.tdE.text=tg.value;return}
   if(tg.id==='acNames'){const v=tg.value;if(/[,，\s]/.test(v)){const parts=v.split(/[,，\s]/),rest=parts.pop();acAdd(parts.join(','));tg.value=rest}return}
   if(tg.classList.contains('ie')&&tg.tagName==='TEXTAREA')autosize(tg);
   if(tg.dataset&&tg.dataset.lf&&tg.dataset.n){const f=tg.dataset.lf,n=tg.dataset.n,v=tg.value;
